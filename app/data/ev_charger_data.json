@@ -1,0 +1,62 @@
+{
+  "actions": [
+    { "icon": "station", "label": "Map Station" },
+    { "icon": "heart", "label": "Favorites" },
+    { "icon": "ticket", "label": "Voucher" }
+  ],
+  "nearbyStations": [
+    {
+      "id": 1,
+      "name": "Station 1",
+      "status": "Open",
+      "image": "/img/blue_ev_charging.jpg",
+      "dc": "1/6",
+      "price": "0.35$/kWh",
+      "gbt": "5/6",
+      "ccs2": "5/6",
+      "distance": "1.4 km"
+    },
+    {
+      "id": 2,
+      "name": "Station 2",
+      "status": "Open",
+      "image": "/img/blue_ev_charging.jpg",
+      "dc": "2/4",
+      "price": "0.40$/kWh",
+      "gbt": "2/4",
+      "ccs2": "1/4",
+      "distance": "2.1 km"
+    },
+    {
+      "id": 3,
+      "name": "Station 3",
+      "status": "Closed",
+      "image": "/img/blue_ev_charging.jpg",
+      "dc": "0/2",
+      "price": "0.38$/kWh",
+      "gbt": "0/2",
+      "ccs2": "0/2",
+      "distance": "3.5 km"
+    }
+  ],
+  "newsFeeds": [
+    {
+      "id": 1,
+      "title": "New Charging Station!",
+      "description": "Explore the cutting-edge features and benefits of the Volta electric vehicle...",
+      "image": "/img/blue_ev_charging.jpg"
+    },
+    {
+      "id": 2,
+      "title": "EV Subsidy Program 2026",
+      "description": "Government announces new subsidies for electric vehicle owners starting this month.",
+      "image": "/img/blue_ev_charging.jpg"
+    },
+    {
+      "id": 3,
+      "title": "Battery Tech Breakthrough",
+      "description": "New solid state batteries promise double the range and half the charging time.",
+      "image": "/img/blue_ev_charging.jpg"
+    }
+  ]
+}

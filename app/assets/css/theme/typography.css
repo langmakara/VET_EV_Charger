@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --app-font-family: 'Inter', sans-serif;
+  --ion-font-family: var(--app-font-family);
+
+  --app-font-size-appbar: 20px;
+  --app-font-size-title: 16px;
+  --app-font-size-normal: 14px;
+
+  --app-font-weight-regular: 400;
+  --app-font-weight-medium: 500;
+  --app-font-weight-semibold: 600;
+  --app-font-weight-bold: 700;
+
+  --app-line-height-tight: 1.2;
+  --app-line-height-normal: 1.4;
+  --app-line-height-relaxed: 1.6;
+
+  --ion-font-size-h1: 2.5rem;
+  --ion-font-size-h2: 2.0rem;
+  --ion-font-size-h3: 1.75rem;
+  --ion-font-size-h4: 1.5rem;
+  --ion-font-size-h5: 1.25rem;
+  --ion-font-size-h6: 1.0rem;
+}
+
+body,
+html {
+  font-family: var(--app-font-family);
+  font-size: var(--app-font-size-normal);
+  color: var(--app-color-text-primary);
+  --ion-font-family: var(--app-font-family);
+}
+
+/* Headings (h1 - h6) */
+h1 { font-family: var(--app-font-family); font-size: var(--ion-font-size-h1); }
+h2 { font-family: var(--app-font-family); font-size: var(--ion-font-size-h2); }
+h3 { font-family: var(--app-font-family); font-size: var(--ion-font-size-h3); }
+h4 { font-family: var(--app-font-family); font-size: var(--ion-font-size-h4); }
+h5 { font-family: var(--app-font-family); font-size: var(--ion-font-size-h5); }
+h6 { font-family: var(--app-font-family); font-size: var(--ion-font-size-h6); }
+
+/* Default base font (14px) for text & components */
+ion-app,
+ion-content,
+ion-page,
+ion-footer,
+ion-toolbar,
+ion-item,
+ion-label,
+ion-input,
+ion-button,
+ion-textarea,
+ion-select,
+ion-card,
+ion-chip,
+ion-badge,
+button,
+input,
+textarea,
+select,
+p,
+li,
+span,
+small,
+label,
+a {
+  font-family: var(--app-font-family);
+  font-size: var(--app-font-size-normal);
+}
+
+/* AppBar font size: 20px */
+ion-header ion-title,
+ion-toolbar ion-title,
+.app-bar-title,
+.font-appbar {
+  font-family: var(--app-font-family);
+  --font-family: var(--app-font-family);
+  font-size: var(--app-font-size-appbar);
+}
+
+/* Title Font Size: 16px */
+ion-card-title,
+.title,
+.font-title,
+[class*="title"]:not([class*="subtitle"]):not(ion-header ion-title):not(ion-toolbar ion-title) {
+  font-family: var(--app-font-family);
+  --font-family: var(--app-font-family);
+  font-size: var(--app-font-size-title);
+}

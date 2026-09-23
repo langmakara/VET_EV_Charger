@@ -1,0 +1,110 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.udaya-technology.vet-car-rental</groupId>
+	<artifactId>vet-car-rental</artifactId>
+	<version>1.36</version>
+	<packaging>war</packaging>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<npm.output.directory>dist</npm.output.directory>
+	</properties>
+
+	<build>
+		<finalName>${project.artifactId}##V${project.version}</finalName>
+		<plugins>
+			<!-- Standard plugin to generate WAR -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>3.3.2</version>
+				<configuration>
+					<webResources>
+						<resource>
+							<directory>${npm.output.directory}</directory>
+						</resource>
+					</webResources>
+					<webXml>${basedir}/web.xml</webXml>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.3.2</version>
+				<executions>
+					<!-- Required: Ensure `pnpm install` is called before anything else during 'Default Lifecycle' -->
+					<execution>
+						<id>pnpm install (initialize)</id>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<phase>initialize</phase>
+						<configuration>
+							<executable>pnpm</executable>
+							<arguments>
+								<argument>install</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<!-- Required: Ensure `pnpm install` is called before anything else during 'Clean Lifecycle' -->
+					<execution>
+						<id>pnpm install (clean)</id>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<phase>pre-clean</phase>
+						<configuration>
+							<executable>pnpm</executable>
+							<arguments>
+								<argument>install</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<!-- Required: Run `pnpm run generate` to build static files -->
+					<execution>
+						<id>pnpm run generate (compile)</id>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<phase>compile</phase>
+						<configuration>
+							<executable>pnpm</executable>
+							<arguments>
+								<argument>run</argument>
+								<argument>generate</argument>
+							</arguments>
+						</configuration>
+					</execution>
+				</executions>
+				<configuration>
+					<environmentVariables>
+						<CI>true</CI>
+						<VITE_NODE_ENV>qa</VITE_NODE_ENV>
+						<NUXT_APP_BASE_URL>/${project.artifactId}/</NUXT_APP_BASE_URL>
+						<!-- Creating a sandbox prefix for CI -->
+						<NPM_CONFIG_PREFIX>${basedir}/npm</NPM_CONFIG_PREFIX>
+						<NPM_CONFIG_CACHE>${NPM_CONFIG_PREFIX}/cache</NPM_CONFIG_CACHE>
+						<NPM_CONFIG_TMP>${project.build.directory}/npmtmp</NPM_CONFIG_TMP>
+					</environmentVariables>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>local</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile>
+		<profile>
+			<id>prod</id>
+		</profile>
+	</profiles>
+</project>

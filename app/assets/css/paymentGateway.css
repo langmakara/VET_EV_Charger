@@ -1,0 +1,72 @@
+.payment-gateway-content {
+  --background: #ffffff;
+}
+
+/* ─── State 1: QR Payment Screen ──────────────────────────────────────────── */
+
+.gateway-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 30px 20px;
+  min-height: 100%;
+  text-align: center;
+}
+
+.header-text p {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 24px 0;
+}
+
+.aba-pay-logo {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 24px;
+}
+
+.aba-blue {
+  color: #003764;
+}
+
+.aba-cyan {
+  color: #00a5d8;
+}
+
+.qr-card {
+  width: 100%;
+  max-width: 280px;
+  background: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.qr-image {
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.scan-instruction {
+  font-size: 13px;
+  color: #888888;
+  margin: 0 0 28px 0;
+  line-height: 1.5;
+}
+
+.countdown-timer {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  letter-spacing: 0.5px;
+}
+
+
+

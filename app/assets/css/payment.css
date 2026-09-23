@@ -1,0 +1,76 @@
+.list {
+  border-radius: 10px;
+  overflow: hidden;
+}
+ion-col {
+  align-items: center;
+  display: flex;
+  height: 100%;
+}
+ion-col ion-img {
+  max-height: 75px;
+  width: 80px;
+}
+.logo,
+.logo::part(image) {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.aba-bank-logo,
+.aba-bank-logo::part(image) {
+  width: 40px !important;
+  height: 40px !important;
+  max-height: 40px !important;
+  object-fit: contain;
+}
+
+.aba-khqr {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+ion-row {
+  background-color: rgb(255, 255, 255);
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
+  height: 60px;
+  margin-bottom: 10px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+ion-row.selected-row {
+  border-color: var(--ion-color-primary);
+  box-shadow: 0 2px 8px rgba(227, 91, 0, 0.1);
+}
+ion-text {
+  padding: 0;
+  margin: 0;
+  font-size: var(--app-font-size-title);
+  font-weight: var(--app-font-weight-semibold);
+}
+h4 {
+  font-size: var(--app-font-size-title);
+  font-weight: var(--app-font-weight-semibold);
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+ion-card-subtitle {
+  align-items: start;
+  padding: 0;
+  margin: 0;
+  font-size: var(--app-font-size-normal, 14px);
+  color: var(--app-color-text-secondary);
+}
+.card-header {
+  padding: 10px;
+  margin: 0;
+}
+
+.sub-title p {
+  color: #666666;
+  margin: 0;
+}
+

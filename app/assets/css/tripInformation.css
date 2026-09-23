@@ -1,0 +1,116 @@
+
+ion-card-content {
+  padding: 0px;
+}
+
+.tripCard {
+  margin-top: 10px;
+}
+
+.section-title {
+  font-weight: 700;
+  color: var(--app-color-text-primary, #1a1a1a);
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-left: 4px;
+}
+
+.trip-grid {
+  width: 100%;
+  padding: 0 !important;
+}
+
+.header-row {
+  margin-bottom: 8px;
+}
+
+.column-label {
+  margin: 0;
+  font-weight: 600;
+  font-size: var(--app-font-size-normal);
+}
+
+.input-row {
+  margin-bottom: 14px;
+}
+
+.input-row:last-child {
+  margin-bottom: 0;
+}
+
+.swap-col {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.swap-icon {
+  font-size: var(--app-font-size-appbar, 20px);
+  color: var(--app-color-text-primary, #1a1a1a);
+}
+
+.add-col {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.add-btn {
+  --padding-start: 0;
+  --padding-end: 0;
+  --height: 44px;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  --box-shadow: 0 2px 6px rgba(202, 196, 191, 0.3);
+}
+
+.add-btn ion-icon {
+  font-size: var(--app-font-size-appbar, 20px);
+}
+
+.add-destination-btn {
+  height: 52px;
+  min-height: 52px;
+  margin-left: 0;
+  margin-right: 0;
+  margin-top: 12px;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.journey-detail-title {
+  display: block;
+  color: #ff0000;
+  margin-bottom: 8px;
+}
+
+.journey-detail-title h2,
+.journey-detail-title h5,
+.journey-detail-title h6 {
+  color: #ff0000;
+  font-size: var(--app-font-size-title);
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+h5 {
+  margin-top: 0px;
+}
+
+.journey-detail-list {
+  list-style-type: disc;
+  padding-left: 18px;
+  margin: 0;
+  color: #333333;
+  font-size: var(--app-font-size-normal, 14px);
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.journey-detail-list li {
+  margin-bottom: 2px;
+}

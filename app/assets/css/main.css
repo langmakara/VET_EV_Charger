@@ -1,0 +1,9 @@
+@import './theme/colors.css';
+@import './theme/typography.css';
+@import './theme/spacing.css';
+@import './theme/variables.css';
+@import './theme/advanced.css';
+
+ion-content {
+  --background: var(--app-color-bg);
+}

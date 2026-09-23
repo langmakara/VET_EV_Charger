@@ -1,0 +1,18 @@
+.terms-back-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 4px;
+}
+
+.terms-title {
+  font-size: var(--app-font-size-title, 16px);
+  font-weight: 600;
+  color: var(--app-color-text-primary, #1a1a1a);
+}
+
+.terms-content {
+  font-size: var(--app-font-size-normal, 14px);
+  color: var(--app-color-text-primary, #1a1a1a);
+  line-height: 1.6;
+}

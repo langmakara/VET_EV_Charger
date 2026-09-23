@@ -1,0 +1,200 @@
+.card-header {
+  border-bottom: 1px solid #000;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 0;
+  padding-right: 0;
+  margin-bottom: var(--ion-padding);
+}
+.card-header2 {
+  padding: 0px;
+}
+.card-header3 {
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 0;
+  padding-right: 10px;
+}
+.card-header4 {
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+.separator-col {
+  display: flex;
+  justify-content: center;
+  align-items: end;
+  padding-bottom: 10px;
+}
+.separator-icon {
+  font-size: var(--app-font-size-appbar, 20px);
+  width: 80%;
+  color: var(--app-color-text-secondary, #666666);
+  border-bottom: 2px solid #666666;
+}
+
+.arrow-icon {
+  padding-bottom: 0;
+  color: #000000;
+}
+
+ion-card {
+  width: 100%;
+  margin-left: 0px;
+  margin-right: 0px;
+}
+
+ion-card-content {
+  padding: 0px;
+}
+
+ion-grid {
+  padding: 0px !important;
+}
+
+ion-col {
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+}
+p {
+  color: #000;
+  font-size: var(--app-font-size-normal, 14px);
+  margin: 0;
+}
+.sub-title,
+.sub-title p {
+  color: #666666;
+}
+h4 {
+  color: #000;
+  font-size: var(--app-font-size-title, 16px);
+  margin: 0;
+  margin-bottom: 15px;
+  margin-top: 5px;
+}
+.boldder {
+  border-top: 1px dashed rgb(102, 99, 99);
+}
+
+/* Price Breakdown Card Enhancements */
+.price-breakdown-card {
+  margin: 12px 0;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(128, 128, 128, 0.466);
+}
+
+.price-breakdown-row {
+  margin-bottom: 6px;
+}
+
+.service-fee-header-row {
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+
+.fee-item-row {
+  margin-bottom: 8px;
+}
+
+.fee-item-row:last-child {
+  margin-bottom: 0;
+}
+
+.price-breakdown-title {
+  font-size: var(--app-font-size-normal) !important;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.price-breakdown-amount {
+  font-size: var(--app-font-size-normal);
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.price-breakdown-subtext {
+  font-size: 12px;
+  color: #757575;
+  margin: 2px 0 0 0;
+  font-weight: 400;
+}
+
+.price-breakdown-divider {
+  border-top: 1px dashed #e0e0e0;
+  margin: 10px 0;
+}
+
+.fee-name {
+  font-size: var(--app-font-size-normal);
+  font-weight: 500;
+  color: #4a4a4a;
+  margin: 0;
+}
+
+.fee-amount {
+  font-size: var(--app-font-size-normal);
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+/* Policy Section Styling */
+.journey-detail-title {
+  display: block;
+  margin-top: 18px;
+  margin-bottom: 12px;
+}
+
+.journey-detail-title h3,
+.journey-title-red {
+  color: var(--ion-color-danger, #eb445a);
+  font-size: var(--app-font-size-appbar);
+  font-weight: 500;
+  margin: 0;
+}
+
+.journey-detail-list {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin: 0 0 16px 0;
+  color: var(--app-color-text-primary);
+  font-size: var(--app-font-size-normal);
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.journey-detail-list li {
+  margin-bottom: 2px;
+}
+
+.termsAndConditions {
+  padding-left: 2px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  white-space: normal;
+}
+
+.termsAndConditions::part(label) {
+  white-space: normal;
+  text-overflow: unset;
+  overflow: visible;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  line-height: var(--app-line-height-normal, 1.4);
+  font-size: var(--app-font-size-normal, 14px);
+}
+
+.termsAndConditions::part(container) {
+  margin-top: 2px;
+}
+
+.termsAndConditions a {
+  color: var(--ion-color-primary, #DE5D0A);
+  text-decoration: underline;
+}

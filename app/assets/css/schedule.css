@@ -1,0 +1,527 @@
+
+
+.legend-item {
+  --background: transparent;
+  --padding-start: 0;
+  --padding-end: 0;
+  --inner-padding-start: 0;
+  --inner-padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+ion-datetime {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+ion-modal {
+  --width: 100%;
+  --max-width: 100%;
+}
+.legend-item .legend-col {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  align-items: center;
+  justify-content: center;
+}
+.legend-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  margin: 0 auto 8px auto;
+}
+.outline-box {
+  border: 2px solid var(--ion-color-primary, #e35b00);
+  background-color: #ffffff;
+}
+.unavailable-box {
+  background-color: #d62600;
+}
+.select-box {
+  background-color: #1E16F5;
+}
+.legend-label {
+  font-size: var(--app-font-size-normal, 14px);
+  color: var(--app-color-text-primary, #1a1a1a);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.ion-verflowX {
+  overflow-x: auto;
+}
+.group {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin: 10px auto;
+  width: 100%;
+}
+.type {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0; /* don't let flex squish it */
+  width: fit-content; /* size to content, not to available space */
+}
+.type ion-chip {
+  width: fit-content;
+  flex: 0 0 auto;
+}
+.type ion-chip.chip-selected {
+  font-weight: bold;
+  color: #ffffff;
+  background-color: var(--ion-color-primary);
+}
+
+ion-col {
+  display: flex;
+  text-align: center;
+  height: auto;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+.center {
+  justify-content: start;
+  text-align: center;
+}
+.time-picker-row {
+  display: flex;
+  gap: 12px;
+}
+
+.time-select-input {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex: 1;
+  padding: 5px;
+  border: 1px solid var(--ion-color-medium, #c8c8c8);
+  border-radius: 5px;
+  background: #fff;
+  font-size: var(--app-font-size-normal, 14px);
+  color: #333;
+  cursor: pointer;
+}
+
+.time-select-input span {
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 25px;
+  text-overflow: ellipsis;
+  flex: 1;
+  align-items: center;
+  justify-content: start;
+  display: flex;
+}
+
+.clock-icon {
+  font-size: var(--app-font-size-title, 16px);
+  color: #555;
+  flex-shrink: 0;
+}
+
+.location-icon {
+  font-size: var(--app-font-size-title, 16px);
+  color: #555;
+  flex-shrink: 0;
+}
+
+.borderRight {
+  border-right: 1px solid #000000;
+}
+
+.col-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.col-label {
+  font-size: var(--app-font-size-normal, 14px);
+  color: #888;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.col-date {
+  font-size: var(--app-font-size-title, 16px);
+  color: #000;
+}
+
+.full-button {
+    width: 100%;
+}
+
+.dateItem {
+  /* display: block; */
+  margin: 0 auto;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* 
+  Override Ionic's default opacity: 0.4 on disabled calendar day buttons.
+  This ensures dates disabled via :is-date-enabled retain 100% opacity 
+  so highlighted unavailable dates display with their full solid color.
+*/
+ion-datetime::part(calendar-day) {
+  opacity: 1;
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  font-size: 14px;
+  border: none !important;
+  outline: none !important;
+}
+
+ion-datetime::part(calendar-day active),
+ion-datetime::part(calendar-day active):focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+ion-datetime::part(calendar-day today) {
+  border: 1px solid !important;
+}
+
+ion-datetime::part(calendar-day active),
+ion-datetime::part(calendar-day active):focus {
+  background-color: #1E16F5;
+  color: #ffffff;
+}
+
+.date-error-message {
+  color: var(--ion-color-danger, #ff0000);
+  font-size: var(--app-font-size-normal);
+  font-weight: 500;
+  text-align: center;
+  margin: -4px 16px 12px 16px;
+}
+
+.col-field {
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+
+.time-select-input.has-error {
+  border-color: var(--ion-color-danger, #eb445a);
+}
+
+.time-select-input span.placeholder {
+  color: #888;
+}
+
+.field-label {
+  font-size: var(--app-font-size-normal, 14px);
+  font-weight: 500;
+  color: var(--app-color-text-primary, #1a1a1a);
+}
+
+.required {
+  color: var(--ion-color-danger, #eb445a);
+  margin-left: 2px;
+}
+
+.error-message {
+  color: var(--ion-color-danger, #eb445a);
+  font-size: var(--app-font-size-normal);
+  margin-top: 4px;
+  padding-left: 4px;
+  text-align: left;
+}
+
+.time-select-item {
+  --background: #ffffff;
+  --border-radius: 10px;
+  --inner-padding-end: 8px;
+  --padding-start: 12px;
+  border: 1px solid var(--ion-color-medium, #c8c8c8);
+  border-radius: 10px;
+  width: 100%;
+  min-height: 44px;
+}
+
+.time-select-item.has-error {
+  border-color: var(--ion-color-danger, #eb445a);
+}
+
+.time-select {
+  width: 100%;
+  font-size: var(--app-font-size-normal, 14px);
+  color: #333;
+}
+
+/* Date Summary Card */
+.date-summary-card {
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  height: 100px;
+  padding: 10px;
+  margin-top: var(--ion-padding);
+  margin-bottom: var(--ion-padding);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.date-summary-card.has-error {
+  border: 1px solid var(--ion-color-danger, #eb445a);
+}
+
+.date-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.summary-icon {
+  font-size: var(--app-font-size-title);
+  color: var(--ion-color-primary);
+}
+
+.summary-title {
+  font-size: var(--app-font-size-normal);
+  font-weight: 700;
+  color: var(--ion-color-primary);
+  text-transform: uppercase;
+  /* letter-spacing: 0.5px; */
+}
+
+.date-summary-body {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.date-summary-body.two-cols {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.date-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.date-label {
+  font-size: var(--app-font-size-normal);
+  font-weight: 600;
+  color: #78849e;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.date-value {
+  font-size: var(--app-font-size-title);
+  font-weight: 700;
+  color: #1e2b4c;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.date-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 20px;
+  padding: 0 12px;
+  text-align: center;
+}
+
+.location-time{
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding-bottom: var(--ion-padding);
+}
+
+.title-location {
+  padding: var(--ion-padding);
+  border-bottom: 2px solid rgb(210, 208, 208);
+  display: flex;
+  align-items: center;
+}
+
+.title-location ion-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: bold;
+  color: var(--ion-color-primary);
+  text-align: center;
+}
+
+.title-location ion-icon {
+  font-size: 18px;
+  color: var(--ion-color-primary);
+}
+
+
+
+.renter-form {
+  padding: var(--ion-padding);
+}
+
+.button-container {
+  margin-top: var(--ion-padding);
+}
+ion-grid.ion-no-padding {
+  padding: 0 !important;
+  --ion-grid-padding: 0 !important;
+  --ion-grid-padding-xs: 0 !important;
+  --ion-grid-padding-sm: 0 !important;
+  --ion-grid-padding-md: 0 !important;
+  --ion-grid-padding-lg: 0 !important;
+  --ion-grid-padding-xl: 0 !important;
+}
+
+.addPickupLocation {
+  --background: transparent;
+  --padding-start: 0;
+  --padding-end: 0;
+  --box-shadow: none;
+  --height: 20px;
+  min-height: 20px;
+  height: 20px;
+  color: #000;
+  margin-right: auto;
+}
+
+.addPickupLocation::part(native) {
+  justify-content: flex-start !important;
+  padding-left: 0 !important;
+  box-shadow: none !important;
+  min-height: 20px !important;
+  height: 20px !important;
+}
+
+.border-addPickup {
+  border-top: 1px solid #8d8e91;
+  margin-top: 5px;
+}
+
+.renter-details {
+  margin-top: var(--ion-padding);
+}
+
+.journey-detail-title {
+  display: block;
+  margin-top: 18px;
+  margin-bottom: 12px;
+}
+
+.journey-detail-title h3,
+.journey-title-red {
+  color: var(--ion-color-danger, #eb445a);
+  font-size: var(--app-font-size-appbar, 20px);
+  font-weight: 500;
+  margin: 0;
+}
+
+.journey-detail-list {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin: 0 0 16px 0;
+  color: var(--app-color-text-primary, #1a1a1a);
+  font-size: var(--app-font-size-normal, 14px);
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.journey-detail-list li {
+  margin-bottom: 2px;
+}
+
+.schedule-header-grid {
+  padding: 12px 16px 4px 16px;
+}
+
+.schedule-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.headerSchedule {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: auto;
+}
+
+.header-journey-title {
+  margin: 0;
+  font-size: var(--app-font-size-title);
+  font-weight: 700;
+  color: var(--app-color-text-primary);
+}
+
+.headerSchedule2 {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: auto;
+}
+
+.headerSchedule2 h5 {
+  background-color: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  padding: 5px;
+  border-radius: 10px;
+}
+
+.header-available-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: var(--app-font-size-normal);
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(222, 93, 10, 0.25);
+  line-height: 1;
+}
+
+.header-available-badge .badge-car-icon {
+  font-size: 18px;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.header-available-badge .badge-car-count {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}

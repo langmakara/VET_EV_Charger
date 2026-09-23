@@ -1,0 +1,46 @@
+:root {
+  /* Brand primary — orange */
+  --ion-color-primary: #DE5D0A;
+  --ion-color-primary-rgb: 222, 93, 10;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #c45209;
+  --ion-color-primary-tint: #e16d22;
+
+  /* Secondary — navy/purple */
+  --ion-color-secondary: #312783;
+  --ion-color-secondary-rgb: 49, 39, 131;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #2b2273;
+  --ion-color-secondary-tint: #463d8f;
+
+  /* Additional Theme Colors */
+  --app-color-default-rg: #FFA733;
+  --app-color-view-map: #FFA733;
+  --app-color-lucky-ticket: #E38F5A;
+  --app-color-air-bus: #662d91;
+
+  /* Neutral text / background scale */
+  --app-color-text-primary: #1a1a1a;
+  --app-color-text-secondary: #8a8a8a;
+  --app-color-text-muted: #b5b5b5;
+  --app-color-bg: #ffffff;
+  --app-color-surface: #ffffff;
+  --app-color-border: #ececec;
+
+  /* Semantic (Ionic system colors) */
+  --ion-color-success: #2dd36f;
+  --ion-color-warning: #ffc409;
+  --ion-color-danger: #eb445a;
+
+  /* Background color */
+  --ion-color-background: #F3F3F3;
+}
+
+/* Swiper pagination */
+.detail-swiper {
+  --swiper-pagination-color: var(--ion-color-primary);
+  --swiper-pagination-bullet-inactive-color: #fff;
+  --swiper-pagination-bullet-inactive-opacity: 0.6;
+}

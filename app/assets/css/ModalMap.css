@@ -1,0 +1,381 @@
+.map-content {
+  --background: transparent !important;
+  --ion-background-color: transparent !important;
+  position: relative;
+  height: 100%;
+}
+
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background: var(--ion-background-color, #ffffff);
+  z-index: 10;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.loading-overlay p {
+  margin-top: 12px;
+  color: var(--ion-color-medium);
+  font-size: 14px;
+}
+
+/* Top Bar Overlay (Close button + Top Search Bar - Screenshot 2) */
+.top-bar-overlay {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.close-btn {
+  background: #ffffff;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.close-btn:active {
+  transform: scale(0.92);
+  background-color: #f5f5f5;
+}
+
+.close-btn ion-icon {
+  font-size: 22px;
+}
+
+/* Top Search Bar (Matching Screenshot 2) */
+.top-search-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.top-search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 25px;
+  padding: 0 16px;
+  height: 46px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.top-search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  height: 100%;
+  flex: 1;
+  font-size: 14px;
+  color: #1a1a1a;
+  font-family: inherit;
+}
+
+.top-search-input::placeholder {
+  color: #757575;
+}
+
+.top-search-icon {
+  font-size: 20px;
+  color: #5f6368;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.clear-input-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999999;
+  margin-left: 4px;
+}
+
+.clear-input-btn ion-icon {
+  font-size: 18px;
+}
+
+.top-suggestions-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 1002;
+  padding: 6px;
+}
+
+.suggestion-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 10px 10px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+.suggestion-row:active,
+.suggestion-row:hover {
+  background-color: #f4f5f8;
+}
+
+.suggestion-icon {
+  font-size: 18px;
+  color: #666666;
+  flex-shrink: 0;
+}
+
+.suggestion-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.suggestion-main-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suggestion-secondary-text {
+  font-size: 12px;
+  color: #888888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.no-suggestions-text {
+  margin: 0;
+  padding: 12px 10px;
+  font-size: 13px;
+  color: #888888;
+  text-align: center;
+}
+
+/* Map Container */
+.map-wrapper {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: transparent !important;
+}
+
+.map-element {
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Floating Bottom Sheet Container */
+.bottom-sheet-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: transparent;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.bottom-sheet-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 16px 16px 0 0;
+  padding: 16px 20px 28px 20px;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
+  pointer-events: auto;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Floating Find Location FAB (Bottom Right - Matching Screenshot 3) */
+.find-location-fab {
+  position: absolute;
+  top: -58px;
+  right: 20px;
+  width: 46px;
+  height: 46px;
+  background-color: var(--ion-color-primary, #DE5D0A);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(222, 93, 10, 0.35);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+  z-index: 1001;
+}
+
+.find-location-fab:active {
+  transform: scale(0.92);
+  background-color: var(--ion-color-primary-shade, #c45209);
+}
+
+.find-location-fab:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.fab-icon {
+  font-size: 24px;
+  color: #ffffff;
+}
+
+.fab-spinner {
+  width: 22px;
+  height: 22px;
+}
+
+/* Drag handle on bottom sheet */
+.drag-handle {
+  width: 38px;
+  height: 4px;
+  background-color: #e0e0e0;
+  border-radius: 2px;
+  margin: 0 auto 16px auto;
+}
+
+/* Confirmation Mode */
+.confirm-view {
+  display: flex;
+  flex-direction: column;
+}
+
+.location-info-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.location-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.location-main-icon {
+  font-size: 26px;
+  color: #1a1a1a;
+}
+
+.location-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.location-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.3;
+}
+
+.location-subtitle {
+  margin: 0;
+  font-size: var(--app-font-size-normal);
+  color: #000000;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+/* Primary Confirm Button */
+.confirm-action {
+  width: 100%;
+}
+
+.primary-confirm-btn {
+  width: 100%;
+  height: 50px;
+  background-color: var(--ion-color-primary, #e35b00);
+  border: none;
+  border-radius: 14px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.primary-confirm-btn:active:not(:disabled) {
+  transform: scale(0.98);
+  background-color: var(--ion-color-primary-shade, #c75000);
+}
+
+.primary-confirm-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.btn-spinner {
+  width: 22px;
+  height: 22px;
+}
+
+/*
+ * Hide Google Maps tile-load error overlays (e.g. "Load error (UNKNOWN): net::ERR_FAILED")
+ * that appear on the map canvas when satellite/hybrid tiles fail to load.
+ * These are internal Google Maps DOM elements, not console errors.
+ */
+.map-wrapper .gm-style div[style*="text-align: center"],
+.map-wrapper .gm-style div[style*="position: absolute"] > span,
+.map-wrapper .gm-style .gm-err-container,
+.map-wrapper .gm-style .gm-err-content,
+.map-wrapper .gm-style .gm-err-message,
+.map-wrapper .gm-style .gm-err-title,
+.map-wrapper .gm-style .gm-err-autocomplete {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Hide the grey/light error overlay Google Maps shows over failed tiles */
+.map-wrapper .gm-style div[style*="background-color: rgb(229, 227, 223)"],
+.map-wrapper .gm-style div[style*="background-color: rgb(248, 249, 250)"] {
+  background-color: transparent !important;
+}

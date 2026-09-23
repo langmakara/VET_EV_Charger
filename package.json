@@ -1,0 +1,38 @@
+{
+  "name": "vet-ev-charger",
+  "version": "1.36",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "zip": "node scripts/build-prod.cjs",
+    "war": "node scripts/build-qa.cjs",
+    "build:mobile": "NUXT_APP_BASE_URL=/ nuxt generate && cap sync"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/geolocation": "^6.1.1",
+    "@capacitor/google-maps": "^8.0.1",
+    "@nuxtjs/i18n": "9.5.6",
+    "@tanstack/vue-query": "^5.62.0",
+    "axios": "^1.7.9",
+    "capacitor-native-settings": "^8.1.0",
+    "nuxt": "^4.4.8",
+    "swiper": "^14.0.5",
+    "vue": "^3.5.39",
+    "vue-router": "^5.1.0",
+    "vue3-google-map": "^0.27.2"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/cli": "^6.1.2",
+    "@ionic/core": "^8.0.0",
+    "@nuxtjs/ionic": "latest",
+    "@types/google.maps": "^3.65.2",
+    "ionicons": "^8.0.13"
+  }
+}
