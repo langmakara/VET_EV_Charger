@@ -87,13 +87,7 @@ const config = computed(() => {
       <div class="modal-body">
         <div class="icon-container">
           <slot name="icon">
-            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="32" cy="32" r="32" :fill="config.color"/>
-              <!-- Lower dot of 'i' -->
-              <rect x="29" y="16" width="6" height="6" rx="1" fill="white"/>
-              <!-- Stem of 'i' -->
-              <rect x="29" y="26" width="6" height="22" rx="1" fill="white"/>
-            </svg>
+            <Icon name="info" size="64px" :color="config.color" />
           </slot>
         </div>
         

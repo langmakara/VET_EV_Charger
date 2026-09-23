@@ -84,6 +84,11 @@ const icons: Record<string, IconDef> = {
     viewBox: "0 0 24 24",
     ...defaultOutline,
     body: '<rect x="6" y="4" width="12" height="10" rx="4" /><circle cx="10" cy="9" r="1.5" /><circle cx="14" cy="9" r="1.5" /><rect x="4" y="14" width="16" height="6" rx="3" /><circle cx="9" cy="17" r="1.5" /><circle cx="15" cy="17" r="1.5" />'
+  },
+  'info': {
+    viewBox: "0 0 64 64",
+    ...defaultFill,
+    body: '<circle cx="32" cy="32" r="32" /><rect x="29" y="16" width="6" height="6" rx="1" fill="white" /><rect x="29" y="26" width="6" height="22" rx="1" fill="white" />'
   }
 };
 
