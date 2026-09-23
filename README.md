@@ -1,6 +1,6 @@
-# VET Car Rental - Customer App
+# VET EV Charger - Customer App
 
-A mobile-responsive customer application for the VET Car Rental system, built with Nuxt.js, Vue.js, and Ionic.
+A mobile-responsive customer application for the VET EV Charger system, built with Nuxt.js, Vue.js, and Ionic.
 
 ---
 
@@ -19,50 +19,51 @@ A mobile-responsive customer application for the VET Car Rental system, built wi
 
 Following production-grade Nuxt 4 structures, the `app/` folder is organized as follows:
 
-```
-apps/vet-car-rental/app/
+```text
+app/
 ├── apis/                             # API Repository Layer
-│   ├── booking.repository.ts         # Booking creation & status endpoints
-│   ├── dropDown.repository.ts        # Dropdown options (locations, nationalities)
+│   ├── evCharger.repository.ts       # EV Charger endpoints
+│   ├── terms.repository.ts           # Terms and conditions endpoints
 │   ├── user.repository.ts            # User profile endpoints
-│   ├── vehicleRental.repository.ts   # Vehicle search, filters & detail endpoints
+│   ├── apiHelpers.ts                 # API helpers
+│   ├── HttpFactory.ts                # HTTP factory
+│   ├── queryKeys.ts                  # Vue query keys
 │   └── index.ts                      # Centralized API exports
 ├── assets/                           # Static Assets & Styling
-│   └── css/main.css                  # Global styles, Ionic overrides & utility classes
+│   ├── css/                          # Global styles, component styles
+│   └── theme/                        # Theme variables, typography, colors
 ├── components/                       # Vue / Ionic UI Components
-│   ├── vehicle-rental/               # Vehicle cards, rental types, list pages
-│   ├── map/                          # Google Maps integration & location markers
-│   ├── modal/                        # Reusable Ionic modal dialogs
-│   └── Button/ & Controls/           # Custom buttons, input controls, select pickers
-├── helpers/                          # Application Helpers
-│   └── languages/                    # i18n JSON sources (en-US, km-KH, zh-CN) & maps
+│   ├── Button/                       # Custom buttons
+│   ├── Card/                         # Card components
+│   ├── Controls/                     # Input controls, checkboxes, selects
+│   ├── Icon/                         # SVG Icons
+│   ├── loading/                      # Skeleton loaders, loading states
+│   └── Map/                          # Map integration components
 ├── composables/                      # Custom Vue Composables
-│   ├── useAppLanguage.ts             # i18n & numeric langId (1=KM, 2=EN, 3=ZH) helper
-│   ├── useNativeBridge.ts            # Flutter native bridge & webview channel
-│   ├── useBookingState.ts            # Global rental booking state management
-│   ├── useDropdown.ts                # Location & nationality cached data fetcher
-│   └── useAuthToken.ts               # Auth token management composable
+│   ├── queries/                      # Vue Query hooks for data fetching
+│   ├── useApiUrl.ts                  # API URL helper
+│   ├── useAssetResolver.ts           # Asset resolving helper
+│   ├── useAuthToken.ts               # Auth token management composable
+│   ├── useNativeBridge.ts            # Native bridge for mobile apps
+│   └── useUserProfile.ts             # User profile state management
+├── data/                             # Mock data or static JSON data
+├── helpers/                          # Application Helpers
+│   └── languages/                    # i18n JSON sources (en-US, km-KH, zh-CN)
 ├── middleware/                       # Nuxt Navigation Guards
 │   └── auth.global.ts                # Global authentication route guard
 ├── pages/                            # File-Based Routing Pages
 │   ├── index.vue                     # Home / entry point page
-│   └── vehicle-rental/               # Vehicle rental checkout workflow:
-│       ├── index.vue                 # Vehicle search & filter listing
-│       ├── schedule/                 # Rental dates & schedule selector
-│       ├── tripInformation/          # Pickup/dropoff locations & traveler details
-│       ├── bookDetail/               # Vehicle specs, facilities & reviews
-│       ├── customerDetails/          # Customer info form & rental summary
-│       └── paymentGateway/           # Payment gateway checkout & confirmation
+│   ├── terms.vue                     # Terms and conditions page
+│   ├── unauthorized.vue              # Unauthorized fallback page
+│   ├── charging/                     # Charging related pages
+│   └── ev_charger/                   # EV Charger locations and details
 ├── plugins/                          # Nuxt Client Plugins
+│   ├── 00.ionic-nav.client.ts        # Ionic client navigation lifecycle
+│   ├── axios.client.ts               # Axios interceptors and configuration
 │   ├── i18n-detector.client.ts       # Auto-detects language from URL query & cookies
-│   ├── flutter-title.client.ts       # Sends page title updates to Flutter app bar
-│   └── 00.ionic-nav.client.ts        # Ionic client navigation lifecycle
+│   ├── vue-query.client.ts           # Vue Query plugin setup
+│   └── zz.flutter-title.client.ts    # Native app title integration
 ├── services/                         # Business Logic & Validation Services
-│   ├── booking.service.ts            # Booking calculations & state transitions
-│   ├── schedule.service.ts           # Date validation & schedule logic
-│   ├── trip.service.ts               # Location search & trip validation
-│   ├── vehicle.service.ts            # Vehicle filtering & transformations
-│   └── validation.service.ts         # Customer form validation rules
 ├── types/                            # TypeScript Type Definitions
 ├── utils/                            # Utility & Helper Functions
 ├── app.config.ts                     # Application configuration
@@ -97,7 +98,7 @@ pnpm build
 ```
 
 ### 2. Package for Nginx (Static Hosting ZIP)
-Generates a ZIP archive under `release/` containing the compiled static resources configured with the base URL path `/vet-car-rental/`.
+Generates a ZIP archive under `release/` containing the compiled static resources configured with the base URL path `/vet-ev-charger/`.
 ```bash
 pnpm zip
 ```
