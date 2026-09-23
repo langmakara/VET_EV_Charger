@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import {
   IonPage,
   IonContent,
@@ -16,8 +16,29 @@ import {
   flash, 
   powerOutline 
 } from 'ionicons/icons';
+import AlertComponent from '~/components/Modal/AlertComponent.vue';
 
-const batteryProgress = ref(30); // Dynamic progress value (0 to 100)
+const isStopAlertOpen = ref(false);
+const isFullyChargedAlertOpen = ref(false);
+
+const handleStopConfirm = () => {
+  // TODO: Add actual stop logic
+  isStopAlertOpen.value = false;
+  navigateTo("/ev_charger");
+};
+
+const batteryProgress = ref(70); // Dynamic progress value (0 to 100)
+
+watch(batteryProgress, (newVal) => {
+  if (newVal >= 100) {
+    isFullyChargedAlertOpen.value = true;
+  }
+}, { immediate: true });
+
+const handleFullyChargedConfirm = () => {
+  isFullyChargedAlertOpen.value = false;
+  navigateTo("/ev_charger");
+};
 
 const circumference = 251.3;
 const progressOffset = computed(() => {
@@ -27,7 +48,7 @@ const progressOffset = computed(() => {
 const progressColor = computed(() => {
   if (batteryProgress.value <= 20) {
     return '#C00000'; // Red for low battery
-  } else if (batteryProgress.value >= 100) {
+  } else if (batteryProgress.value >= 80) {
     return '#00A651'; // Solid green for full
   }
   return '#A4C214'; // Lime green for normal charging
@@ -190,7 +211,7 @@ const progressColor = computed(() => {
             </ion-card>
           </ion-col>
           <ion-col size="3" class="stop-col ion-text-right">
-            <ion-button class="stop-button" expand="block">
+            <ion-button class="stop-button" expand="block" @click="isStopAlertOpen = true">
               <span class="stop-button-content">
                 <ion-icon :icon="powerOutline" class="stop-icon"></ion-icon>
                 <ion-text class="stop-text">Stop</ion-text>
@@ -198,8 +219,39 @@ const progressColor = computed(() => {
             </ion-button>
           </ion-col>
         </ion-row>
-
+        
       </ion-grid>
+
+      <AlertComponent
+        :is-open="isStopAlertOpen"
+        type="stop"
+        @cancel="isStopAlertOpen = false"
+        @confirm="handleStopConfirm"
+        @didDismiss="isStopAlertOpen = false"
+      />
+
+      <AlertComponent
+        :is-open="isFullyChargedAlertOpen"
+        type="custom"
+        title="Fully Charged!"
+        message="Please unplug the charger before traveling.<br>Thank you."
+        label-confirm="Continue"
+        hide-cancel
+        outline-confirm
+        @confirm="handleFullyChargedConfirm"
+        @didDismiss="isFullyChargedAlertOpen = false"
+      >
+        <template #icon>
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="20" width="44" height="24" rx="4" stroke="#000000" stroke-width="3"/>
+            <path d="M52 28H54C55.1046 28 56 28.8954 56 30V34C56 35.1046 55.1046 36 54 36H52V28Z" fill="#000000"/>
+            <rect x="12" y="24" width="8" height="16" rx="1" fill="#65C449"/>
+            <rect x="22" y="24" width="8" height="16" rx="1" fill="#65C449"/>
+            <rect x="32" y="24" width="8" height="16" rx="1" fill="#65C449"/>
+            <rect x="42" y="24" width="8" height="16" rx="1" fill="#65C449"/>
+          </svg>
+        </template>
+      </AlertComponent>
     </ion-content>
   </ion-page>
 </template>

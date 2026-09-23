@@ -10,9 +10,9 @@ export default defineNuxtConfig({
     defaultLocale: "en",
     strategy: "no_prefix",
     locales: [
-      { code: "en", iso: "en-US", name: "English", file: "en-US.json" },
-      { code: "km", iso: "km-KH", name: "Khmer", file: "km-KH.json" },
-      { code: "zh", iso: "zh-CN", name: "Chinese", file: "zh-CN.json" },
+      { code: "en", iso: "en-US", name: "English", file: "en-US.ts" },
+      { code: "km", iso: "km-KH", name: "Khmer", file: "km-KH.ts" },
+      { code: "zh", iso: "zh-CN", name: "Chinese", file: "zh-CN.ts" },
     ],
     bundle: {
       optimizeTranslationDirective: false,

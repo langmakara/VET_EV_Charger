@@ -1,4 +1,4 @@
-{
+export default {
   "welcome": "欢迎使用我们的应用程序！",
   "profile": {
     "greeting": "您好，{name}！"

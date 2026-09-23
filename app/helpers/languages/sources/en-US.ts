@@ -1,4 +1,4 @@
-{
+export default {
   "welcome": "Welcome to our application!",
   "profile": {
     "greeting": "Hello, {name}!"
@@ -13,6 +13,27 @@
     "total": "Total",
     "ok": "OK",
     "close": "Close"
+  },
+  "label": {
+    "message": "Message",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "logout": "Logout",
+    "logout_message": "Are you sure you want to logout?",
+    "delete": "Delete",
+    "delete_message_with_name": "Are you sure you want to delete {name}?",
+    "delete_message": "Are you sure you want to delete this?",
+    "exit": "Exit",
+    "exit_message": "Are you sure you want to exit?",
+    "save": "Save",
+    "save_message": "Are you sure you want to save?",
+    "activate": "Activate",
+    "activate_message": "Are you sure you want to activate this?",
+    "inactivate": "Inactivate",
+    "inactivate_message": "Are you sure you want to inactivate this?",
+    "terminate": "Terminate",
+    "terminate_message": "Are you sure you want to terminate this?",
+    "stop_message": "Are you sure you want to stop?"
   },
   "vehicle": {
     "searchPlaceholder": "Search vehicle...",

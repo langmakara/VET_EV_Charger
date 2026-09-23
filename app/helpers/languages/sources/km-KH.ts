@@ -1,4 +1,4 @@
-{
+export default {
   "welcome": "សូមស្វាគមន៍!",
   "profile": {
     "greeting": "សួស្តី, {name}!"
@@ -13,6 +13,27 @@
     "total": "សរុប",
     "ok": "យល់ព្រម",
     "close": "បិទ"
+  },
+  "label": {
+    "message": "សារ",
+    "cancel": "បោះបង់",
+    "confirm": "បញ្ជាក់",
+    "logout": "ចាកចេញ",
+    "logout_message": "តើអ្នកប្រាកដជាចង់ចាកចេញមែនទេ?",
+    "delete": "លុប",
+    "delete_message_with_name": "តើអ្នកប្រាកដជាចង់លុប {name} មែនទេ?",
+    "delete_message": "តើអ្នកប្រាកដជាចង់លុបមែនទេ?",
+    "exit": "ចាកចេញ",
+    "exit_message": "តើអ្នកប្រាកដជាចង់ចាកចេញពីកម្មវិធីមែនទេ?",
+    "save": "រក្សាទុក",
+    "save_message": "តើអ្នកប្រាកដជាចង់រក្សាទុកមែនទេ?",
+    "activate": "បើកដំណើរការ",
+    "activate_message": "តើអ្នកប្រាកដជាចង់បើកដំណើរការមែនទេ?",
+    "inactivate": "បិទដំណើរការ",
+    "inactivate_message": "តើអ្នកប្រាកដជាចង់បិទដំណើរការមែនទេ?",
+    "terminate": "បញ្ចប់",
+    "terminate_message": "តើអ្នកប្រាកដជាចង់បញ្ចប់មែនទេ?",
+    "stop_message": "តើអ្នកប្រាកដជាចង់បញ្ឈប់មែនទេ?"
   },
   "vehicle": {
     "searchPlaceholder": "ស្វែងរករថយន្ត...",
