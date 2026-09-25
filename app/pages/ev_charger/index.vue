@@ -24,8 +24,7 @@ const handleAction = (action: any) => {
 };
 
 const handlePointsClick = () => {
-  console.log('Clicked points card');
-  // Add navigation logic for points history here
+  navigateTo('/membership');
 };
 </script>
 
