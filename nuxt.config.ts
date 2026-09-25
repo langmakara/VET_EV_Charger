@@ -41,9 +41,15 @@ export default defineNuxtConfig({
     host: "0.0.0.0",
   },
   nitro: {
+    prerender: {
+      routes: [],
+    },
     output: {
       publicDir: "dist",
     },
+  },
+  experimental: {
+    componentIslands: false,
   },
   routeRules: {
     "/**": {
