@@ -1,13 +1,22 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import {
   IonPage,
   IonContent,
-  IonCardContent
+  IonCardContent,
+  IonItem,
+  IonLabel,
+  IonThumbnail,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonCard
 } from "@ionic/vue";
 import AppCard from "~/components/Card/AppCard.vue";
 import AppButton from "~/components/Button/AppButton.vue";
 import Icon from "~/components/Icon/icon.vue";
 import SectionHeader from "~/components/SectionHeader.vue";
+import StationDetailModal from "./StationDetailModal.vue";
 import StationCard from "~/components/Card/StationCard.vue";
 
 import evChargerData from "~/data/ev_charger_data.json";
@@ -25,6 +34,19 @@ const handleAction = (action: any) => {
 
 const handlePointsClick = () => {
   navigateTo('/membership');
+};
+
+const isStationModalOpen = ref(false);
+const selectedStation = ref<any>(null);
+
+const handleStationClick = (station: any) => {
+  selectedStation.value = station;
+  isStationModalOpen.value = true;
+};
+
+const closeStationModal = () => {
+  isStationModalOpen.value = false;
+  selectedStation.value = null;
 };
 </script>
 
@@ -92,6 +114,7 @@ const handlePointsClick = () => {
           v-for="station in nearbyStations" 
           :key="station.id" 
           :station="station" 
+          @click="handleStationClick(station)" 
         />
       </div>
 
@@ -109,6 +132,14 @@ const handlePointsClick = () => {
           </ion-label>
         </ion-item>
       </ion-card>
+
+      <!-- Station Details Modal -->
+      <StationDetailModal
+        :is-open="isStationModalOpen"
+        :station="selectedStation"
+        @close="closeStationModal"
+      />
+
     </ion-content>
   </ion-page>
 </template>
@@ -303,4 +334,6 @@ ion-card-content {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+
 </style>

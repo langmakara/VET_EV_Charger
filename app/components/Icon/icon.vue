@@ -43,7 +43,7 @@ const icons: Record<string, IconDef> = {
   station: {
     viewBox: "0 0 24 24",
     ...defaultFill,
-    body: '<path d="M19.77 7.23l.01-.01-3.72-3.72L15 4.56l2.11 2.11C16.17 7 15.5 7.93 15.5 9v11h2V9c0-.69.28-1.32.73-1.77zM12 10H6V5h6v5zm0 2H6v9h6v-9zm-6-9h6c1.1 0 2 .9 2 2v14H4V5c0-1.1.9-2 2-2z"/>'
+    body: '<path fill-rule="evenodd" clip-rule="evenodd" d="M14 3a2 2 0 0 0-2 2v16h10V5a2 2 0 0 0-2-2h-6zm.5 8.5H13l3.5-6v4h1.5l-3.5 6v-4z M4 2h2v4H4V2zm4 0h2v4H8V2z M3 6h8v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6zm3 7v2a3 3 0 0 0 3 3h3v-2H9a1 1 0 0 1-1-1v-2H6z" />'
   },
   heart: {
     viewBox: "0 0 24 24",
@@ -73,22 +73,37 @@ const icons: Record<string, IconDef> = {
   'plug': {
     viewBox: "0 0 24 24",
     ...defaultOutline,
-    body: '<path d="M12 22v-5M9 8V2M15 8V2M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" />'
+    body: '<path d="M4 7h16M9 22v-7l-4-5V7m10 15v-7l4-5V7M9 7V2m6 5V2" /><rect x="9" y="11" width="6" height="4" rx="2" />'
   },
   'gbt': {
-    viewBox: "0 0 24 24",
+    viewBox: "0 0 64 64",
     ...defaultOutline,
-    body: '<circle cx="12" cy="12" r="10" /><circle cx="12" cy="8" r="2" /><circle cx="8" cy="14" r="2" /><circle cx="16" cy="14" r="2" />'
+    body: '<path d="M 14.7 10 L 49.3 10 A 28 28 0 1 1 14.7 10 Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" /><circle cx="32" cy="27" r="5" fill="none" stroke="currentColor" stroke-width="3" /><circle cx="16" cy="27" r="5" fill="none" stroke="currentColor" stroke-width="3" /><circle cx="48" cy="27" r="5" fill="none" stroke="currentColor" stroke-width="3" /><circle cx="24" cy="42" r="5" fill="none" stroke="currentColor" stroke-width="3" /><circle cx="40" cy="42" r="5" fill="none" stroke="currentColor" stroke-width="3" /><circle cx="26" cy="15" r="2" fill="currentColor" stroke="none" /><circle cx="38" cy="15" r="2" fill="currentColor" stroke="none" />'
   },
   'ccs2': {
-    viewBox: "0 0 24 24",
+    viewBox: "0 0 64 64",
     ...defaultOutline,
-    body: '<rect x="6" y="4" width="12" height="10" rx="4" /><circle cx="10" cy="9" r="1.5" /><circle cx="14" cy="9" r="1.5" /><rect x="4" y="14" width="16" height="6" rx="3" /><circle cx="9" cy="17" r="1.5" /><circle cx="15" cy="17" r="1.5" />'
+    body: '<path fill="none" stroke="currentColor" stroke-width="3" d="M 21.8 6 L 42.2 6 A 19 19 0 0 1 49.2 30 A 21 21 0 1 1 14.8 30 A 19 19 0 0 1 21.8 6 Z" /><path fill="currentColor" fill-rule="evenodd" d="M 22.7 9 L 41.3 9 A 16 16 0 0 1 45.6 30.3 A 18 18 0 1 1 18.4 30.3 A 16 16 0 0 1 22.7 9 Z M 32 20.3 A 3.2 3.2 0 1 0 32 26.7 A 3.2 3.2 0 1 0 32 20.3 Z M 22 17.3 A 3.2 3.2 0 1 0 22 23.7 A 3.2 3.2 0 1 0 22 17.3 Z M 42 17.3 A 3.2 3.2 0 1 0 42 23.7 A 3.2 3.2 0 1 0 42 17.3 Z M 25 25.8 A 3.2 3.2 0 1 0 25 32.2 A 3.2 3.2 0 1 0 25 25.8 Z M 39 25.8 A 3.2 3.2 0 1 0 39 32.2 A 3.2 3.2 0 1 0 39 25.8 Z M 27 11.9 A 1.6 1.6 0 1 0 27 15.1 A 1.6 1.6 0 1 0 27 11.9 Z M 37 11.9 A 1.6 1.6 0 1 0 37 15.1 A 1.6 1.6 0 1 0 37 11.9 Z M 21 39.5 A 5.5 5.5 0 1 0 21 50.5 A 5.5 5.5 0 1 0 21 39.5 Z M 43 39.5 A 5.5 5.5 0 1 0 43 50.5 A 5.5 5.5 0 1 0 43 39.5 Z" stroke="none" /><circle cx="21" cy="45" r="1.5" fill="currentColor" stroke="none" /><circle cx="43" cy="45" r="1.5" fill="currentColor" stroke="none" />'
   },
   'info': {
     viewBox: "0 0 64 64",
     ...defaultFill,
     body: '<circle cx="32" cy="32" r="32" /><rect x="29" y="16" width="6" height="6" rx="1" fill="white" /><rect x="29" y="26" width="6" height="22" rx="1" fill="white" />'
+  },
+  'phone': {
+    viewBox: "0 0 24 24",
+    ...defaultOutline,
+    body: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />'
+  },
+  'telegram': {
+    viewBox: "0 0 24 24",
+    ...defaultOutline,
+    body: '<path d="M22 2L11 13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />'
+  },
+  'messenger': {
+    viewBox: "0 0 24 24",
+    ...defaultOutline,
+    body: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />'
   }
 };
 

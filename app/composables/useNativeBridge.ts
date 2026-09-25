@@ -1,319 +1,177 @@
+import { callHandler, registerHandler } from 'web-bridge-gateway';
+import * as Sentry from '@sentry/vue';
 import { Geolocation } from "@capacitor/geolocation";
 
-interface FlutterInAppWebView {
-  callHandler: (handlerName: string, ...args: any[]) => Promise<any>;
+// ─── ABA MINI-APP TYPES & PAYLOADS ──────────────────────────────────────────
+
+export interface AbaProfilePayload {
+  app_id: string;
+  hash: string; // SHA-256 generated on server: UPPER(SHA256(appId+firstName+lastName+fullName+sex+nationality/dobShort+dobFull+nidNumber+secretKey))
 }
 
-interface NativeBridgeWindow extends Window {
-  flutter_inappwebview?: FlutterInAppWebView;
-  SetAppBarTitle?: { postMessage: (msg: string) => void };
-  Android?: {
-    requestLocationPermission?: () => boolean;
-    requestPermission?: (type: string) => void;
-    getCurrentLocation?: () => string | { lat: number; lng: number; accuracy?: number } | any;
-    showToast?: (message: string) => void;
-    closeApp?: () => void;
-  };
-  RequestLocationPermission?: { postMessage: (msg: string) => void };
-  CloseApp?: { postMessage: (msg: string) => void };
+export interface AbaPaymentPayload {
+  account: string;
+  amount: string; // 2 decimal places e.g., "12.00"
+  currency: string;
+  vendorId: string;
+  useDefault: boolean;
+  hash: string; // SHA-256 generated on server: UPPER(SHA256(account+amount+currency+secretKey))
 }
 
-let lastSentTitle: string | null = null;
-let pendingRetryTimer: ReturnType<typeof setTimeout> | null = null;
-let isPlatformReadyListenerAdded = false;
+export interface CalendarPayload {
+  startDate: number;
+  endDate: number;
+  title: string;
+  description: string;
+}
+
+// ─── ERROR HANDLING ────────────────────────────────────────────────────────
 
 /**
- * Function to notify Flutter of the current page title.
- * Retries briefly if the native bridge hasn't injected yet, and
- * skips redundant sends if the title hasn't changed.
+ * Standardized ABA Error Handler
+ * Translates errors to standard categories and logs to Sentry & Native
  */
-export const sendTitleToFlutter = (titleName: string, attempt = 0): boolean => {
-  if (typeof window === "undefined" || !titleName) return false;
+const handleBridgeError = (handlerName: string, error: any) => {
+  let errorCode = "APP-UNKNOWN";
+  let displayMessage = "Service provider technical issues";
 
-  // Listen for flutterInAppWebViewPlatformReady event to send title immediately when bridge is injected
-  if (!isPlatformReadyListenerAdded && typeof window !== "undefined") {
-    isPlatformReadyListenerAdded = true;
-    window.addEventListener("flutterInAppWebViewPlatformReady", () => {
-      if (lastSentTitle) {
-        const titleToResend = lastSentTitle;
-        lastSentTitle = null; // Reset so sendTitleToFlutter won't skip it
-        sendTitleToFlutter(titleToResend);
-      }
+  if (error?.code) {
+    // 400-500 Vendor server errors
+    if (error.code >= 400 && error.code <= 500) {
+      displayMessage = `Service provider technical issues. Ref: [${error.transactionId || 'N/A'}][${error.code}]`;
+    } 
+    // Timeout
+    else if (error.code === 'TIMEOUT') {
+      displayMessage = "Request timed out. Please try again.";
+      errorCode = "APP-TIMEOUT";
+    }
+    // Bridge/Native errors
+    else if (error.code.toString().startsWith('NATIVE')) {
+      errorCode = error.code;
+    }
+  }
+
+  const errorObj = new Error(`[${handlerName}] ${displayMessage} | Original: ${error?.message || JSON.stringify(error)}`);
+  
+  // 1. Log to Sentry for crash tracking
+  if (import.meta.client) {
+    Sentry.captureException(errorObj, {
+      extra: { handlerName, errorData: error }
     });
   }
 
-  // Skip redundant sends (e.g. back-to-back route changes resolving to the same title)
-  if (titleName === lastSentTitle) return true;
+  // 2. Log to Native Bridge
+  try {
+    callHandler("logError", { detail: errorObj.message });
+  } catch (e) {}
 
-  const win = window as NativeBridgeWindow;
-  const MAX_RETRIES = 10;
-  const RETRY_DELAY_MS = 100;
-
-  // 1. flutter_inappwebview package
-  if (win.flutter_inappwebview?.callHandler) {
-    try {
-      win.flutter_inappwebview.callHandler("SetAppBarTitle", titleName).catch(() => {});
-      lastSentTitle = titleName;
-      if (pendingRetryTimer) {
-        clearTimeout(pendingRetryTimer);
-        pendingRetryTimer = null;
-      }
-      return true;
-    } catch {}
-  }
-  // 2. standard webview_flutter package
-  else if (win.SetAppBarTitle?.postMessage) {
-    try {
-      win.SetAppBarTitle.postMessage(titleName);
-      lastSentTitle = titleName;
-      if (pendingRetryTimer) {
-        clearTimeout(pendingRetryTimer);
-        pendingRetryTimer = null;
-      }
-      return true;
-    } catch {}
-  }
-
-  // Store desired title so the platform ready listener can resend if bridge injects late
-  lastSentTitle = titleName;
-
-  // 3. Bridge not ready yet — retry a few times before giving up
-  if (attempt < MAX_RETRIES) {
-    if (pendingRetryTimer) clearTimeout(pendingRetryTimer);
-    pendingRetryTimer = setTimeout(() => {
-      const targetTitle = titleName;
-      lastSentTitle = null;
-      sendTitleToFlutter(targetTitle, attempt + 1);
-    }, RETRY_DELAY_MS);
-  }
-
-  return false;
+  return Promise.reject(errorObj);
 };
 
-/**
- * Request location permission from native mobile host app (Android / Flutter / Capacitor)
- */
+// ─── 1. MINI-APP TO NATIVE (callHandler) ───────────────────────────────────
+
+export const abaBridge = {
+  getProfile: (payload: AbaProfilePayload) => callHandler("getProfile", payload).catch(e => handleBridgeError('getProfile', e)),
+  getDefaultAcc: (payload: { currency: string; amount: string }) => callHandler("getDefaultAcc", payload).catch(e => handleBridgeError('getDefaultAcc', e)),
+  doPayment: (payload: AbaPaymentPayload) => callHandler("doPayment", payload).catch(e => handleBridgeError('doPayment', e)),
+  closeApp: () => callHandler("closeApp", {}).catch(e => handleBridgeError('closeApp', e)),
+  setBarTitle: (title: string, bgColor: string = "") => callHandler("setBarTitle", { title, bgColor }).catch(e => handleBridgeError('setBarTitle', e)),
+  uploadFile: (filters: { crop?: boolean; type?: string[] }) => callHandler("uploadFile", filters).catch(e => handleBridgeError('uploadFile', e)),
+  getConfig: () => callHandler("getConfig", {}).catch(e => handleBridgeError('getConfig', e)),
+  setPlayList: (payload: any) => callHandler("setPlayList", payload).catch(e => handleBridgeError('setPlayList', e)),
+  setAudioPlay: (payload: any) => callHandler("setAudioPlay", payload).catch(e => handleBridgeError('setAudioPlay', e)),
+  getPlayingId: () => callHandler("getPlayingId", {}).catch(e => handleBridgeError('getPlayingId', e)),
+  switchPlayerMode: (mode: string) => callHandler("switchPlayerMode", { mode }).catch(e => handleBridgeError('switchPlayerMode', e)),
+  openMap: (payload: { lat: number; lng: number }) => callHandler("openMap", payload).catch(e => handleBridgeError('openMap', e)),
+  share: (payload: { files: string[]; type: 'single' | 'multiple' }) => callHandler("share", payload).catch(e => handleBridgeError('share', e)),
+  backToHomePage: () => callHandler("backToHomePage", {}).catch(e => handleBridgeError('backToHomePage', e)),
+  addCalendar: (payload: CalendarPayload) => callHandler("addCalendar", payload).catch(e => handleBridgeError('addCalendar', e)),
+  requestCurrentLocation: () => callHandler("requestCurrentLocation", {}).catch(e => handleBridgeError('requestCurrentLocation', e)),
+  download: (url: string) => callHandler("download", { url }).catch(e => handleBridgeError('download', e)),
+  openApp: (type: 'phone' | 'email', address: string) => callHandler("openApp", { type, address }).catch(e => handleBridgeError('openApp', e)),
+  logError: (detail: string) => callHandler("logError", { detail }).catch(e => handleBridgeError('logError', e)),
+  previewPDF: (url: string) => callHandler("previewPDF", { url }).catch(e => handleBridgeError('previewPDF', e)),
+  getFavorite: () => callHandler("getFavorite", {}).catch(e => handleBridgeError('getFavorite', e)),
+  requestVoiceRecord: () => callHandler("requestVoiceRecord", {}).catch(e => handleBridgeError('requestVoiceRecord', e)),
+  getDeviceInfo: () => callHandler("getDeviceInfo", {}).catch(e => handleBridgeError('getDeviceInfo', e)),
+  confirmOnClose: (confirm: boolean) => callHandler("confirmOnClose", { confirm }).catch(e => handleBridgeError('confirmOnClose', e)),
+  getContact: () => callHandler("getContact", {}).catch(e => handleBridgeError('getContact', e)),
+};
+
+
+// ─── COMPATIBILITY LAYER (Preserving existing public API) ──────────────────
+
+export const sendTitleToFlutter = (titleName: string, attempt = 0): boolean => {
+  if (typeof window === "undefined" || !titleName) return false;
+  abaBridge.setBarTitle(titleName, ""); // Empty bgColor uses default gradient
+  return true;
+};
+
 export const requestLocationPermission = async (): Promise<boolean> => {
   if (!import.meta.client) return false;
-
-  const win = window as NativeBridgeWindow;
-
-  // 1. Native Android WebView bridge call (custom interface)
-  if (win.Android?.requestLocationPermission) {
-    try {
-      const res = win.Android.requestLocationPermission();
-      if (typeof res === "boolean") return res;
-    } catch {}
-  } else if (win.Android?.requestPermission) {
-    try {
-      win.Android.requestPermission("location");
-    } catch {}
-  }
-
-  // 2. Native Flutter WebView bridge call
-  if (win.flutter_inappwebview) {
-    try {
-      await win.flutter_inappwebview.callHandler("requestLocationPermission");
-    } catch {}
-  } else if (win.RequestLocationPermission?.postMessage) {
-    try {
-      win.RequestLocationPermission.postMessage("request");
-    } catch {}
-  }
-
-  // 3. Capacitor Geolocation plugin permission request
+  
+  // ABA Native bridge handles permission implicitly in `requestCurrentLocation`.
+  // We keep Capacitor check for local browser fallback.
   try {
     const permStatus = await Geolocation.checkPermissions();
     if (permStatus.location !== "granted") {
       const reqRes = await Geolocation.requestPermissions();
       return reqRes.location === "granted";
     }
-    return true;
   } catch {}
-
-  // 4. Standard Web Browser permissions check
-  if (navigator?.permissions?.query) {
-    try {
-      const result = await navigator.permissions.query({ name: "geolocation" as PermissionName });
-      if (result.state === "denied") return false;
-      if (result.state === "granted") return true;
-    } catch (e) {
-      // Ignore permission query error
-    }
-  }
-
   return true;
 };
 
-/**
- * Get current native location coordinates using Native Bridge, Capacitor, or HTML5 Geolocation fallback
- */
 export const getCurrentNativeLocation = async (): Promise<{ lat: number; lng: number; accuracy?: number } | null> => {
   if (!import.meta.client) return null;
 
-  // Request permission from native mobile host app first
-  await requestLocationPermission();
-
-  const win = window as NativeBridgeWindow;
-
-  // 1. Try Flutter WebView bridge callHandler ("getCurrentLocation")
-  if (win.flutter_inappwebview?.callHandler) {
-    try {
-      const loc = await win.flutter_inappwebview.callHandler("getCurrentLocation");
-      if (loc && typeof loc.lat === "number" && typeof loc.lng === "number") {
-        return {
-          lat: loc.lat,
-          lng: loc.lng,
-          accuracy: typeof loc.accuracy === "number" ? loc.accuracy : 10,
-        };
-      }
-    } catch {}
-  }
-
-  // 2. Try Android custom native bridge if present
-  if (win.Android?.getCurrentLocation) {
-    try {
-      const raw = win.Android.getCurrentLocation();
-      if (raw) {
-        const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-        if (parsed && typeof parsed.lat === "number" && typeof parsed.lng === "number") {
-          return {
-            lat: parsed.lat,
-            lng: parsed.lng,
-            accuracy: parsed.accuracy ?? 10,
-          };
-        }
-      }
-    } catch {}
-  }
-
-  // 3. Try Capacitor Geolocation plugin
   try {
-    const position = await Geolocation.getCurrentPosition({
-      enableHighAccuracy: true,
-      timeout: 8000,
-      maximumAge: 5000,
-    });
-    if (position?.coords) {
+    // 1. Try ABA Native Bridge First
+    const loc: any = await abaBridge.requestCurrentLocation();
+    if (loc && typeof loc.lat !== "undefined") {
       return {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-        accuracy: position.coords.accuracy,
+        lat: Number(loc.lat),
+        lng: Number(loc.lng),
+        accuracy: 10, // Default to 10 if not provided by ABA
       };
     }
+  } catch (e) {
+    console.warn("ABA Location failed, falling back to Capacitor", e);
+  }
+
+  // 2. Fallback to HTML5/Capacitor Geolocation
+  try {
+    const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+    return {
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+      accuracy: position.coords.accuracy,
+    };
   } catch {}
 
-  // 4. Fallback to HTML5 Geolocation API with high accuracy -> low accuracy fallback
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) {
-      resolve(null);
-      return;
-    }
-
-    const tryGetPosition = (highAccuracy: boolean) => {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          resolve({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            accuracy: pos.coords.accuracy,
-          });
-        },
-        () => {
-          if (highAccuracy) {
-            tryGetPosition(false);
-          } else {
-            resolve(null);
-          }
-        },
-        {
-          enableHighAccuracy: highAccuracy,
-          timeout: highAccuracy ? 5000 : 10000,
-          maximumAge: 10000,
-        },
-      );
-    };
-
-    tryGetPosition(true);
-  });
+  return null;
 };
 
-/**
- * Composable for communicating with Native Mobile Apps (Android WebView & Flutter WebView)
- */
+// ─── THE COMPOSABLE ────────────────────────────────────────────────────────
+
 export const useNativeBridge = () => {
-  /**
-   * Display a native toast or notification message
-   */
+  
   const showToast = (message: string) => {
-    if (!import.meta.client) return;
-
-    const win = window as NativeBridgeWindow;
-
-    if (win.Android?.showToast) {
-      try {
-        win.Android.showToast(message);
-      } catch {}
-    }
+    // ABA Spec doesn't define showToast. Fall back to browser alert for local testing.
+    if (import.meta.client) alert(message);
   };
 
-  /**
-   * Close the native WebView activity / screen to return to the mobile app
-   */
   const closeApp = (): boolean => {
-    if (!import.meta.client) return false;
-
-    const win = window as NativeBridgeWindow;
-    let isNativeHandled = false;
-
-    // 1. Flutter WebView callHandler
-    if (win.flutter_inappwebview?.callHandler) {
-      try {
-        win.flutter_inappwebview.callHandler("closeApp").catch(() => {});
-        win.flutter_inappwebview.callHandler("close").catch(() => {});
-        isNativeHandled = true;
-      } catch {}
+    if (import.meta.client) {
+      abaBridge.closeApp();
+      return true;
     }
-
-    // 2. Flutter JS Channel postMessage
-    if (win.CloseApp?.postMessage) {
-      try {
-        win.CloseApp.postMessage("close");
-        isNativeHandled = true;
-      } catch {}
-    }
-
-    // 3. Android WebView custom bridge interface
-    if (win.Android?.closeApp) {
-      try {
-        win.Android.closeApp();
-        isNativeHandled = true;
-      } catch {}
-    }
-
-    return isNativeHandled;
+    return false;
   };
 
-  /**
-   * Open external URL or native app deeplink (e.g., abamobilebank://...)
-   */
   const openDeeplink = (url: string) => {
     if (!import.meta.client || !url) return;
-
-    const win = window as NativeBridgeWindow;
-
-    // 1. Try Flutter WebView bridge callHandler if registered
-    if (win.flutter_inappwebview?.callHandler) {
-      try {
-        win.flutter_inappwebview.callHandler("openUrl", url).catch(() => {
-          window.location.href = url;
-        });
-        return;
-      } catch {}
-    }
-
-    // 2. Fallback to standard web location redirection for deep link scheme
-    window.location.href = url;
+    window.location.href = url; // Browsers handle deep links natively
   };
 
   return {
@@ -323,6 +181,47 @@ export const useNativeBridge = () => {
     openDeeplink,
     showToast,
     closeApp,
+    abaBridge // Expose ABA specifically for Vue components
   };
 };
 
+// ─── INITIALIZATION (Listeners & Routing) ──────────────────────────────────
+
+if (import.meta.client) {
+  
+  // 1. Hook popstate for Back Button routing to Native Shell
+  window.addEventListener('popstate', (event) => {
+    // Replicate back behavior - if root page, let native app close/minimize
+    const isFirstPage = (window.history.state === null || window.history.length <= 1);
+    if (isFirstPage) {
+      abaBridge.backToHomePage();
+    }
+  });
+
+  // 2. ABA Listeners (native -> web)
+  registerHandler("getStatus", (data, responseCallback) => {
+    responseCallback({ success: true });
+  });
+
+  registerHandler("getFileUpload", (data, responseCallback) => {
+    responseCallback({ success: true });
+  });
+
+  registerHandler("onPlayIdChange", (data, responseCallback) => {
+    responseCallback({ success: true });
+  });
+
+  registerHandler("redirectPage", (data, responseCallback) => {
+    const payload = data as { propId?: string };
+    if (payload && payload.propId) {
+      window.location.href = payload.propId; // Route by propId
+    }
+    responseCallback({ success: true });
+  });
+
+  registerHandler("getCurrentLocation", (data, responseCallback) => {
+    getCurrentNativeLocation().then(loc => {
+      responseCallback({ success: true, location: loc });
+    });
+  });
+}

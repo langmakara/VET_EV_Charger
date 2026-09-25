@@ -14,7 +14,7 @@ defineProps({
   <ion-card class="station-card" style="background: #f8fafc;">
     <ion-item lines="none" class="station-item">
       <ion-thumbnail slot="start" class="station-thumbnail">
-        <img :src="station.image" :alt="station.name" />
+        <img :src="station.station" :alt="station.name" />
       </ion-thumbnail>
       
       <ion-label class="station-info ion-text-wrap">

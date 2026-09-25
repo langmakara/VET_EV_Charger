@@ -1,42 +1,200 @@
 {
   "actions": [
-    { "icon": "station", "label": "Map Station" },
-    { "icon": "heart", "label": "Favorites" },
-    { "icon": "ticket", "label": "Voucher" }
+    {
+      "icon": "station",
+      "label": "Map Station"
+    },
+    {
+      "icon": "heart",
+      "label": "Favorites"
+    },
+    {
+      "icon": "ticket",
+      "label": "Voucher"
+    }
   ],
   "nearbyStations": [
     {
       "id": 1,
-      "name": "Station 1",
+      "name": "VET - Pursat",
       "status": "Open",
-      "image": "/img/blue_ev_charging.jpg",
+      "type": "Bus Station",
+      "image": "/img/vet-pursat.svg",
+      "station": "/img/station.svg",
+      "profile": "/img/logo.svg",
       "dc": "1/6",
       "price": "0.35$/kWh",
       "gbt": "5/6",
       "ccs2": "5/6",
-      "distance": "1.4 km"
+      "distance": "1.4 km",
+      "stationCount": 6,
+      "plugCount": 12,
+      "location": "Pursat, Pursat",
+      "hours": "24/7",
+      "operator": "VET",
+      "amenities": [
+        "24/7",
+        "On-site Staff",
+        "Restroom",
+        "Seating Area",
+        "Wi-Fi"
+      ],
+      "surroundings": [
+        "Mart"
+      ],
+      "connectors": [
+        {
+          "icon": "gbt",
+          "name": "GB/T (DC)",
+          "power": "120 kW",
+          "price": "0.35$/kWh",
+          "status": "5/6"
+        },
+        {
+          "icon": "ccs2",
+          "name": "CCS2 (DC)",
+          "power": "120 kW",
+          "price": "0.35$/kWh",
+          "status": "5/6"
+        }
+      ],
+      "contacts": [
+        {
+          "type": "phone",
+          "icon": "phone",
+          "colorClass": "bg-gray-btn"
+        },
+        {
+          "type": "telegram",
+          "icon": "telegram",
+          "colorClass": "bg-blue-btn"
+        },
+        {
+          "type": "messenger",
+          "icon": "messenger",
+          "colorClass": "bg-messenger-btn"
+        }
+      ]
     },
     {
       "id": 2,
       "name": "Station 2",
       "status": "Open",
+      "type": "Mall Station",
       "image": "/img/blue_ev_charging.jpg",
+      "station": "/img/station.svg",
+      "profile": "/img/logo.svg",
       "dc": "2/4",
       "price": "0.40$/kWh",
       "gbt": "2/4",
       "ccs2": "1/4",
-      "distance": "2.1 km"
+      "distance": "2.1 km",
+      "stationCount": 4,
+      "plugCount": 8,
+      "location": "Phnom Penh Mall",
+      "hours": "08:00 - 22:00",
+      "operator": "Charge+",
+      "amenities": [
+        "Restroom",
+        "Wi-Fi",
+        "Food Court"
+      ],
+      "surroundings": [
+        "Shopping Mall"
+      ],
+      "connectors": [
+        {
+          "icon": "gbt",
+          "name": "GB/T (DC)",
+          "power": "120 kW",
+          "price": "0.40$/kWh",
+          "status": "2/4"
+        },
+        {
+          "icon": "ccs2",
+          "name": "CCS2 (DC)",
+          "power": "120 kW",
+          "price": "0.40$/kWh",
+          "status": "1/4"
+        }
+      ],
+      "contacts": [
+        {
+          "type": "phone",
+          "icon": "phone",
+          "colorClass": "bg-gray-btn"
+        },
+        {
+          "type": "telegram",
+          "icon": "telegram",
+          "colorClass": "bg-blue-btn"
+        },
+        {
+          "type": "messenger",
+          "icon": "messenger",
+          "colorClass": "bg-messenger-btn"
+        }
+      ]
     },
     {
       "id": 3,
       "name": "Station 3",
       "status": "Closed",
+      "type": "Highway Stop",
       "image": "/img/blue_ev_charging.jpg",
+      "station": "/img/station.svg",
+      "profile": "/img/logo.svg",
       "dc": "0/2",
       "price": "0.38$/kWh",
       "gbt": "0/2",
       "ccs2": "0/2",
-      "distance": "3.5 km"
+      "distance": "3.5 km",
+      "stationCount": 2,
+      "plugCount": 4,
+      "location": "Route 4, Kampong Speu",
+      "hours": "24/7",
+      "operator": "EV Station",
+      "amenities": [
+        "24/7",
+        "Restroom"
+      ],
+      "surroundings": [
+        "Gas Station",
+        "Mart"
+      ],
+      "connectors": [
+        {
+          "icon": "gbt",
+          "name": "GB/T (DC)",
+          "power": "120 kW",
+          "price": "0.38$/kWh",
+          "status": "0/2"
+        },
+        {
+          "icon": "ccs2",
+          "name": "CCS2 (DC)",
+          "power": "120 kW",
+          "price": "0.38$/kWh",
+          "status": "0/2"
+        }
+      ],
+      "contacts": [
+        {
+          "type": "phone",
+          "icon": "phone",
+          "colorClass": "bg-gray-btn"
+        },
+        {
+          "type": "telegram",
+          "icon": "telegram",
+          "colorClass": "bg-blue-btn"
+        },
+        {
+          "type": "messenger",
+          "icon": "messenger",
+          "colorClass": "bg-messenger-btn"
+        }
+      ]
     }
   ],
   "newsFeeds": [
