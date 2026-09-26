@@ -35,6 +35,7 @@
     "@ionic/core": "^8.0.0",
     "@nuxtjs/ionic": "latest",
     "@types/google.maps": "^3.65.2",
-    "ionicons": "^8.0.13"
+    "ionicons": "^8.0.13",
+    "prettier": "^3.9.9"
   }
 }
