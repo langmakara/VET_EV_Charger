@@ -20,12 +20,12 @@ defineProps({
       <ion-label class="station-info ion-text-wrap">
         <ion-grid class="info-grid">
           <ion-row class="info-header ion-align-items-center ion-justify-content-between">
-            <ion-col size="9">
+            <ion-col size="8">
               <ion-text color="dark">
                 <h3 class="station-name">{{ station.name }}</h3>
               </ion-text>
             </ion-col>
-            <ion-col size="3">
+            <ion-col class="status" size="4">
               <ion-text :color="station.status === 'Open' ? 'success' : 'danger'" class="station-status">
                 • {{ station.status }}
               </ion-text>
@@ -76,7 +76,7 @@ defineProps({
 <style scoped>
 .station-card {
   width: 350px;
-  min-width: 325px;
+  min-width: 315px;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
   box-shadow: none;
@@ -137,11 +137,18 @@ ion-col {
   font-size: 15px;
   font-weight: 700;
   color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .station-status {
   font-size: 12px;
   font-weight: 600;
+}
+.status {
+  display: flex;
+  justify-content: end;
 }
 
 .info-row {

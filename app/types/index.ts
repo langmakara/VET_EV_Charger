@@ -14,4 +14,5 @@ export type {
   ChargingSession,
   StartChargingPayload,
   SessionHistoryParams,
+  HistoryItem,
 } from './ev-charger'

@@ -23,5 +23,6 @@ defineProps({
 .app-card {
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  margin-top: 0;
 }
 </style>

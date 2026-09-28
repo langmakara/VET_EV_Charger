@@ -98,7 +98,7 @@ const progressColor = computed(() => {
           <!-- Time Elapsed -->
           <ion-col size="6">
             <ion-card class="stat-card">
-              <ion-card-content>
+              <ion-card-content class="card-content">
                 <ion-text class="stat-label"><p>Time Elapsed</p></ion-text>
                 <ion-row class="ion-align-items-center ion-nowrap stat-row-inner">
                   <span class="stat-icon icon-orange">
@@ -117,7 +117,7 @@ const progressColor = computed(() => {
           <!-- Current -->
           <ion-col size="6">
             <ion-card class="stat-card">
-              <ion-card-content>
+              <ion-card-content class="card-content">
                 <ion-text class="stat-label"><p>Current</p></ion-text>
                 <ion-row class="ion-align-items-center ion-nowrap stat-row-inner">
                   <span class="stat-icon icon-green">
@@ -135,7 +135,7 @@ const progressColor = computed(() => {
           <!-- Voltage -->
           <ion-col size="6">
             <ion-card class="stat-card">
-              <ion-card-content>
+              <ion-card-content class="card-content">
                 <ion-text class="stat-label"><p>Voltage</p></ion-text>
                 <ion-row class="ion-align-items-center ion-nowrap stat-row-inner">
                   <span class="stat-icon icon-blue">
@@ -154,7 +154,7 @@ const progressColor = computed(() => {
           <!-- Energy -->
           <ion-col size="6">
             <ion-card class="stat-card">
-              <ion-card-content>
+              <ion-card-content class="card-content">
                 <ion-text class="stat-label"><p>Energy</p></ion-text>
                 <ion-row class="ion-align-items-center ion-nowrap stat-row-inner">
                   <span class="stat-icon icon-red">
@@ -173,7 +173,7 @@ const progressColor = computed(() => {
         <ion-row>
           <ion-col size="12">
             <ion-card class="stat-card">
-              <ion-card-content>
+              <ion-card-content class="card-content">
                 <ion-text class="stat-label"><p>Estimated Cost</p></ion-text>
                 <ion-row class="ion-align-items-center ion-nowrap stat-row-inner">
                   <span class="stat-icon icon-yellow">
@@ -352,8 +352,11 @@ const progressColor = computed(() => {
   background: #F8FAFC;
   box-shadow: none;
   border-radius: 12px;
+  padding: 0;
 }
-
+.card-content{
+  padding: 10px;
+}
 ion-card-content {
   padding: 16px;
 }
@@ -433,10 +436,11 @@ ion-card-content {
   border-radius: 12px;
   background: white;
   width: 100%;
+  padding: 10px;
 }
 
 .warning-content {
-  padding: 12px;
+  padding: 0;
   display: flex;
   align-items: center;
   height: 100%;

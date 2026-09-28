@@ -90,7 +90,6 @@ function onClick(event) {
 }
 </script>
 
-
 <template>
   <template v-if="!hidden">
     <!-- back link -->

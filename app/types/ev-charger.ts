@@ -60,3 +60,12 @@ export interface SessionHistoryParams {
   dateTo?: string;
   [key: string]: any;
 }
+
+export type HistoryItem = {
+  id: number;
+  title: string;
+  datetime: string;
+  dateGroup: string;
+  points: number;
+  type: 'earned' | 'spend';
+};

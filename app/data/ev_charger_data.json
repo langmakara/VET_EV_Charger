@@ -16,7 +16,7 @@
   "nearbyStations": [
     {
       "id": 1,
-      "name": "VET - Pursat",
+      "name": "VET - Pursat Bus Station",
       "status": "Open",
       "type": "Bus Station",
       "image": "/img/vet-pursat.svg",
@@ -66,13 +66,13 @@
         },
         {
           "type": "telegram",
-          "icon": "telegram",
-          "colorClass": "bg-blue-btn"
+          "icon": "/icons/telegram.svg",
+          "colorClass": "bg-transparent"
         },
         {
           "type": "messenger",
-          "icon": "messenger",
-          "colorClass": "bg-messenger-btn"
+          "icon": "/icons/messenger.svg",
+          "colorClass": "bg-transparent"
         }
       ]
     },
@@ -126,13 +126,13 @@
         },
         {
           "type": "telegram",
-          "icon": "telegram",
-          "colorClass": "bg-blue-btn"
+          "icon": "/icons/telegram.svg",
+          "colorClass": "bg-transparent"
         },
         {
           "type": "messenger",
-          "icon": "messenger",
-          "colorClass": "bg-messenger-btn"
+          "icon": "/icons/messenger.svg",
+          "colorClass": "bg-transparent"
         }
       ]
     },
@@ -186,13 +186,13 @@
         },
         {
           "type": "telegram",
-          "icon": "telegram",
-          "colorClass": "bg-blue-btn"
+          "icon": "/icons/telegram.svg",
+          "colorClass": "bg-transparent"
         },
         {
           "type": "messenger",
-          "icon": "messenger",
-          "colorClass": "bg-messenger-btn"
+          "icon": "/icons/messenger.svg",
+          "colorClass": "bg-transparent"
         }
       ]
     }
@@ -216,5 +216,113 @@
       "description": "New solid state batteries promise double the range and half the charging time.",
       "image": "/img/blue_ev_charging.jpg"
     }
+  ],
+  "membershipBenefits": [
+    {
+      "id": 1,
+      "level": "Level 1: Basic Member",
+      "isCurrentTier": false,
+      "perks": [
+        {
+          "text": "Base Charging Discount: Standard network rates (no baseline discount)."
+        },
+        {
+          "text": "In-App Perks:",
+          "subItems": [
+            "Real-time charger availability tracking and route planning.",
+            "Basic digital receipt and carbon footprint tracking history."
+          ]
+        },
+        {
+          "text": "Community: Access to basic community forums and crowdsourced station reviews."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "level": "Tier 2: Silver Member",
+      "isCurrentTier": false,
+      "perks": [
+        {
+          "text": "Base Charging Discount: 2% off per kWh on all standard chargers."
+        },
+        {
+          "text": "In-App Perks:",
+          "subItems": [
+            "Advanced Filter: Filter stations by real-time amenities (e.g., cafes, restrooms, Wi-Fi nearby).",
+            "The 5-Minute Hold: Remotely reserve an open charger for up to 5 minutes while driving toward it."
+          ]
+        },
+        {
+          "text": "Rewards: Earn 1× reward points per dollar spent, redeemable for charging credits."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "level": "Tier 3: Gold Member",
+      "isCurrentTier": false,
+      "perks": [
+        {
+          "text": "Base Charging Discount: 5% off per kWh on all standard chargers."
+        },
+        {
+          "text": "In-App Perks:",
+          "subItems": [
+            "The 15-Minute Hold: Remotely reserve an open charger for up to 15 minutes.",
+            "Monthly Usage Analytics: Get detailed reports on your charging habits and savings."
+          ]
+        },
+        {
+          "text": "Rewards: Earn 2× reward points per dollar spent, redeemable for charging credits."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "level": "Tier 4: Platinum Member",
+      "isCurrentTier": true,
+      "perks": [
+        {
+          "text": "Base Charging Discount: 10% off per kWh on all standard chargers."
+        },
+        {
+          "text": "In-App Perks:",
+          "subItems": [
+            "Priority Customer Support: 24/7 dedicated hotline for Platinum members.",
+            "Free idle time: Up to 30 minutes free idle time after full charge."
+          ]
+        },
+        {
+          "text": "Rewards: Earn 3× reward points per dollar spent, redeemable for charging credits."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "level": "Tier 5: Diamond Member",
+      "isCurrentTier": false,
+      "perks": [
+        {
+          "text": "Base Charging Discount: 20% off per kWh on all standard chargers."
+        },
+        {
+          "text": "In-App Perks:",
+          "subItems": [
+            "Exclusive Access: Access to Diamond-only high-speed chargers during peak hours.",
+            "Dedicated Account Manager: Personalized support for your EV charging needs.",
+            "Roadside Assistance: Free towing up to 50km if you run out of battery."
+          ]
+        },
+        {
+          "text": "Rewards: Earn 5× reward points per dollar spent, redeemable for partner rewards."
+        }
+      ]
+    }
+  ],
+  "pointsHistory": [
+    { "id": 1, "title": "Top-up",   "datetime": "14 Jan 2025, 4:00 PM", "dateGroup": "Today",        "points":    50, "type": "earned" },
+    { "id": 2, "title": "Station 1","datetime": "14 Jan 2025, 4:30 PM", "dateGroup": "Today",        "points": -2000, "type": "spend"  },
+    { "id": 3, "title": "Station 1","datetime": "14 Jan 2025, 4:00 PM", "dateGroup": "14 Jan 2025",  "points": -2000, "type": "spend"  }
   ]
 }

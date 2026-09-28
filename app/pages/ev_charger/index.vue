@@ -55,7 +55,7 @@ const closeStationModal = () => {
     <ion-content class="ion-padding" :fullscreen="true">
       
       <!-- Charging Card -->
-      <AppCard bgColor="linear-gradient(135deg, #f8e9e1, #ead1c5)">
+      <AppCard class="ChargingCard" bgColor="linear-gradient(135deg, #f8e9e1, #ead1c5)" >
         <ion-card-content>
           <div class="card-header">
             <div class="icon-circle">
@@ -75,7 +75,7 @@ const closeStationModal = () => {
       </AppCard>
 
       <!-- Points Card -->
-      <AppCard bgColor="linear-gradient(135deg, #f8e9e1, #ead1c5)" customClass="points-card" button="true" @click="handlePointsClick">
+      <AppCard class="ChargingCard" bgColor="linear-gradient(135deg, #f8e9e1, #ead1c5)" customClass="points-card" button="true" @click="handlePointsClick">
         <img src="/img/Crown.svg" alt="Crown" class="bg-crown" />
         <ion-card-content class="points-card-content">
           <div class="points-header">
@@ -151,16 +151,24 @@ const closeStationModal = () => {
   margin-top: 16px;
 }
 
+.action-card{
+  padding: 0;
+}
+
 /* Horizontal Scroll Container */
 .station-scroll-container {
   display: flex;
   overflow-x: auto;
-  gap: 12px;
+  gap: 10px;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 .station-scroll-container::-webkit-scrollbar {
   display: none;
+}
+
+.ChargingCard {
+  padding: 10px;
 }
 
 /* Charging Card Styles */
@@ -261,7 +269,7 @@ ion-card-content {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 12px;
+  padding: 10px;
 }
 .action-icon-wrapper {
   width: 32px;

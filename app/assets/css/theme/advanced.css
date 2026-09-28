@@ -1,5 +1,5 @@
 :root {
-  --ion-padding: 10px;
+  --ion-padding: 20px;
 }
 
 ion-page {
@@ -81,4 +81,4 @@ ion-toolbar {
 .ion-text-center ion-spinner {
   display: block;
   margin: 0 auto;
-}
+}

@@ -1,15 +1,26 @@
 <script setup lang="ts">
   import { IonPage, IonContent, IonHeader, IonToolbar, IonButtons, IonBackButton } from '@ionic/vue'
-  import { computed } from 'vue'
+  import { ref, computed } from 'vue'
+  import IconButton from '../../components/Button/IconButton.vue'
+  import Icon from '~/components/Icon/icon.vue'
+  import history from './history.vue'
 
   const currentPoints = 190
   const maxPoints = 500
+  const headerIsActive = ref(false)
 
   const radius = 40
   const circumference = 2 * Math.PI * radius
   const progressOffset = computed(() => {
     return circumference - (circumference * currentPoints) / maxPoints
   })
+
+  const headerBenefit = () => {
+    navigateTo('/membership/membershipBenefit')
+  }
+  const headerHistory = () => {
+    headerIsActive.value = true
+  }
 </script>
 
 <template>
@@ -66,6 +77,19 @@
     </ion-header>
 
     <ion-content :fullscreen="true" class="ion-padding">
+      <div v-if="!headerIsActive" class="membership-benefit" @click="headerBenefit">
+        <h2 class="title"><Icon name="user-plus" size="20px" />Membership Benefit</h2>
+        <div class="view-all" @click="$emit('view-all')" role="button" tabindex="0">
+          <Icon name="chevron-right" class="chevron-icon" size="20px" />
+        </div>
+      </div>
+      <div v-if="!headerIsActive" class="membership-benefit" @click="headerHistory">
+        <h2 class="title"><Icon name="history-check" size="20px" />History</h2>
+        <div class="view-all" @click="$emit('view-all')" role="button" tabindex="0">
+          <Icon name="chevron-right" class="chevron-icon" size="20px" />
+        </div>
+      </div>
+      <history v-if="headerIsActive" />
     </ion-content>
   </ion-page>
 </template>
@@ -90,7 +114,7 @@
   .membership-card {
     display: flex;
     align-items: center;
-    padding: 80px 10px 30px;
+    padding: 70px 10px 30px;
     position: relative;
     z-index: 1;
   }
@@ -196,5 +220,23 @@
 
   .days-left {
     color: #00a651;
+  }
+
+  .membership-benefit {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 4px 10px 4px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .title {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Adds space between icon and text */
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f232d;
   }
 </style>
