@@ -1,8 +1,6 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue'
   import {
-    IonPage,
-    IonContent,
     IonGrid,
     IonRow,
     IonCol,
@@ -37,8 +35,8 @@
 </script>
 
 <template>
-  <ion-page class="pagePadding">
-    <ion-content :fullscreen="true" class="ion-padding">
+  <div class="history-container">
+    <div class="history-header-tabs">
       <ion-grid>
         <ion-row class="tab-row">
           <ion-col>
@@ -73,8 +71,10 @@
           </ion-col>
         </ion-row>
       </ion-grid>
+    </div>
 
-      <!-- History List grouped by date -->
+    <!-- History List grouped by date -->
+    <div class="history-list-scroll">
       <ion-list
         v-for="(items, dateLabel) in groupedData"
         :key="dateLabel"
@@ -123,21 +123,42 @@
       <ion-text v-if="Object.keys(groupedData).length === 0" class="empty-state">
         <p>No history found.</p>
       </ion-text>
-    </ion-content>
-  </ion-page>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-  .pagePadding {
-    padding-top: 195px;
+  .history-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    width: 100%;
   }
+
+  .history-header-tabs {
+    flex-shrink: 0;
+    padding: 0 11px;
+  }
+
   .tab-row {
     padding-top: 10px;
     margin-bottom: 4px;
   }
 
+  .history-list-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    padding: 0 16px 24px 16px;
+  }
+  
+
   .history-group {
-    margin-top: 16px;
+    margin-top: 12px;
     background: transparent;
     padding: 0;
   }
@@ -240,11 +261,17 @@
     text-transform: capitalize;
     --background: #e5e7eb;
     --color: #6c7280;
+    --background-hover: #ffe4cc;
+    --color-hover: #c44e05;
+    --background-hover-opacity: 1;
   }
 
   ion-button.tab-btn.active {
     --background: #fff3e6;
     --color: #df5e0e;
+    --background-hover: #ffe4cc;
+    --color-hover: #c44e05;
+    --background-hover-opacity: 1;
     font-weight: 600;
   }
 </style>

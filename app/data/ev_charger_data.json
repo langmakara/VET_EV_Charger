@@ -321,8 +321,25 @@
     }
   ],
   "pointsHistory": [
-    { "id": 1, "title": "Top-up",   "datetime": "14 Jan 2025, 4:00 PM", "dateGroup": "Today",        "points":    50, "type": "earned" },
-    { "id": 2, "title": "Station 1","datetime": "14 Jan 2025, 4:30 PM", "dateGroup": "Today",        "points": -2000, "type": "spend"  },
-    { "id": 3, "title": "Station 1","datetime": "14 Jan 2025, 4:00 PM", "dateGroup": "14 Jan 2025",  "points": -2000, "type": "spend"  }
+    { "id": 1, "title": "Top-up", "datetime": "14 Jan 2025, 5:15 PM", "dateGroup": "Today", "points": 100, "type": "earned" },
+    { "id": 2, "title": "Station 1 - Pursat", "datetime": "14 Jan 2025, 4:30 PM", "dateGroup": "Today", "points": -2000, "type": "spend" },
+    { "id": 3, "title": "Top-up", "datetime": "14 Jan 2025, 10:00 AM", "dateGroup": "Today", "points": 50, "type": "earned" },
+    { "id": 4, "title": "Station 2 - Phnom Penh", "datetime": "13 Jan 2025, 6:45 PM", "dateGroup": "Yesterday", "points": -1500, "type": "spend" },
+    { "id": 5, "title": "Daily Check-in Reward", "datetime": "13 Jan 2025, 8:20 AM", "dateGroup": "Yesterday", "points": 20, "type": "earned" },
+    { "id": 6, "title": "Station 1 - Pursat", "datetime": "12 Jan 2025, 8:00 PM", "dateGroup": "12 Jan 2025", "points": -1800, "type": "spend" },
+    { "id": 7, "title": "Top-up Bonus", "datetime": "12 Jan 2025, 2:15 PM", "dateGroup": "12 Jan 2025", "points": 200, "type": "earned" },
+    { "id": 8, "title": "Station 3 - Kampong Chhnang", "datetime": "11 Jan 2025, 5:30 PM", "dateGroup": "11 Jan 2025", "points": -2200, "type": "spend" },
+    { "id": 9, "title": "Referral Reward", "datetime": "11 Jan 2025, 11:00 AM", "dateGroup": "11 Jan 2025", "points": 150, "type": "earned" },
+    { "id": 10, "title": "Station 2 - Phnom Penh", "datetime": "10 Jan 2025, 7:10 PM", "dateGroup": "10 Jan 2025", "points": -1200, "type": "spend" },
+    { "id": 11, "title": "Top-up", "datetime": "10 Jan 2025, 1:45 PM", "dateGroup": "10 Jan 2025", "points": 80, "type": "earned" },
+    { "id": 12, "title": "Station 4 - Siem Reap", "datetime": "08 Jan 2025, 3:30 PM", "dateGroup": "08 Jan 2025", "points": -2500, "type": "spend" },
+    { "id": 13, "title": "Eco Driver Weekly Bonus", "datetime": "08 Jan 2025, 9:00 AM", "dateGroup": "08 Jan 2025", "points": 100, "type": "earned" },
+    { "id": 14, "title": "Station 1 - Pursat", "datetime": "06 Jan 2025, 6:00 PM", "dateGroup": "06 Jan 2025", "points": -1600, "type": "spend" },
+    { "id": 15, "title": "Top-up", "datetime": "06 Jan 2025, 11:30 AM", "dateGroup": "06 Jan 2025", "points": 120, "type": "earned" },
+    { "id": 16, "title": "Station 5 - Sihanoukville", "datetime": "04 Jan 2025, 4:15 PM", "dateGroup": "04 Jan 2025", "points": -3000, "type": "spend" },
+    { "id": 17, "title": "New Year Special Reward", "datetime": "01 Jan 2025, 10:00 AM", "dateGroup": "01 Jan 2025", "points": 500, "type": "earned" },
+    { "id": 18, "title": "Station 2 - Phnom Penh", "datetime": "30 Dec 2024, 8:20 PM", "dateGroup": "30 Dec 2024", "points": -1400, "type": "spend" },
+    { "id": 19, "title": "Top-up", "datetime": "29 Dec 2024, 2:00 PM", "dateGroup": "29 Dec 2024", "points": 90, "type": "earned" },
+    { "id": 20, "title": "Welcome Tier Reward", "datetime": "25 Dec 2024, 9:00 AM", "dateGroup": "25 Dec 2024", "points": 300, "type": "earned" }
   ]
 }

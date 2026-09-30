@@ -30,6 +30,7 @@ const handleViewDetail = () => {
 const handleAction = (action: any) => {
   console.log('Clicked action:', action.label);
   // You can route to different pages based on action.label here
+  navigateTo('/ev_charger/MapStation');
 };
 
 const handlePointsClick = () => {
@@ -202,7 +203,7 @@ const closeStationModal = () => {
   justify-content: space-between;
 }
 .car-image {
-  width: 230px;
+  width: 210px;
   height: 100px;
   object-fit: cover;
   mix-blend-mode: multiply;
