@@ -28,9 +28,7 @@ const handleViewDetail = () => {
 };
 
 const handleAction = (action: any) => {
-  console.log('Clicked action:', action.label);
-  // You can route to different pages based on action.label here
-  navigateTo('/ev_charger/MapStation');
+  navigateTo(action.path);
 };
 
 const handlePointsClick = () => {
@@ -112,7 +110,7 @@ const closeStationModal = () => {
       <SectionHeader title="Nearby Station" @view-all="() => console.log('View all stations clicked')" />
       <div class="station-scroll-container">
         <StationCard 
-          v-for="station in nearbyStations" 
+          v-for="station in nearbyStations.slice(0, 5)" 
           :key="station.id" 
           :station="station" 
           @click="handleStationClick(station)" 

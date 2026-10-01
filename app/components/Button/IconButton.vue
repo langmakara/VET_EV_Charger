@@ -61,6 +61,7 @@ const configs = computed(() => ({
   'upload-receipt': { icon: 'receipt', iconLabel: t('label.upload_receipt'), colorScheme: 'green', variant: 'clear', iconOnly: true },
   badge: { variant: 'badge-icon' },
   back: { variant: 'back-link' },
+  direction: { icon: 'navigate', iconLabel: 'Direction', colorScheme: 'gray', iconOnly: true },
 }))
 
 const config = computed(() => configs.value[props.buttonType] || {})

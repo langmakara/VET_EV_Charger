@@ -18,16 +18,12 @@
 
 <template>
   <ion-page mode="ios">
-    <ion-content :fullscreen="true" class="ion-padding">
+    <ion-content :fullscreen="true" class="page-content">
       <div v-for="benefit in benefits" :key="benefit.id" class="benefit-header">
         <div v-if="benefit.isCurrentTier" class="ribbon-wrapper">
           <div class="ribbon">You are here</div>
         </div>
-        <AppCard
-          bgColor="#F3F3F3"
-          class="benefit-card"
-        >
-
+        <AppCard bgColor="#F3F3F3" class="benefit-card">
           <ion-card-header>
             <ion-text>
               <h4 class="benefit-name">{{ benefit.level }}</h4>
@@ -52,6 +48,12 @@
 </template>
 
 <style scoped>
+  .page-content {
+    --padding-top: 20px;
+    --padding-bottom: 20px;
+    --padding-start: 20px;
+    --padding-end: 20px;
+  }
   ion-card-header {
     padding: 16px 16px 8px 16px;
   }

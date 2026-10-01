@@ -33,12 +33,12 @@ defineProps({
           </ion-row>
           
           <ion-row class="info-row">
-            <ion-col size="3" class="info-item">
+            <ion-col size="4" class="info-item">
               <Icon name="plug" class="info-icon" size="14px" />
               <ion-text color="medium">DC </ion-text>
               <ion-text class="highlight">{{ station.dc }}</ion-text>
             </ion-col>
-            <ion-col size="9" class="info-item">
+            <ion-col size="8" class="info-item">
               <Icon name="dollar" class="info-icon" size="14px" />
               <ion-text color="medium">Start from </ion-text>
               <ion-text class="highlight">{{ station.price }}</ion-text>
@@ -46,12 +46,12 @@ defineProps({
           </ion-row>
           
           <ion-row class="info-row">
-            <ion-col size="4" class="info-item">
+            <ion-col size="4" size-md="4" size-lg="4" class="info-item">
               <Icon name="gbt" class="info-icon" size="14px" />
               <ion-text color="medium">GB/T </ion-text>
               <ion-text class="highlight">{{ station.gbt }}</ion-text>
             </ion-col>
-            <ion-col size="8" class="info-item">
+            <ion-col size="8" size-md="8" size-lg="8" class="info-item">
               <Icon name="ccs2" class="info-icon" size="14px" />
               <ion-text color="medium">CCS2 (DC) </ion-text>
               <ion-text class="highlight">{{ station.ccs2 }}</ion-text>
@@ -75,8 +75,8 @@ defineProps({
 
 <style scoped>
 .station-card {
-  width: 350px;
-  min-width: 315px;
+  width: 360px;
+  min-width: 330px;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
   box-shadow: none;
@@ -115,7 +115,7 @@ defineProps({
 }
 
 .info-grid {
-  padding: 8px 10px;
+  padding: 5px;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -164,6 +164,8 @@ ion-col {
 
 .info-icon {
   color: #64748b;
+  min-width: 12px;
+  min-height: 12px;
 }
 
 .highlight {
