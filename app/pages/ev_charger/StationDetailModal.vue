@@ -51,11 +51,13 @@
         </div>
         <div class="modal-header-stats">
           <div class="stat-pill">
-            <Icon name="station" class="stat-icon" size="14px" /> {{ station?.stationCount }}
+            <img src="/icons/Vector.svg" class="stat-icon" style="width: 14px; height: 14px" />{{
+              station?.stationCount
+            }}
             <span class="stat-divider">|</span>
             <Icon name="plug" class="stat-icon" size="14px" /> {{ station?.plugCount }}
             <span class="stat-divider">|</span>
-            <ion-icon :icon="locationOutline" class="stat-icon" /> {{ station?.distance }}
+            <img src="/icons/way.svg" class="stat-icon" style="width: 14px; height: 14px" /> {{ station?.distance }}
           </div>
         </div>
       </div>
@@ -97,7 +99,12 @@
             <div class="connector-row">
               <div class="connector-left">
                 <div class="connector-icon-wrapper">
-                  <Icon :name="connector.icon" size="24px" />
+                  <img
+                    v-if="connector.icon.includes('.svg')"
+                    :src="connector.icon"
+                    style="width: 24px; height: 24px"
+                  />
+                  <Icon v-else :name="connector.icon" size="24px" />
                 </div>
                 <span class="connector-name">{{ connector.name }}</span>
               </div>

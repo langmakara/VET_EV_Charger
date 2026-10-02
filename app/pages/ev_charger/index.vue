@@ -120,7 +120,12 @@ onIonViewWillLeave(() => {
             <AppCard customClass="action-card" button="true" @click="handleAction(action)">
               <ion-card-content class="action-content">
                 <div class="action-icon-wrapper">
-                  <Icon :name="action.icon" class="action-icon" size="18px" />
+                  <img
+                    v-if="action.icon.includes('.svg')"
+                    :src="action.icon"
+                    style="width: 18px; height: 18px;"
+                  />
+                  <Icon v-else :name="action.icon" class="action-icon" size="18px" />
                 </div>
                 <div class="action-label">{{ action.label }}</div>
               </ion-card-content>
