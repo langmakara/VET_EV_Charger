@@ -147,6 +147,11 @@ const icons: Record<string, IconDef> = {
     viewBox: "0 0 24 24",
     ...defaultFill,
     body: '<path d="M12 2L19.07 19.07L12 15.93L4.93 19.07L12 2Z" />'
+  },
+  'scan': {
+    viewBox: "0 0 24 24",
+    ...defaultOutline,
+    body: '<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" /><line x1="3" y1="12" x2="21" y2="12" />'
   }
 };
 

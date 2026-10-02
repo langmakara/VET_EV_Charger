@@ -62,6 +62,7 @@ const configs = computed(() => ({
   badge: { variant: 'badge-icon' },
   back: { variant: 'back-link' },
   direction: { icon: 'navigate', iconLabel: 'Direction', colorScheme: 'gray', iconOnly: true },
+  scan: { icon: 'scan', iconLabel: t('label.scan'), colorScheme: 'blue', iconOnly: true },
 }))
 
 const config = computed(() => configs.value[props.buttonType] || {})

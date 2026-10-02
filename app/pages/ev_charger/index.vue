@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import {
   IonPage,
   IonContent,
@@ -10,7 +11,8 @@ import {
   IonGrid,
   IonRow,
   IonCol,
-  IonCard
+  IonCard,
+  onIonViewWillLeave
 } from "@ionic/vue";
 import AppCard from "~/components/Card/AppCard.vue";
 import AppButton from "~/components/Button/AppButton.vue";
@@ -38,15 +40,36 @@ const handlePointsClick = () => {
 const isStationModalOpen = ref(false);
 const selectedStation = ref<any>(null);
 
+const route = useRoute();
+const router = useRouter();
+
 const handleStationClick = (station: any) => {
   selectedStation.value = station;
   isStationModalOpen.value = true;
+  router.push({ hash: '#station-modal' });
 };
 
 const closeStationModal = () => {
   isStationModalOpen.value = false;
   selectedStation.value = null;
+  if (route.hash === '#station-modal') {
+    router.back();
+  }
 };
+
+watch(
+  () => route.hash,
+  (newHash) => {
+    if (newHash !== '#station-modal' && isStationModalOpen.value) {
+      isStationModalOpen.value = false;
+      selectedStation.value = null;
+    }
+  }
+);
+
+onIonViewWillLeave(() => {
+  closeStationModal();
+});
 </script>
 
 <template>
