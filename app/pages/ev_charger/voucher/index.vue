@@ -1,7 +1,8 @@
 <script setup lang="ts">
   import AppInputField from '~/components/Controls/AppInputField.vue'
   import { IonCol, IonGrid, IonRow } from '@ionic/vue'
-import IconButton from '~/components/Button/IconButton.vue';
+  import IconButton from '~/components/Button/IconButton.vue';
+  import VoucherCard from './voucherCard.vue';
 </script>
 
 <template>
@@ -17,6 +18,8 @@ import IconButton from '~/components/Button/IconButton.vue';
           </ion-col>
         </ion-row>
       </ion-grid>
+
+      <VoucherCard />
     </ion-content>
   </ion-page>
 </template>
