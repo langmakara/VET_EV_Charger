@@ -1,22 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import AppCard from '~/components/Card/AppCard.vue';
+import type { Voucher } from '~/types/ev-charger';
 
-// Reactive sample data matching the original coupon design
-const discountRate = ref('5.0%');
-const conditions = ref('5% off with any charge');
-const voucherLabel = ref('Voucher Code');
-const voucherExpiry = ref('Valid Till - 31 December 2024');
-const isActive = ref(true);
+defineProps<Voucher>();
 </script>
 
 <template>
-  <!-- Using standard wrapper adjustments to fit AppCard custom structure safely -->
-  <AppCard class="voucher-card-wrapper">
-    <ion-grid class="voucher-grid">
-      <ion-row class="voucher-row">
-        
-        <!-- Left Section (Orange Discount Badge Area) -->
+  <AppCard class="voucher-card">
+    <ion-grid class="voucher-card">
+      <ion-row>
         <ion-col class="voucher-header" size="4">
           <div class="badge-content">
             <ion-text class="discount-rate">{{ discountRate }}</ion-text>
@@ -25,58 +17,40 @@ const isActive = ref(true);
             <ion-text class="condition-txt">{{ conditions }}</ion-text>
           </div>
         </ion-col>
-        
-        <!-- Right Section (White Text Details Area) -->
+
         <ion-col class="voucher-body" size="8">
           <div class="details-content">
             <div class="top-meta">
               <ion-text class="title-text">{{ voucherLabel }}</ion-text>
-              <span v-if="isActive" class="status-indicator">
-                <span class="status-dot"></span>Active
+              <span class="status-indicator" :class="isActive ? 'is-active' : 'is-inactive'">
+                <span class="status-dot"></span>{{ isActive ? 'Active' : 'Inactive' }}
               </span>
             </div>
-            
             <ion-text class="highlight-rate">{{ discountRate }} OFF</ion-text>
             <ion-text class="expiry-text">{{ voucherExpiry }}</ion-text>
           </div>
         </ion-col>
-
       </ion-row>
     </ion-grid>
   </AppCard>
 </template>
 
 <style scoped>
-/* Reset padding inside your wrapper to ensure the edges flush correctly */
-.voucher-card-wrapper {
-  padding: 0;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.voucher-grid {
+.voucher-card {
   padding: 0px;
+  box-shadow: none;
 }
 
-.voucher-row {
-  display: flex;
-  align-items: stretch; /* Forces left and right columns to have identical height */
-}
-
-/* 
-  Left Side styling 
-  Replaces the invalid border-radius with modern radial gradient clipping masks 
-*/
+/* ---------- Left (orange) side ---------- */
 .voucher-header {
-  background-color: #e66a15; /* Replaced blueviolet with the authentic ticket orange */
+  background-color: #e66a15;
   padding: var(--ion-padding);
-  display: flex;
+  /* display: flex; */
   align-items: center;
   justify-content: center;
   position: relative;
-  
-  /* Creates perfectly smooth inward circle cutouts on the top-right and bottom-right edges */
+
+  /* Inward circle cutouts on the top-right and bottom-right edges */
   mask-image: radial-gradient(circle at 100% 0px, transparent 8px, white 0),
               radial-gradient(circle at 100% 100%, transparent 8px, white 0);
   mask-composite: intersect;
@@ -85,52 +59,30 @@ const isActive = ref(true);
   -webkit-mask-composite: destination-in;
 }
 
-.badge-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  color: #ffffff;
-}
-
-.discount-rate {
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.discount-lbl {
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.badge-divider {
-  width: 80%;
-  border: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.4);
-  margin: 6px 0;
-}
-
-.condition-txt {
-  font-size: 10px;
-  line-height: 1.2;
-  opacity: 0.9;
-}
-
-/* Right Side styling */
+/* ---------- Right (details) side ---------- */
 .voucher-body {
+  background-color: #f7f4f3;
   padding: var(--ion-padding);
-  background-color: #ffffff;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: stretch;          /* details-content fills the full height */
+  justify-content: flex-start;
+  position: relative;
+  min-height: 110px;             /* gives spare height to push the expiry into */
+
+  /* Inward circle cutouts on the top-left and bottom-left edges */
+  mask-image: radial-gradient(circle at 0% 0px, transparent 8px, white 0),
+              radial-gradient(circle at 0% 100%, transparent 8px, white 0);
+  mask-composite: intersect;
+  -webkit-mask-image: radial-gradient(circle at 0% 0px, transparent 8px, white 0),
+                      radial-gradient(circle at 0% 100%, transparent 8px, white 0);
+  -webkit-mask-composite: destination-in;
 }
 
 .details-content {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  justify-content: space-between;
+  width: 100%;
+  /* no justify-content here: margin-top: auto on the expiry handles the bottom */
 }
 
 .top-meta {
@@ -145,32 +97,85 @@ const isActive = ref(true);
   color: #333333;
 }
 
-/* Green Active State Dot */
 .status-indicator {
   display: flex;
   align-items: center;
-  font-size: 11px;
-  color: #2e7d32;
+  justify-content: flex-end;
+  font-size: 14px;
   font-weight: 500;
+}
+
+.status-indicator.is-active {
+  color: #2e7d32;
+}
+
+.status-indicator.is-inactive {
+  color: #636363;
 }
 
 .status-dot {
   width: 6px;
   height: 6px;
-  background-color: #2e7d32;
   border-radius: 50%;
   margin-right: 4px;
 }
 
+.status-indicator.is-active .status-dot {
+  background-color: #2e7d32;
+}
+
+.status-indicator.is-inactive .status-dot {
+  background-color: #636363;
+}
+
 .highlight-rate {
+  display: block;
   font-size: 18px;
   font-weight: 700;
   color: #e66a15;
-  margin: 4px 0;
+  margin: 8px 0 8px;
+  width: 100%;
 }
 
 .expiry-text {
-  font-size: 12px;
+  display: flex;
+  justify-content: flex-start;   /* text on the left; use flex-end for right */
+  margin-top: auto;              /* pins expiry to the bottom of voucher-body */
+  font-size: 14px;
   color: #888888;
+}
+
+/* ---------- Left badge content ---------- */
+.badge-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  color: #ffffff;
+}
+
+.badge-divider {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
+  margin: 6px 0;
+}
+
+.discount-rate {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.1;
+  padding-left: 5px;
+}
+
+.discount-lbl {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.condition-txt {
+  font-size: 14px;
+  line-height: 1.2;
+  opacity: 0.9;
 }
 </style>

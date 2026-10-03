@@ -1,4 +1,33 @@
 {
+  "vouchers": [
+    {
+      "id": 1,
+      "discountRate": "5.0%",
+      "conditions": "5% off with any charge",
+      "voucherLabel": "Voucher Code",
+      "voucherExpiry": "Valid Till - 31 December 2024",
+      "voucherDescription": "Voucher Description",
+      "isActive": true
+    },
+    {
+      "id": 2,
+      "discountRate": "10.0%",
+      "conditions": "10% off for first charge",
+      "voucherLabel": "Welcome Bonus",
+      "voucherExpiry": "Valid Till - 31 March 2025",
+      "voucherDescription": "Exclusive voucher for new users",
+      "isActive": true
+    },
+    {
+      "id": 3,
+      "discountRate": "2.0%",
+      "conditions": "2% off for charging over 50kWh",
+      "voucherLabel": "Heavy User",
+      "voucherExpiry": "Valid Till - 30 June 2025",
+      "voucherDescription": "For long distance travelers",
+      "isActive": false
+    }
+  ],
   "actions": [
     {
       "icon": "/icons/Vector.svg",

@@ -3,6 +3,9 @@
   import { IonCol, IonGrid, IonRow } from '@ionic/vue'
   import IconButton from '~/components/Button/IconButton.vue';
   import VoucherCard from './voucherCard.vue';
+  import evData from '~/data/ev_charger_data.json';
+  
+  const vouchers = evData.vouchers;
 </script>
 
 <template>
@@ -19,7 +22,18 @@
         </ion-row>
       </ion-grid>
 
-      <VoucherCard />
+      <div class="vouchers-container">
+        <VoucherCard 
+          v-for="voucher in vouchers" 
+          :key="voucher.id"
+          :discountRate="voucher.discountRate"
+          :conditions="voucher.conditions"
+          :voucherLabel="voucher.voucherLabel"
+          :voucherExpiry="voucher.voucherExpiry"
+          :voucherDescription="voucher.voucherDescription"
+          :isActive="voucher.isActive"
+        />
+      </div>
     </ion-content>
   </ion-page>
 </template>
@@ -29,6 +43,14 @@
   display: flex;
   align-items: flex-end;
   padding-bottom: 2px;
+  padding-right: 0;
 }
 
+.vouchers-container {
+  display: flex;
+  flex-direction: column;
+}
+.voucher-grid {
+  padding: 10px 0;
+}
 </style>

@@ -145,7 +145,7 @@ const displayErrorMessage = computed(() => {
   height: 48px;
   background-color: #ffffff;
   border: 1px solid var(--app-color-border);
-  border-radius: 5px;
+  border-radius: 10px;
   padding: 0 var(--ion-padding);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: border-color 0.2s ease;

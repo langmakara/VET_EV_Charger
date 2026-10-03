@@ -69,3 +69,13 @@ export type HistoryItem = {
   points: number;
   type: 'earned' | 'spend';
 };
+
+export interface Voucher {
+  id?: number | string;
+  discountRate: string;
+  conditions: string;
+  voucherLabel: string;
+  voucherExpiry: string;
+  voucherDescription?: string;
+  isActive: boolean;
+}
