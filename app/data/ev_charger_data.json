@@ -703,19 +703,22 @@
       "id": 1,
       "title": "New Charging Station!",
       "description": "Explore the cutting-edge features and benefits of the Volta electric vehicle...",
-      "image": "/img/blue_ev_charging.jpg"
+      "image": "/img/blue_ev_charging.jpg",
+      "date": "14 Jan 2025, 5:15 PM"
     },
     {
       "id": 2,
       "title": "EV Subsidy Program 2026",
       "description": "Government announces new subsidies for electric vehicle owners starting this month.",
-      "image": "/img/blue_ev_charging.jpg"
+      "image": "/img/blue_ev_charging.jpg",
+      "date": "14 Jan 2025, 10:00 AM"
     },
     {
       "id": 3,
       "title": "Battery Tech Breakthrough",
       "description": "New solid state batteries promise double the range and half the charging time.",
-      "image": "/img/blue_ev_charging.jpg"
+      "image": "/img/blue_ev_charging.jpg",
+      "date": "14 Jan 2025, 5:15 PM"
     }
   ],
   "membershipBenefits": [

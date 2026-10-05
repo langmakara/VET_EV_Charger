@@ -18,7 +18,7 @@ import AppCard from "~/components/Card/AppCard.vue";
 import AppButton from "~/components/Button/AppButton.vue";
 import Icon from "~/components/Icon/icon.vue";
 import SectionHeader from "~/components/SectionHeader.vue";
-import StationDetailModal from "./StationDetailModal.vue";
+import StationDetailModal from "../../components/Modal/StationDetailModal.vue";
 import StationCard from "~/components/Card/StationCard.vue";
 
 import evChargerData from "~/data/ev_charger_data.json";
@@ -135,7 +135,7 @@ onIonViewWillLeave(() => {
       </ion-grid>
 
       <!-- Nearby Station Section -->
-      <SectionHeader title="Nearby Station" @view-all="() => console.log('View all stations clicked')" />
+      <SectionHeader title="Nearby Station" @view-all="() => navigateTo('/nearBy_Station')" />
       <div class="station-scroll-container">
         <StationCard 
           v-for="station in nearbyStations.slice(0, 5)" 
@@ -146,7 +146,7 @@ onIonViewWillLeave(() => {
       </div>
 
       <!-- News feed Section -->
-      <SectionHeader title="News feed" @view-all="() => console.log('View all news clicked')" />
+      <SectionHeader title="News feed" @view-all="() => navigateTo('/newsFeed')" />
       
       <ion-card class="news-card" v-for="news in newsFeeds" :key="news.id">
         <ion-item lines="none" class="news-item">
