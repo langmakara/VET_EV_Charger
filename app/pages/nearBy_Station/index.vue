@@ -44,7 +44,7 @@ watch(
         <StationCard
           v-for="station in stations"
           :key="station.id"
-          :station="station"
+          :station="station" 
           @click="handleStationClick(station)"
           customClass="station-card"
         />
