@@ -5,7 +5,7 @@ import { IonModal, IonButton } from '@ionic/vue';
 
 const props = defineProps<{
   isOpen: boolean;
-  type?: 'logout' | 'delete' | 'exit' | 'save' | 'activate' | 'inactivate' | 'terminate' | 'stop' | 'custom';
+  type?: 'logout' | 'delete' | 'exit' | 'save' | 'activate' | 'inactivate' | 'terminate' | 'stop' | 'voucher' | 'custom';
   name?: string;
   title?: string;
   message?: string;
@@ -75,6 +75,13 @@ const config = computed(() => {
       base.message = props.message || t('label.stop_message');
       base.color = '#E53935';
       break;
+    case 'voucher':
+      base.title = props.title || t('label.add_voucher');
+      base.message = props.message || t('label.add_voucher_message');
+      base.btnConfirm = props.labelConfirm || t('label.add_voucher_confirm');
+      base.btnCancel = props.labelCancel || t('label.cancel');
+      base.color = '#e66a15';
+      break;
   }
   
   return base;
@@ -87,13 +94,33 @@ const config = computed(() => {
       <div class="modal-body">
         <div class="icon-container">
           <slot name="icon">
-            <Icon name="info" size="64px" :color="config.color" />
+            <svg v-if="props.type === 'voucher'" width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="36" cy="36" r="36" fill="#e66a15"/>
+              <g transform="translate(36, 36) rotate(-35) translate(-21, -13)">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M3 0C1.34315 0 0 1.34315 0 3V9.5C1.933 9.5 3.5 11.067 3.5 13C3.5 14.933 1.933 16.5 0 16.5V23C0 24.6569 1.34315 26 3 26H39C40.6569 26 42 24.6569 42 23V16.5C40.067 16.5 38.5 14.933 38.5 13C38.5 11.067 40.067 9.5 42 9.5V3C42 1.34315 40.6569 0 39 0H3Z" fill="white"/>
+                <line x1="21" y1="2.5" x2="21" y2="23.5" stroke="#e66a15" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="2.5 3"/>
+              </g>
+            </svg>
+            <Icon v-else name="info" size="64px" :color="config.color" />
           </slot>
         </div>
         
         <h2 class="modal-title">{{ config.title }}</h2>
         <p class="modal-desc" v-html="config.message"></p>
-        
+        <div v-if="props.type === 'stop'" class="stopType">
+          <ion-grid>
+            <ion-row>
+              <ion-col size="auto">
+                <Icon name="info-circle" size="32px" color="#FF9800" />
+              </ion-col>
+              <ion-col class="warting-col">
+                <h2 class="warting-title">{{ $t('label.return_moneyT') }}</h2>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+          <p class="stopType-desc">{{ $t('label.return_money1') }}</p>
+          <p class="stopType-desc">{{ $t('label.return_money2') }}</p>
+        </div>
         <div class="modal-actions">
           <ion-button v-if="!hideCancel" fill="outline" class="cancel-btn" :disabled="isLoading" @click="emit('cancel')">
             {{ config.btnCancel }}
@@ -158,7 +185,7 @@ const config = computed(() => {
 .modal-desc {
   font-size: 15px;
   color: #8C99A8;
-  margin: 0 0 24px 0;
+  margin: 0 0 10px 0;
   line-height: 1.5;
 }
 
@@ -186,5 +213,35 @@ const config = computed(() => {
 .confirm-btn {
   --color: white;
   --box-shadow: none;
+}
+
+.stopType {
+  background-color: #FFF6E8;
+  padding: var(--ion-padding);
+  margin-bottom: var(--ion-padding);
+  border-radius: var(--ion-padding);
+}
+
+.warting-title {
+  text-align: start;
+  justify-content: center;
+  margin: 0;
+  margin-left: 10px;
+}
+
+.warting-col{
+  display: flex;
+  align-items: center;
+  text-align: start;
+}
+
+.stopType-desc {
+  text-align: start;
+}
+ion-grid {
+  padding: 0;
+}
+ion-col {
+  padding: 0;
 }
 </style>

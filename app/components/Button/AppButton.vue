@@ -24,14 +24,17 @@ defineProps<{
 ion-button {
   --height: 52px;
   min-height: 52px;
+  text-transform: none;
 }
 
 ion-button[size="small"] {
   --height: 36px;
   min-height: 36px;
+  font-size: var(--app-font-size-normal);
 }
 
 ion-button::part(native) {
+  text-transform: none;
   /* Subtle, premium box shadow matching iOS design */
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease-in-out;

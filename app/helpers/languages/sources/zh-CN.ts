@@ -14,6 +14,18 @@ export default {
     "ok": "确定",
     "close": "关闭"
   },
+  "label": {
+    "message": "消息",
+    "cancel": "取消",
+    "confirm": "确认",
+    "stop_message": "您真的要停止充电过程吗？",
+    "add_voucher": "添加优惠券",
+    "add_voucher_message": "您确定要添加此优惠券吗？",
+    "add_voucher_confirm": "添加优惠券",
+    "return_moneyT": "款项如何退回",
+    "return_money1": "预授权仅为临时冻结资金，并非实际扣款。系统仅会收取最终的充电费用。",
+    "return_money2": "充电停止后，剩余资金将退还至您的账户。"
+  },
   "vehicle": {
     "searchPlaceholder": "搜索车辆...",
     "upToPassengers": "最多可乘 {count} 名乘客",

@@ -195,11 +195,7 @@ const progressColor = computed(() => {
               <ion-card-content class="warning-content">
                 <ion-row class="ion-align-items-center ion-nowrap">
                   <ion-col size="auto" class="warning-icon-col">
-                     <svg viewBox="0 0 24 24" class="custom-warning-icon">
-                        <circle cx="12" cy="12" r="10" stroke="#E53935" stroke-width="2" fill="none" />
-                        <line x1="5.5" y1="5.5" x2="18.5" y2="18.5" stroke="#E53935" stroke-width="2" />
-                        <path d="M9 10v4h2v5h2v-5h2v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2z" stroke="#E53935" stroke-width="1.5" fill="none"/>
-                     </svg>
+                    <img src="/images/don.svg" alt="Do not unplug" class="custom-warning-icon" />
                   </ion-col>
                   <ion-col>
                     <ion-text class="warning-text">
@@ -455,6 +451,7 @@ ion-card-content {
 .custom-warning-icon {
   width: 44px;
   height: 44px;
+  object-fit: contain;
 }
 
 .warning-text {

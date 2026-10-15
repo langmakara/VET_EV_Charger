@@ -33,7 +33,10 @@ export default {
     "inactivate_message": "Are you sure you want to inactivate this?",
     "terminate": "Terminate",
     "terminate_message": "Are you sure you want to terminate this?",
-    "stop_message": "Are you sure you want to stop?",
+    "stop_message": "Do you really want to stop the charging process?",
+    "add_voucher": "Add voucher",
+    "add_voucher_message": "Do you want to add this voucher?",
+    "add_voucher_confirm": "Add Voucher",
     "add": "Add",
     "add_new": "Add New",
     "update": "Update",
@@ -60,7 +63,10 @@ export default {
     "download": "Download",
     "print_pdf": "Print PDF",
     "upload_receipt": "Upload Receipt",
-    "back": "Back"
+    "back": "Back",
+    "return_moneyT" : "How your money returns",
+    "return_money1" : "Pre-authorization is a temporary hold, not a payment. Only the final session cost is charged.",
+    "return_money2" : "Any remaining funds will be released back to your account once charging stops."
   },
   "vehicle": {
     "searchPlaceholder": "Search vehicle...",

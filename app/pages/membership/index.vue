@@ -1,6 +1,6 @@
 <script setup lang="ts">
-  import { IonPage, IonContent } from '@ionic/vue'
-  import { computed } from 'vue'
+  import { IonPage, IonContent, onIonViewWillEnter } from '@ionic/vue'
+  import { ref, computed, watch, onMounted } from 'vue'
   import IconButton from '../../components/Button/IconButton.vue'
   import Icon from '~/components/Icon/icon.vue'
   import history from './history.vue'
@@ -11,17 +11,28 @@
   const currentPoints = 190
   const maxPoints = 2500
 
-  // Synchronized with route query ?tab=history so clicking back route closes history
-  const headerIsActive = computed({
-    get: () => route.query.tab === 'history',
-    set: (val: boolean) => {
-      if (val) {
-        router.push({ query: { ...route.query, tab: 'history' } })
-      } else if (route.query.tab === 'history') {
-        router.back()
-      }
-    }
+  const headerIsActive = ref(false)
+
+  const checkTab = () => {
+    const tab = router.currentRoute.value.query.tab ?? route.query.tab
+    headerIsActive.value = tab === 'history'
+  }
+
+  onMounted(() => {
+    checkTab()
   })
+
+  onIonViewWillEnter(() => {
+    checkTab()
+  })
+
+  watch(
+    () => [router.currentRoute.value.fullPath, route.fullPath, route.query.tab],
+    () => {
+      checkTab()
+    },
+    { immediate: true }
+  )
 
   const radius = 40
   const circumference = 2 * Math.PI * radius
@@ -34,6 +45,7 @@
   }
   const headerHistory = () => {
     headerIsActive.value = true
+    router.push({ query: { ...route.query, tab: 'history' } })
   }
 </script>
 
@@ -163,7 +175,7 @@
   .membership-card {
     display: flex;
     align-items: center;
-    padding: 70px 10px 30px;
+    padding: 30px 10px 30px;
     position: relative;
     z-index: 1;
   }

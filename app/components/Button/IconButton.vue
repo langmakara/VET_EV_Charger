@@ -63,6 +63,7 @@ const configs = computed(() => ({
   back: { variant: 'back-link' },
   direction: { icon: 'navigate', iconLabel: 'Direction', colorScheme: 'gray', iconOnly: true },
   scan: { icon: 'scan', iconLabel: t('label.scan'), colorScheme: 'blue', iconOnly: true },
+  'qr-code': { icon: 'qr-code', iconLabel: 'QR Code', colorScheme: 'gray', iconOnly: true },
 }))
 
 const config = computed(() => configs.value[props.buttonType] || {})
@@ -145,6 +146,12 @@ function onClick(event) {
 
 
 <style scoped>
+ion-button {
+  text-transform: none;
+}
+ion-button::part(native) {
+  text-transform: none;
+}
 .app-btn-back {
   display: inline-flex;
   align-items: center;

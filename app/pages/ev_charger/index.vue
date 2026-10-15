@@ -37,6 +37,18 @@ const handlePointsClick = () => {
   navigateTo('/membership');
 };
 
+const handlePointsHistory = (event?: Event) => {
+  event?.stopPropagation();
+  navigateTo({
+    path: '/membership',
+    query: { tab: 'history' }
+  });
+};
+
+const handlePurchaseHistory = () => {
+  navigateTo('/charging_history');
+}
+
 const isStationModalOpen = ref(false);
 const selectedStation = ref<any>(null);
 
@@ -86,7 +98,7 @@ onIonViewWillLeave(() => {
             <span class="status-text">Your vehicle is charging</span>
           </div>
           <div class="card-body">
-            <img src="/img/blue_ev_charging.jpg" alt="Charging EV" class="car-image" />
+            <img src="/images/blue_ev_charging.jpg" alt="Charging EV" class="car-image" />
             <div class="button-container">
               <AppButton size="small" fill="solid" @click="handleViewDetail()">
                 View Detail
@@ -98,17 +110,29 @@ onIonViewWillLeave(() => {
 
       <!-- Points Card -->
       <AppCard class="ChargingCard" bgColor="linear-gradient(135deg, #f8e9e1, #ead1c5)" customClass="points-card" button="true" @click="handlePointsClick">
-        <img src="/img/Crown.svg" alt="Crown" class="bg-crown" />
+        <img src="/images/Crown.svg" alt="Crown" class="bg-crown" />
         <ion-card-content class="points-card-content">
           <div class="points-header">
             <div class="points-label">Total Points</div>
             <div class="points-value">190 pts</div>
           </div>
           <div class="button-container-right">
-            <AppButton size="small" fill="solid">
-              <Icon name="HistoryIcon" class="btn-icon" />
-              History
-            </AppButton>
+            <ion-grid>
+              <ion-row>
+                <ion-col>
+                  <AppButton size="small" fill="solid" expand="block" @click.stop="handlePointsHistory">
+                    <Icon name="point" class="btn-icon"/>
+                    Point History
+                  </AppButton>
+                </ion-col>
+                <ion-col>
+                  <AppButton size="small" fill="solid" expand="block" @click="handlePurchaseHistory">
+                    <Icon name="purchase" class="btn-icon"/>
+                    Purchase History
+                  </AppButton>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
           </div>
         </ion-card-content>
       </AppCard>

@@ -1,12 +1,16 @@
 <script setup lang="ts">
+import { IonGrid, IonRow, IonCol, IonText } from '@ionic/vue';
 import AppCard from '~/components/Card/AppCard.vue';
 import type { Voucher } from '~/types/ev-charger';
 
 defineProps<Voucher>();
+defineEmits<{
+  (e: 'click'): void;
+}>();
 </script>
 
 <template>
-  <AppCard class="voucher-card">
+  <AppCard class="voucher-card clickable" @click="$emit('click')">
     <ion-grid class="voucher-card">
       <ion-row>
         <ion-col class="voucher-header" size="4">
@@ -39,6 +43,17 @@ defineProps<Voucher>();
 .voucher-card {
   padding: 0px;
   box-shadow: none;
+}
+
+.clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  user-select: none;
+}
+
+.clickable:active {
+  transform: scale(0.985);
+  opacity: 0.9;
 }
 
 /* ---------- Left (orange) side ---------- */

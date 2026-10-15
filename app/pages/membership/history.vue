@@ -14,15 +14,36 @@
     IonText
   } from '@ionic/vue'
   import evChargerData from '~/data/ev_charger_data.json'
-  import type { HistoryItem } from '~/types'
+  import TransactionModal from '~/components/Modal/TransactionModal.vue'
+  import { useRoute } from 'vue-router'
+
+  const props = withDefaults(
+    defineProps<{
+      dataSource?: 'pointsHistory' | 'chargingHistory'
+    }>(),
+    {
+      dataSource: 'pointsHistory'
+    }
+  )
+
+  const route = useRoute()
+  const isChargingHistory = computed(
+    () => props.dataSource === 'chargingHistory' || route?.path?.includes('charging_history')
+  )
 
   const activeTab = ref('all')
 
-  const ev_charger_data = evChargerData.pointsHistory as HistoryItem[]
+  const ev_charger_data = computed(() => {
+    return (
+      isChargingHistory.value
+        ? ((evChargerData as any).chargingHistory || [])
+        : (evChargerData.pointsHistory || [])
+    ) as (HistoryItem & { formattedAmount?: string })[]
+  })
 
   const filteredData = computed(() => {
-    if (activeTab.value === 'all') return ev_charger_data
-    return ev_charger_data.filter((item) => item.type === activeTab.value)
+    if (activeTab.value === 'all') return ev_charger_data.value
+    return ev_charger_data.value.filter((item) => item.type === activeTab.value)
   })
 
   const groupedData = computed(() => {
@@ -31,6 +52,33 @@
       ;(groups[item.dateGroup] ??= []).push(item)
     }
     return groups
+  })
+
+  const selectedItem = ref<(HistoryItem & Record<string, any>) | null>(null)
+  const isModalOpen = ref(false)
+
+  const openTransactionModal = (item: HistoryItem) => {
+    selectedItem.value = item
+    isModalOpen.value = true
+  }
+
+  const isEarned = computed(() => selectedItem.value?.type === 'earned')
+
+  const modalTitle = computed(() => {
+    return isEarned.value ? 'Top-up Detail' : 'Transaction Detail'
+  })
+
+  const formattedId = computed(() => {
+    if (!selectedItem.value) return '00000'
+    return selectedItem.value.id.toString().padStart(5, '0')
+  })
+
+  const mockAmount = computed(() => {
+    if (!selectedItem.value) return '$0.00'
+    if (selectedItem.value.formattedAmount) {
+      return selectedItem.value.formattedAmount
+    }
+    return `$${(selectedItem.value.points ?? 0).toFixed(2)}`
   })
 </script>
 
@@ -85,7 +133,7 @@
           <ion-label class="date-label">{{ dateLabel }}</ion-label>
         </ion-list-header>
 
-        <ion-item v-for="item in items" :key="item.id" class="history-card" lines="none">
+        <ion-item v-for="item in items" :key="item.id" class="history-card" lines="none" @click="openTransactionModal(item)" button>
           <!-- Icon -->
           <ion-avatar
             slot="start"
@@ -108,14 +156,19 @@
           <ion-note
             slot="end"
             class="item-points"
-            :class="item.points > 0 ? 'points-earned' : 'points-spend'"
+            :class="item.type === 'earned' ? 'points-earned' : 'points-spend'"
           >
-            {{
-              item.points > 0
-                ? `+ ${item.points.toLocaleString()}`
-                : `- ${Math.abs(item.points).toLocaleString()}`
-            }}
-            Points
+            <template v-if="item.formattedAmount">
+              {{ item.formattedAmount }}
+            </template>
+            <template v-else>
+              {{
+                item.points > 0
+                  ? `+ ${item.points.toLocaleString()}`
+                  : `- ${Math.abs(item.points).toLocaleString()}`
+              }}
+              Points
+            </template>
           </ion-note>
         </ion-item>
       </ion-list>
@@ -124,6 +177,67 @@
         <p>No history found.</p>
       </ion-text>
     </div>
+
+    <!-- Transaction Modal Inline -->
+    <TransactionModal 
+      :is-open="isModalOpen" 
+      :title="modalTitle"
+      @did-dismiss="isModalOpen = false" 
+    >
+      <template v-if="selectedItem">
+        <!-- Top-up Detail (Earned) -->
+        <template v-if="isEarned">
+          <ion-item>
+            <ion-label color="medium">Date</ion-label>
+            <ion-note slot="end" color="dark">{{ selectedItem.datetime }}</ion-note>
+          </ion-item>
+          <ion-item>
+            <ion-label color="medium">Amount</ion-label>
+            <ion-note slot="end" color="dark">{{ mockAmount }}</ion-note>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label color="medium">Point Earned</ion-label>
+            <ion-note slot="end" class="points-earned">+ {{ selectedItem.points.toLocaleString() }} Points</ion-note>
+          </ion-item>
+        </template>
+
+        <!-- Transaction Detail (Spend) -->
+        <template v-else>
+          <ion-item>
+            <ion-label color="medium">Transaction id</ion-label>
+            <ion-note slot="end" color="dark">{{ formattedId }}</ion-note>
+          </ion-item>
+          <ion-item>
+            <ion-label color="medium">Station Name</ion-label>
+            <ion-note slot="end" color="dark">{{ selectedItem.stationName || selectedItem.title }}</ion-note>
+          </ion-item>
+          <ion-item>
+            <ion-label color="medium">Order Date</ion-label>
+            <ion-note slot="end" color="dark">{{ selectedItem.datetime }}</ion-note>
+          </ion-item>
+          <ion-item>
+            <ion-label color="medium">Sub Total</ion-label>
+            <ion-note slot="end" color="dark">{{ selectedItem.subTotal || 'KHR (៛) 48,000' }}</ion-note>
+          </ion-item>
+          <ion-item>
+            <ion-label color="medium">Discount (20%)</ion-label>
+            <ion-note slot="end" color="dark">{{ selectedItem.discount || '-KHR (៛) 4,000' }}</ion-note>
+          </ion-item>
+          <ion-item>
+            <ion-label color="medium">Total Amount</ion-label>
+            <ion-note slot="end" class="bold-value">{{ selectedItem.totalAmount || (selectedItem.formattedAmount ?? 'KHR (៛) 44,000') }}</ion-note>
+          </ion-item>
+          <ion-item>
+            <ion-label color="medium">Total kWh</ion-label>
+            <ion-note slot="end" class="bold-value">{{ selectedItem.totalKwh || '20 kWh' }}</ion-note>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label color="medium">Point Spend</ion-label>
+            <ion-note slot="end" class="points-spend">- {{ Math.abs(selectedItem.points).toLocaleString() }} Points</ion-note>
+          </ion-item>
+        </template>
+      </template>
+    </TransactionModal>
   </div>
 </template>
 
@@ -246,6 +360,11 @@
     color: #8c92a0;
     margin-top: 48px;
     font-size: 14px;
+  }
+
+  .bold-value {
+    font-weight: 600 !important;
+    color: #1f232d !important;
   }
 </style>
 

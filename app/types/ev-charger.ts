@@ -70,6 +70,23 @@ export type HistoryItem = {
   type: 'earned' | 'spend';
 };
 
+export type ChargingHistoryItem = {
+  id: number;
+  title: string;
+  datetime: string;
+  dateGroup: string;
+  amount: number;
+  currency: string;
+  formattedAmount: string;
+  type: 'earned' | 'spend';
+  subTotal?: string;
+  discount?: string;
+  totalAmount?: string;
+  totalKwh?: string;
+  points?: number;
+  stationName?: string;
+};
+
 export interface Voucher {
   id?: number | string;
   discountRate: string;
