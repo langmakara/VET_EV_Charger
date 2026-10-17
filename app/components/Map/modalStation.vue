@@ -83,6 +83,8 @@
           :station="station"
           customClass="station-card"
           @click="handleStationClick(station)"
+          address="true"
+          heart="true"
         />
       </div>
     </ion-content>

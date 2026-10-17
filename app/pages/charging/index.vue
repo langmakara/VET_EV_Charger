@@ -24,7 +24,7 @@ const isFullyChargedAlertOpen = ref(false);
 const handleStopConfirm = () => {
   // TODO: Add actual stop logic
   isStopAlertOpen.value = false;
-  navigateTo("/ev_charger");
+  navigateTo("/session_summary");
 };
 
 const batteryProgress = ref(70); // Dynamic progress value (0 to 100)

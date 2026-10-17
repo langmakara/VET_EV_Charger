@@ -3,13 +3,22 @@
     <ion-content class="map-content" :scroll-y="false">
       <!-- Top Overlay Container (Close button + Top Search Bar) -->
       <div class="top-bar-overlay">
-        <SearchMap
-          v-model:selectedAddress="selectedAddress"
-          v-model:isGeocoding="isGeocoding"
-          :selected-coords="selectedCoords"
-          @select-location="onLocationSelected"
-          @search-click="onSearchClick"
-        />
+        <ion-grid>
+          <ion-row>
+            <ion-col size="10">
+              <SearchMap
+                v-model:selectedAddress="selectedAddress"
+                v-model:isGeocoding="isGeocoding"
+                :selected-coords="selectedCoords"
+                @select-location="onLocationSelected"
+                @search-click="onSearchClick"
+              />
+            </ion-col>
+            <ion-col size="2">
+              <IconButton name="filter" color="light" size="md" @click="$emit('filter-click')"/>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
       </div>
 
       <!-- Map Container -->
@@ -51,7 +60,10 @@
               <img
                 src="/icons/AdvancedMarker.svg"
                 class="station-svg-pin"
-                :class="{ 'pin-busy': station.status === 'Busy', 'pin-closed': station.status === 'Closed' }"
+                :class="{
+                  'pin-busy': station.status === 'Busy',
+                  'pin-closed': station.status === 'Closed'
+                }"
                 :alt="station.name"
               />
             </div>
@@ -106,6 +118,11 @@
     getCurrentNativeLocation,
     useNativeBridge
   } from '~/composables/useNativeBridge'
+  import IconButton from '../Button/IconButton.vue'
+
+  defineEmits<{
+    (e: 'filter-click'): void
+  }>()
 
   const props = withDefaults(
     defineProps<{
@@ -521,7 +538,7 @@
 
   .station-label {
     background: rgba(255, 255, 255, 0.92);
-    color: #E8690A;
+    color: #e8690a;
     font-size: 11px;
     font-weight: 700;
     padding: 2px 7px;
@@ -557,11 +574,12 @@
 
   /* Busy: amber tint overlay via hue-rotate */
   .station-svg-pin.pin-busy {
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35)) sepia(1) saturate(3) hue-rotate(-20deg) brightness(1.1);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35)) sepia(1) saturate(3) hue-rotate(-20deg)
+      brightness(1.1);
   }
 
   /* Closed: greyscale + dimmed */
   .station-svg-pin.pin-closed {
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25)) grayscale(1) opacity(0.65);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25)) grayscale(1) opacity(0.65);
   }
 </style>

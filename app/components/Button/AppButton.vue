@@ -1,7 +1,7 @@
 <template>
   <ion-button :color="color" :fill="fill" :expand="expand" :shape="shape" :size="size" :disabled="disabled" v-bind="$attrs" :type="type">
     <slot name="start" />
-    <slot />
+    <slot>{{ label }}</slot>
     <slot name="end" />
   </ion-button>
 </template>
@@ -10,6 +10,7 @@
 import { IonButton } from "@ionic/vue";
 
 defineProps<{
+  label?: string;
   color?: string;
   fill?: "clear" | "outline" | "solid" | "default";
   expand?: "block" | "full";
@@ -25,6 +26,7 @@ ion-button {
   --height: 52px;
   min-height: 52px;
   text-transform: none;
+  font-size: 16px;
 }
 
 ion-button[size="small"] {

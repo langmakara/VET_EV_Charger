@@ -10,6 +10,9 @@
   const isStationModalOpen = ref(false)
   const selectedStation = ref<any>(null)
 
+  const handleFavoriteClick = (station: any) => {
+    
+  }
   const handleStationClick = (station: any) => {
     selectedStation.value = station
     isStationModalOpen.value = true
@@ -30,7 +33,10 @@
           :key="station.id"
           :station="station"
           @click="handleStationClick(station)"
+          @favorite-click="handleFavoriteClick"
           customClass="station-card"
+          address="true"
+          heart="true"
         />
       </div>
 

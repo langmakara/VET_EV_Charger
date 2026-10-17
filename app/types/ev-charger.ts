@@ -96,3 +96,19 @@ export interface Voucher {
   voucherDescription?: string;
   isActive: boolean;
 }
+
+// ─── Membership Benefits ───────────────────────────────────────────────────
+
+export interface MembershipBenefit {
+  id: number;
+  name: string;
+  requirePoint: number;
+  expireDuration: number;
+  description: string;
+  discount: number;
+  pointMultiplier: number;
+  redeemPoint: number;
+  /** 1 if this is the user's current tier, 0 otherwise */
+  isYouAreHere: number;
+}
+

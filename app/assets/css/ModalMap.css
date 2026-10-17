@@ -74,7 +74,7 @@
   display: flex;
   align-items: center;
   background: #ffffff;
-  border-radius: 25px;
+  border-radius: var(--ion-padding);
   padding: 0 16px;
   height: 46px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);

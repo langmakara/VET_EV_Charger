@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { computed } from 'vue'
   import {
     IonCard,
     IonItem,
@@ -10,17 +11,92 @@
     IonText
   } from '@ionic/vue'
   import Icon from '~/components/Icon/icon.vue'
+  import IconButton from '../Button/IconButton.vue';
 
-  defineProps({
-    station: {
-      type: Object,
-      required: true
+  const props = withDefaults(
+    defineProps<{
+      station: any
+      address?: boolean | string
+      price?: boolean | string
+      mode?: 'address' | 'price' | string
+      heart?: boolean | string
+      status?: boolean | string
+      customClass?: string
+    }>(),
+    {
+      address: false,
+      price: false,
+      mode: '',
+      heart: false,
+      status: false,
+      customClass: ''
     }
+  )
+
+  const showAddress = computed(() => {
+    return (
+      props.address === true ||
+      props.address === '' ||
+      props.address === 'true' ||
+      props.mode === 'address'
+    )
   })
+
+  const showPrice = computed(() => {
+    if (
+      props.price === true ||
+      props.price === '' ||
+      props.price === 'true' ||
+      props.mode === 'price'
+    ) {
+      return true
+    }
+    // If address is explicitly enabled and price wasn't specified, hide price
+    if (showAddress.value) {
+      return false
+    }
+    // Default fallback: show price
+    return true
+  })
+
+  const showHeart = computed(() => {
+    return (
+      props.heart === true ||
+      props.heart === '' ||
+      props.heart === 'true'
+    )
+  })
+
+  const showStatus = computed(() => {
+    if (
+      props.status === true ||
+      props.status === '' ||
+      props.status === 'true'
+    ) {
+      return true
+    }
+    // If heart is explicitly enabled and status wasn't specified, hide status
+    if (showHeart.value) {
+      return false
+    }
+    // Default fallback: show status
+    return true
+  })
+
+  const emit = defineEmits(['favorite-click', 'toggle-favorite'])
+
+  function handlefavoriteClick(e: Event) {
+    e.stopPropagation()
+    if (props.station) {
+      props.station.isFavorites = !props.station.isFavorites
+      emit('favorite-click', props.station)
+      emit('toggle-favorite', props.station)
+    }
+  }
 </script>
 
 <template>
-  <ion-card class="station-card" style="background: #f8fafc">
+  <ion-card :class="['station-card', customClass]" style="background: #f8fafc">
     <ion-item lines="none" class="station-item">
       <ion-thumbnail slot="start" class="station-thumbnail">
         <img :src="station.station" :alt="station.name" />
@@ -36,26 +112,36 @@
             </ion-col>
             <ion-col class="status" size="4">
               <ion-text
+                v-if="showStatus"
                 :color="station.status === 'Open' ? 'success' : 'danger'"
                 class="station-status"
               >
                 • {{ station.status }}
               </ion-text>
+              <IconButton
+                v-if="showHeart"
+                name="heart"
+                size="20px"
+                class="heart-btn"
+                :color="station.isFavorites ? 'primary' : 'medium'"
+                @click.stop="handlefavoriteClick"
+              />
             </ion-col>
           </ion-row>
 
-          <ion-row class="info-row">
-            <ion-col size="4" class="info-item">
-              <Icon name="plug" class="info-icon" size="14px" />
-              <ion-text color="medium">DC </ion-text>
-              <ion-text class="highlight">{{ station.dc }}</ion-text>
-            </ion-col>
-            <ion-col size="8" class="info-item">
+          <ion-row v-if="showPrice" class="info-row">
+            <ion-col size="12" class="info-item">
               <Icon name="dollar" class="info-icon" size="14px" />
-              <ion-text color="medium">Start from </ion-text>
               <ion-text class="highlight">{{ station.price }}</ion-text>
             </ion-col>
           </ion-row>
+
+          <ion-row v-if="showAddress" class="info-row">
+            <ion-col size="12" class="info-item">
+              <ion-text class="highlight"># {{ station.address || station.location }}</ion-text>
+            </ion-col>
+          </ion-row>
+
 
           <ion-row class="info-row">
             <ion-col size="4" size-md="4" size-lg="4" class="info-item">
@@ -173,7 +259,13 @@
   }
   .status {
     display: flex;
-    justify-content: end;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+  .heart-btn {
+    cursor: pointer;
+    --color: #e85d04;
   }
 
   .info-row {
@@ -195,6 +287,7 @@
 
   .highlight {
     color: #e85d04;
+    font-size: 12px;
   }
 
   .location-row {

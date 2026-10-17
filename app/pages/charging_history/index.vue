@@ -10,3 +10,9 @@
         </ion-content>
     </ion-page>
 </template>
+
+<style scoped>
+    ion-page {
+        padding: 0 !important;
+    }
+</style>

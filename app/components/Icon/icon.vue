@@ -63,7 +63,7 @@ const icons: Record<string, IconDef> = {
   'dollar': {
     viewBox: "0 0 24 24",
     ...defaultOutline,
-    body: '<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />'
+    body: '<line x1="12" y1="2" x2="12" y2="22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />'
   },
   'location': {
     viewBox: "0 0 24 24",
@@ -174,7 +174,18 @@ const icons: Record<string, IconDef> = {
     viewBox: "0 0 24 24",
     ...defaultOutline,
     body: '<circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />'
-  }
+  },
+  'filter': {
+    viewBox: "0 0 24 24",
+    ...defaultOutline,
+    body: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />'
+  },
+  
+  'close': {
+    viewBox: "0 0 24 24",
+    ...defaultOutline,
+    body: '<path d="M18 6 6 18M6 6l12 12" />'
+  },
 };
 
 const iconDef = computed(() => icons[props.name]);

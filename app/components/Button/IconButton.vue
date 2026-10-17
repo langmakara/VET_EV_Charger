@@ -5,11 +5,12 @@ import Icon from '../Icon/icon.vue'
 
 const props = defineProps({
   buttonType: { type: String, default: null },
+  name: { type: String, default: null },
   type: { type: String, default: 'button' },
   variant: { type: String, default: null }, // 'solid' | 'outline' | 'clear' | 'back-link' | 'badge-icon'
   colorScheme: { type: String, default: null }, // 'brand' | 'gray' | 'red' | 'green' | 'blue'
   color: { type: String, default: null }, // direct Ionic color, overrides colorScheme
-  size: { type: String, default: null }, // 'sm' | 'md' | 'lg'
+  size: { type: String, default: null }, // 'sm' | 'md' | 'lg' | custom CSS (e.g. '12px', '16px')
   icon: { type: [String, Object, Function], default: null },
   iconLabel: { type: String, default: null },
   leftIcon: { type: [String, Object, Function], default: null },
@@ -48,7 +49,6 @@ const configs = computed(() => ({
   remove: { icon: 'remove-circle', iconLabel: t('label.remove'), colorScheme: 'red', iconOnly: true },
   pay: { icon: 'cash', iconLabel: t('label.pay_back'), colorScheme: 'green', iconOnly: true },
   upload: { icon: 'cloud-upload', iconLabel: t('label.upload'), colorScheme: 'gray', iconOnly: true },
-  filter: { icon: 'search', iconLabel: t('label.filter'), iconOnly: true },
   moreFilter: { icon: 'options', iconLabel: t('label.more_filter'), iconOnly: true },
   append: { icon: 'add-circle', iconLabel: t('label.append'), colorScheme: 'green', iconOnly: true },
   print: { icon: 'print', iconLabel: t('label.print'), colorScheme: 'blue', iconOnly: true },
@@ -64,27 +64,38 @@ const configs = computed(() => ({
   direction: { icon: 'navigate', iconLabel: 'Direction', colorScheme: 'gray', iconOnly: true },
   scan: { icon: 'scan', iconLabel: t('label.scan'), colorScheme: 'blue', iconOnly: true },
   'qr-code': { icon: 'qr-code', iconLabel: 'QR Code', colorScheme: 'gray', iconOnly: true },
+  heart: { icon: 'heart', iconLabel: 'Favorite', colorScheme: 'brand', variant: 'clear', iconOnly: true },
+  filter: { icon: 'filter', iconLabel: t('label.filter') || 'Filter', colorScheme: 'gray', iconOnly: true },
+  close: { icon: 'x', iconLabel: 'Close', colorScheme: 'gray', variant: 'clear', iconOnly: true },
 }))
 
-const config = computed(() => configs.value[props.buttonType] || {})
+const config = computed(() => configs.value[props.buttonType || props.name || props.icon] || {})
 
 // * Property resolution — props win over the buttonType config
 const resolvedLabel = computed(() => props.label ?? config.value.label)
-const resolvedIcon = computed(() => props.icon ?? config.value.icon)
+const resolvedIcon = computed(() => props.name ?? props.icon ?? config.value.icon)
 const resolvedIconLabel = computed(() => props.iconLabel ?? config.value.iconLabel)
 const resolvedLeftIcon = computed(() => props.leftIcon ?? (!props.rightIcon ? resolvedIcon.value : null))
 const resolvedRightIcon = computed(() => props.rightIcon)
 
 const isBackLink = computed(() => props.buttonType === 'back' || props.variant === 'back-link')
 const isBadgeIcon = computed(() => props.buttonType === 'badge' || props.variant === 'badge-icon')
-const isIconOnly = computed(() => props.isIconButton || !!config.value.iconOnly)
+const isIconOnly = computed(() => props.isIconButton || !!config.value.iconOnly || (!!resolvedIcon.value && !resolvedLabel.value && !props.leftIcon && !props.rightIcon))
+
+const isCustomSize = computed(() => typeof props.size === 'string' && (props.size.includes('px') || props.size.includes('em') || props.size.includes('rem') || props.size.includes('%')))
+const resolvedIconSize = computed(() => {
+  if (isCustomSize.value) return props.size
+  if (props.size === 'sm') return '14px'
+  if (props.size === 'lg') return '24px'
+  return undefined
+})
 
 const colorSchemeMap = { brand: 'primary', gray: 'medium', red: 'danger', green: 'success', blue: 'tertiary' }
 const sizeMap = { sm: 'small', md: 'default', lg: 'large' }
 const variantFillMap = { solid: 'solid', outline: 'outline', clear: 'clear', unstyled: 'clear', ghost: 'clear' }
 
 const resolvedColor = computed(() => props.color || colorSchemeMap[props.colorScheme || config.value.colorScheme] || 'primary')
-const resolvedSize = computed(() => sizeMap[props.size] || 'default')
+const resolvedSize = computed(() => (isCustomSize.value ? 'small' : (sizeMap[props.size] || 'default')))
 const resolvedFill = computed(() => variantFillMap[props.variant || config.value.variant] || 'solid')
 
 function onClick(event) {
@@ -117,11 +128,14 @@ function onClick(event) {
       :disabled="isDisabled || isLoading"
       :title="resolvedIconLabel"
       :aria-label="resolvedIconLabel"
+      class="app-btn-icon-only"
+      :class="{ 'app-btn-icon-clear': resolvedFill === 'clear' }"
+      :style="isCustomSize ? { '--padding-start': '0px', '--padding-end': '0px', width: resolvedIconSize, height: resolvedIconSize } : null"
       v-bind="$attrs"
       @click="onClick"
     >
       <ion-spinner v-if="isLoading" name="dots" slot="icon-only" />
-      <Icon v-else :name="resolvedIcon" slot="icon-only" />
+      <Icon v-else :name="resolvedIcon" :size="resolvedIconSize" slot="icon-only" />
     </ion-button>
 
     <!-- standard button -->
@@ -137,9 +151,9 @@ function onClick(event) {
       @click="onClick"
     >
       <ion-spinner v-if="isLoading" name="dots" slot="start" />
-      <Icon v-else-if="resolvedLeftIcon" :name="resolvedLeftIcon" slot="start" />
+      <Icon v-else-if="resolvedLeftIcon" :name="resolvedLeftIcon" :size="resolvedIconSize" slot="start" />
       <slot>{{ resolvedLabel }}</slot>
-      <Icon v-if="resolvedRightIcon && !isLoading" :name="resolvedRightIcon" slot="end" />
+      <Icon v-if="resolvedRightIcon && !isLoading" :name="resolvedRightIcon" :size="resolvedIconSize" slot="end" />
     </ion-button>
   </template>
 </template>
@@ -151,6 +165,17 @@ ion-button {
 }
 ion-button::part(native) {
   text-transform: none;
+}
+.app-btn-icon-clear {
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  margin: 0;
+  min-height: unset;
+}
+.app-btn-icon-clear::part(native) {
+  padding: 0;
 }
 .app-btn-back {
   display: inline-flex;

@@ -217,11 +217,11 @@
           </ion-item>
           <ion-item>
             <ion-label color="medium">Sub Total</ion-label>
-            <ion-note slot="end" color="dark">{{ selectedItem.subTotal || 'KHR (៛) 48,000' }}</ion-note>
+            <ion-note slot="end" color="dark">{{ selectedItem.subTotal  }}</ion-note>
           </ion-item>
           <ion-item>
             <ion-label color="medium">Discount (20%)</ion-label>
-            <ion-note slot="end" color="dark">{{ selectedItem.discount || '-KHR (៛) 4,000' }}</ion-note>
+            <ion-note slot="end" color="dark">{{ selectedItem.discount}}</ion-note>
           </ion-item>
           <ion-item>
             <ion-label color="medium">Total Amount</ion-label>
@@ -229,7 +229,7 @@
           </ion-item>
           <ion-item>
             <ion-label color="medium">Total kWh</ion-label>
-            <ion-note slot="end" class="bold-value">{{ selectedItem.totalKwh || '20 kWh' }}</ion-note>
+            <ion-note slot="end" class="bold-value">{{ selectedItem.totalKwh  }}</ion-note>
           </ion-item>
           <ion-item lines="none">
             <ion-label color="medium">Point Spend</ion-label>
@@ -242,6 +242,11 @@
 </template>
 
 <style scoped>
+ 
+  ion-page {
+    padding: 0 !important;
+  }
+
   .history-container {
     display: flex;
     flex-direction: column;
@@ -253,7 +258,7 @@
 
   .history-header-tabs {
     flex-shrink: 0;
-    padding: 0 11px;
+    padding: 0;
   }
 
   .tab-row {
@@ -267,7 +272,7 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-    padding: 0 16px 24px 16px;
+    padding: 0 10px 10px 10px;
   }
   
 

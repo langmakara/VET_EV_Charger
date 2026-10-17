@@ -7,13 +7,25 @@
 // ─── Generic API Response Wrapper ───────────────────────────────────────────
 
 export interface ApiResponseWrapper<T> {
-  success: boolean
-  status: number
+  header: {
+    serverTimestamp: number
+    result: boolean
+    statusCode: number
+  }
+  body: {
+    status: boolean
+    message: string
+    data: T
+  }
+  /** Optional backward compatibility for legacy flat responses */
+  data?: T
+  success?: boolean
+  status?: number
   code?: number
-  message: string
-  data: T
-  timestamp: string
+  message?: string
+  timestamp?: string
 }
+
 
 // ─── User Profile ──────────────────────────────────────────────────────────
 

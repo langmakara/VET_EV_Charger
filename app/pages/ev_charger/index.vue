@@ -120,7 +120,7 @@ onIonViewWillLeave(() => {
             <ion-grid>
               <ion-row>
                 <ion-col>
-                  <AppButton size="small" fill="solid" expand="block" @click.stop="handlePointsHistory">
+                  <AppButton size="small" fill="solid" expand="block" @click.stop="handlePointsHistory" class="btn-action">
                     <Icon name="point" class="btn-icon"/>
                     Point History
                   </AppButton>

@@ -18,6 +18,12 @@ export const queryKeys = {
     profile: () => [...queryKeys.user.all, "profile"] as const,
   },
 
+  membership: {
+    all: ["membership"] as const,
+    benefits: () => [...queryKeys.membership.all, "benefits"] as const,
+  },
+
+
   evCharger: {
     all: ["ev-charger"] as const,
     stations: (params?: Record<string, any>) =>

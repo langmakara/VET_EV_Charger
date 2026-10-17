@@ -16,4 +16,8 @@ export type {
   SessionHistoryParams,
   HistoryItem,
   ChargingHistoryItem,
+  Voucher,
+  MembershipBenefit,
 } from './ev-charger'
+
+
