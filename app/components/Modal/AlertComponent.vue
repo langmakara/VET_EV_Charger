@@ -5,7 +5,7 @@ import { IonModal, IonButton } from '@ionic/vue';
 
 const props = defineProps<{
   isOpen: boolean;
-  type?: 'logout' | 'delete' | 'exit' | 'save' | 'activate' | 'inactivate' | 'terminate' | 'stop' | 'voucher' | 'custom';
+  type?: 'logout' | 'delete' | 'exit' | 'save' | 'activate' | 'inactivate' | 'terminate' | 'stop' | 'voucher' | 'success' | 'custom';
   name?: string;
   title?: string;
   message?: string;
@@ -13,6 +13,7 @@ const props = defineProps<{
   labelConfirm?: string;
   isLoading?: boolean;
   hideCancel?: boolean;
+  hideConfirm?: boolean;
   outlineConfirm?: boolean;
 }>();
 
@@ -82,6 +83,12 @@ const config = computed(() => {
       base.btnCancel = props.labelCancel || t('label.cancel');
       base.color = '#e66a15';
       break;
+    case 'success':
+      base.title = props.title || 'Scanned Successfully!';
+      base.message = props.message || 'Your QR Code scanned Successfully!';
+      base.btnConfirm = props.labelConfirm || t('common.ok') || 'OK';
+      base.color = '#00A651';
+      break;
   }
   
   return base;
@@ -100,6 +107,10 @@ const config = computed(() => {
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M3 0C1.34315 0 0 1.34315 0 3V9.5C1.933 9.5 3.5 11.067 3.5 13C3.5 14.933 1.933 16.5 0 16.5V23C0 24.6569 1.34315 26 3 26H39C40.6569 26 42 24.6569 42 23V16.5C40.067 16.5 38.5 14.933 38.5 13C38.5 11.067 40.067 9.5 42 9.5V3C42 1.34315 40.6569 0 39 0H3Z" fill="white"/>
                 <line x1="21" y1="2.5" x2="21" y2="23.5" stroke="#e66a15" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="2.5 3"/>
               </g>
+            </svg>
+            <svg v-else-if="props.type === 'success'" width="68" height="68" viewBox="0 0 68 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="34" cy="34" r="34" fill="#00A651"/>
+              <path d="M20 34.5L29 43.5L47 25.5" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
             <Icon v-else name="info" size="64px" :color="config.color" />
           </slot>
@@ -121,11 +132,12 @@ const config = computed(() => {
           <p class="stopType-desc">{{ $t('label.return_money1') }}</p>
           <p class="stopType-desc">{{ $t('label.return_money2') }}</p>
         </div>
-        <div class="modal-actions">
+        <div v-if="!hideCancel || !hideConfirm" class="modal-actions">
           <ion-button v-if="!hideCancel" fill="outline" class="cancel-btn" :disabled="isLoading" @click="emit('cancel')">
             {{ config.btnCancel }}
           </ion-button>
           <ion-button 
+            v-if="!hideConfirm"
             :fill="outlineConfirm ? 'outline' : 'solid'"
             :class="outlineConfirm ? 'cancel-btn' : 'confirm-btn'"
             :disabled="isLoading"

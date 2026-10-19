@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import IconButton from "~/components/Button/IconButton.vue";
 import EvChargerPage from "./ev_charger/index.vue";
+
+const router = useRouter();
 </script>
 
 <template>
@@ -24,6 +26,7 @@ import EvChargerPage from "./ev_charger/index.vue";
               --height: 64px;
               font-size: 1.6rem;
             "
+            @click="router.push('/qr_scan')"
           />
         </div>
       </div>
