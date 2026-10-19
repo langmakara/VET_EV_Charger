@@ -29,6 +29,10 @@ const handleAlertConfirm = () => {
   isAlertOpen.value = false;
   isToastOpen.value = true;
 };
+
+const handlescanVouchercode = () => {
+  navigateTo('/ev_charger/voucher/camera')
+}
 </script>
 
 <template>
@@ -44,7 +48,7 @@ const handleAlertConfirm = () => {
             />
           </ion-col>
           <ion-col size="auto" class="btn-container">
-            <IconButton buttonType="scan" size="lg" />
+            <IconButton buttonType="scan" size="lg" @click="handlescanVouchercode" />
           </ion-col>
         </ion-row>
       </ion-grid>
@@ -88,8 +92,8 @@ const handleAlertConfirm = () => {
 .btn-container {
   display: flex;
   align-items: flex-end;
-  padding-bottom: 2px;
-  padding-right: 0;
+  padding-bottom: 5px;
+  padding-right: 5px;
 }
 
 .vouchers-container {

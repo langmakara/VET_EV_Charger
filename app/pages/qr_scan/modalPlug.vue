@@ -10,6 +10,7 @@
     IonText
   } from '@ionic/vue'
   import Icon from '~/components/Icon/icon.vue'
+  import AppButton from '~/components/Button/AppButton.vue'
 
   const props = withDefaults(
     defineProps<{
@@ -65,14 +66,8 @@
               @click="handleSelect(plug)"
             >
               <!-- Icon Badge Box -->
-              <div
-                class="plug-icon-box"
-                :class="{ 'is-selected': selectedPlug === plug.id }"
-              >
-                <Icon
-                  :name="selectedPlug === plug.id ? 'plugWhite' : 'plugGray'"
-                  size="26px"
-                />
+              <div class="plug-icon-box" :class="{ 'is-selected': selectedPlug === plug.id }">
+                <Icon :name="selectedPlug === plug.id ? 'plugWhite' : 'plugGray'" size="26px" />
               </div>
 
               <!-- Plug Details -->
@@ -107,6 +102,9 @@
             </div>
           </div>
         </ion-card-content>
+        <div class="modal-footer">
+          <AppButton label="Contiue" expand="block" />
+        </div>
       </ion-card>
     </ion-content>
   </ion-modal>
@@ -161,7 +159,11 @@
   }
 
   .modal-body {
-    padding: 8px 20px 24px;
+    padding: 8px 20px 8px;
+  }
+
+  .modal-footer {
+    padding: 8px 20px 8px;
   }
 
   .plug-list {

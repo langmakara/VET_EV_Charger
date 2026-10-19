@@ -10,7 +10,11 @@ const props = defineProps({
   variant: { type: String, default: null }, // 'solid' | 'outline' | 'clear' | 'back-link' | 'badge-icon'
   colorScheme: { type: String, default: null }, // 'brand' | 'gray' | 'red' | 'green' | 'blue'
   color: { type: String, default: null }, // direct Ionic color, overrides colorScheme
-  size: { type: String, default: null }, // 'sm' | 'md' | 'lg' | custom CSS (e.g. '12px', '16px')
+  size: { type: String, default: null }, // button size fallback or custom CSS (e.g. 'sm', 'md', 'lg', '12px', '16px')
+  buttonSize: { type: String, default: null }, // button dimensions (e.g. '48px', '60px', 'sm', 'md', 'lg')
+  iconSize: { type: String, default: null }, // icon dimensions (e.g. '18px', '24px', '28px', 'sm', 'md', 'lg')
+  shape: { type: String, default: null }, // 'round'
+  rounded: { type: Boolean, default: false }, // if true, makes button circular (50% border-radius)
   icon: { type: [String, Object, Function], default: null },
   iconLabel: { type: String, default: null },
   leftIcon: { type: [String, Object, Function], default: null },
@@ -60,13 +64,14 @@ const configs = computed(() => ({
   download: { icon: 'download', iconLabel: t('label.download'), colorScheme: 'gray', iconOnly: true },
   'upload-receipt': { icon: 'receipt', iconLabel: t('label.upload_receipt'), colorScheme: 'green', variant: 'clear', iconOnly: true },
   badge: { variant: 'badge-icon' },
-  back: { variant: 'back-link' },
+  back: { icon: 'chevron-left', iconLabel: t('label.back'), variant: 'back-link' },
   direction: { icon: 'navigate', iconLabel: 'Direction', colorScheme: 'gray', iconOnly: true },
   scan: { icon: 'scan', iconLabel: t('label.scan'), colorScheme: 'blue', iconOnly: true },
   'qr-code': { icon: 'qr-code', iconLabel: 'QR Code', colorScheme: 'gray', iconOnly: true },
   heart: { icon: 'heart', iconLabel: 'Favorite', colorScheme: 'brand', variant: 'clear', iconOnly: true },
   filter: { icon: 'filter', iconLabel: t('label.filter') || 'Filter', colorScheme: 'gray', iconOnly: true },
   close: { icon: 'x', iconLabel: 'Close', colorScheme: 'gray', variant: 'clear', iconOnly: true },
+  flashlight: { icon: 'flashlight', iconLabel: 'Flashlight', colorScheme: 'gray', iconOnly: true },
 }))
 
 const config = computed(() => configs.value[props.buttonType || props.name || props.icon] || {})
@@ -78,24 +83,87 @@ const resolvedIconLabel = computed(() => props.iconLabel ?? config.value.iconLab
 const resolvedLeftIcon = computed(() => props.leftIcon ?? (!props.rightIcon ? resolvedIcon.value : null))
 const resolvedRightIcon = computed(() => props.rightIcon)
 
-const isBackLink = computed(() => props.buttonType === 'back' || props.variant === 'back-link')
+const isBackLink = computed(() => {
+  if (props.variant === 'back-link') return true
+  if (props.buttonType === 'back') {
+    if (props.isIconButton || props.buttonSize || props.rounded || (props.variant && props.variant !== 'back-link')) return false
+    return true
+  }
+  return false
+})
 const isBadgeIcon = computed(() => props.buttonType === 'badge' || props.variant === 'badge-icon')
 const isIconOnly = computed(() => props.isIconButton || !!config.value.iconOnly || (!!resolvedIcon.value && !resolvedLabel.value && !props.leftIcon && !props.rightIcon))
 
-const isCustomSize = computed(() => typeof props.size === 'string' && (props.size.includes('px') || props.size.includes('em') || props.size.includes('rem') || props.size.includes('%')))
+const isCustomLength = (val) =>
+  typeof val === 'string' &&
+  (val.includes('px') || val.includes('em') || val.includes('rem') || val.includes('%'))
+
+// Resolve Icon Size
 const resolvedIconSize = computed(() => {
-  if (isCustomSize.value) return props.size
+  if (props.iconSize) {
+    if (props.iconSize === 'sm') return '14px'
+    if (props.iconSize === 'md') return '18px'
+    if (props.iconSize === 'lg') return '24px'
+    return props.iconSize
+  }
+  // When buttonSize is specified without iconSize, fallback to clean icon defaults
+  if (props.buttonSize) {
+    if (props.buttonSize === 'sm') return '14px'
+    if (props.buttonSize === 'lg') return '28px'
+    return '24px'
+  }
+  // Backwards compatibility with props.size
+  if (isCustomLength(props.size)) return props.size
   if (props.size === 'sm') return '14px'
   if (props.size === 'lg') return '24px'
   return undefined
 })
 
-const colorSchemeMap = { brand: 'primary', gray: 'medium', red: 'danger', green: 'success', blue: 'tertiary' }
 const sizeMap = { sm: 'small', md: 'default', lg: 'large' }
+const colorSchemeMap = { brand: 'primary', gray: 'medium', red: 'danger', green: 'success', blue: 'tertiary' }
 const variantFillMap = { solid: 'solid', outline: 'outline', clear: 'clear', unstyled: 'clear', ghost: 'clear' }
 
+// Resolve native Ionic button size
+const resolvedSize = computed(() => {
+  const s = props.buttonSize || props.size
+  if (isCustomLength(s)) return 'small'
+  return sizeMap[s] || 'default'
+})
+
+// Resolve explicit button dimensions (width/height)
+const resolvedButtonDimension = computed(() => {
+  if (props.buttonSize) {
+    if (isCustomLength(props.buttonSize)) return props.buttonSize
+    if (props.buttonSize === 'sm') return '32px'
+    if (props.buttonSize === 'md') return '44px'
+    if (props.buttonSize === 'lg') return '56px'
+  }
+  // Backwards compatibility: custom length in props.size when iconSize is not separate
+  if (isCustomLength(props.size) && !props.iconSize) {
+    return props.size
+  }
+  return null
+})
+
+const buttonCustomStyle = computed(() => {
+  const styles = {}
+  if (resolvedButtonDimension.value) {
+    styles.width = resolvedButtonDimension.value
+    styles.height = resolvedButtonDimension.value
+    styles['--padding-start'] = '0px'
+    styles['--padding-end'] = '0px'
+    styles['--padding-top'] = '0px'
+    styles['--padding-bottom'] = '0px'
+    styles['min-height'] = 'unset'
+  }
+  if (props.rounded || props.shape === 'round') {
+    styles['--border-radius'] = '50%'
+    styles['border-radius'] = '50%'
+  }
+  return Object.keys(styles).length > 0 ? styles : null
+})
+
 const resolvedColor = computed(() => props.color || colorSchemeMap[props.colorScheme || config.value.colorScheme] || 'primary')
-const resolvedSize = computed(() => (isCustomSize.value ? 'small' : (sizeMap[props.size] || 'default')))
 const resolvedFill = computed(() => variantFillMap[props.variant || config.value.variant] || 'solid')
 
 function onClick(event) {
@@ -125,12 +193,13 @@ function onClick(event) {
       :fill="resolvedFill"
       :color="resolvedColor"
       :size="resolvedSize"
+      :shape="shape"
       :disabled="isDisabled || isLoading"
       :title="resolvedIconLabel"
       :aria-label="resolvedIconLabel"
       class="app-btn-icon-only"
-      :class="{ 'app-btn-icon-clear': resolvedFill === 'clear' }"
-      :style="isCustomSize ? { '--padding-start': '0px', '--padding-end': '0px', width: resolvedIconSize, height: resolvedIconSize } : null"
+      :class="{ 'app-btn-icon-clear': resolvedFill === 'clear', 'app-btn-rounded': rounded || shape === 'round' }"
+      :style="buttonCustomStyle"
       v-bind="$attrs"
       @click="onClick"
     >
@@ -145,8 +214,10 @@ function onClick(event) {
       :fill="resolvedFill"
       :color="resolvedColor"
       :size="resolvedSize"
+      :shape="shape"
       :expand="expand"
       :disabled="isDisabled || isLoading"
+      :style="buttonCustomStyle"
       v-bind="$attrs"
       @click="onClick"
     >
@@ -165,6 +236,25 @@ ion-button {
 }
 ion-button::part(native) {
   text-transform: none;
+}
+.app-btn-icon-only {
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  margin: 0;
+}
+.app-btn-icon-only::part(native) {
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.app-btn-rounded {
+  --border-radius: 50%;
+}
+.app-btn-rounded::part(native) {
+  border-radius: 50%;
 }
 .app-btn-icon-clear {
   --padding-start: 0;
