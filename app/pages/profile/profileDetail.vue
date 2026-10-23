@@ -7,18 +7,20 @@ import {
 } from '@ionic/vue';
 import Icon from '~/components/Icon/icon.vue';
 import { sendTitleToFlutter } from '~/composables/useNativeBridge';
+import evChargerData from '~/data/ev_charger_data.json';
 
 onMounted(() => {
   sendTitleToFlutter('Profile Details');
 });
 
-// Profile user data matching the design
+// Profile user data from centralized JSON
+const { profile } = evChargerData;
 const user = ref({
-  fullName: 'Chan Makara',
-  email: 'ChanMakara12@gmail.com',
-  address: 'Phnom Penh',
-  phoneNumber: '097 456 445',
-  avatar: '/images/profile_chan_makara.png'
+  fullName: profile.fullName,
+  email: profile.email,
+  address: profile.address,
+  phoneNumber: profile.phoneNumber,
+  avatar: profile.avatar
 });
 
 // Toast feedback

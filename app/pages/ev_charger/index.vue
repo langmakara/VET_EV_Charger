@@ -27,7 +27,7 @@
   import evChargerData from '~/data/ev_charger_data.json'
 import IconButton from '~/components/Button/IconButton.vue'
 
-  const { actions, nearbyStations, newsFeeds } = evChargerData
+  const { actions, nearbyStations, newsFeeds, profile } = evChargerData
 
   const chargingInfo = ref({
     status: 'Your vehicle is charging',
@@ -116,11 +116,11 @@ import IconButton from '~/components/Button/IconButton.vue'
         <ion-card-content class="profile-card-content">
           <ion-item class="profile-item" lines="none" :detail="false">
             <ion-avatar slot="start" class="profile-avatar">
-              <img src="/images/profile_kim_dara.jpg" alt="Kim Dara" />
+              <img :src="profile.avatar" :alt="profile.fullName" />
             </ion-avatar>
             <ion-label class="profile-info-label">
-              <h2 class="profile-user-name">Kim Dara</h2>
-              <p class="profile-user-greeting">Welcome!</p>
+              <h2 class="profile-user-name">{{ profile.fullName }}</h2>
+              <p class="profile-user-greeting">{{ profile.greeting }}</p>
             </ion-label>
             <ion-icon slot="end" :icon="chevronForward" class="profile-chevron"></ion-icon>
           </ion-item>
@@ -216,12 +216,7 @@ import IconButton from '~/components/Button/IconButton.vue'
             <AppCard customClass="action-card" button="true" @click="handleAction(action)">
               <ion-card-content class="action-content">
                 <div class="action-icon-wrapper">
-                  <img
-                    v-if="action.icon.includes('.svg')"
-                    :src="action.icon"
-                    style="width: 18px; height: 18px"
-                  />
-                  <Icon v-else :name="action.icon" class="action-icon" size="18px" />
+                  <Icon :name="action.icon" class="action-icon" size="18px" />
                 </div>
                 <div class="action-label">{{ action.label }}</div>
               </ion-card-content>

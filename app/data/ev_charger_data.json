@@ -1,4 +1,12 @@
 {
+  "profile": {
+    "fullName": "Kim Makara",
+    "email": "ChanMakara12@gmail.com",
+    "address": "Phnom Penh",
+    "phoneNumber": "097 456 445",
+    "avatar": "/vet-ev-charger/images/profile_chan_makara.png",
+    "greeting": "Welcome!"
+  },
   "vouchers": [
     {
       "id": 1,
@@ -30,7 +38,7 @@
   ],
   "actions": [
     {
-      "icon": "/icons/Vector.svg",
+      "icon": "Vector",
       "label": "Map Station",
       "path": "/ev_charger/mapStations"
     },
@@ -51,9 +59,9 @@
       "name": "VET - Pursat Bus Station",
       "status": "Open",
       "type": "Bus Station",
-      "image": "/images/vet-pursat.svg",
-      "station": "/images/station.svg",
-      "profile": "/images/logo.svg",
+      "image": "/vet-ev-charger/images/vet-pursat.svg",
+      "station": "/vet-ev-charger/images/station.svg",
+      "profile": "/vet-ev-charger/images/logo.svg",
       "dc": "1/6",
       "price": "2,000KHR/kWh",
       "gbt": "5/6",
@@ -85,7 +93,7 @@
           "status": "5/6"
         },
         {
-          "icon": "/icons/ccs2DC.svg",
+          "icon": "/vet-ev-charger/icons/ccs2DC.svg",
           "name": "CCS2 (DC)",
           "power": "120 kW",
           "price": "2,000KHR/kWh",
@@ -100,12 +108,12 @@
         },
         {
           "type": "telegram",
-          "icon": "/icons/telegram.svg",
+          "icon": "/vet-ev-charger/icons/telegram.svg",
           "colorClass": "bg-transparent"
         },
         {
           "type": "messenger",
-          "icon": "/icons/messenger.svg",
+          "icon": "/vet-ev-charger/icons/messenger.svg",
           "colorClass": "bg-transparent"
         }
       ],
@@ -117,9 +125,9 @@
       "name": "VET - Phnom Penh Mall",
       "status": "Open",
       "type": "Mall Station",
-      "image": "/images/blue_ev_charging.jpg",
-      "station": "/images/station.svg",
-      "profile": "/images/logo.svg",
+      "image": "/vet-ev-charger/images/blue_ev_charging.jpg",
+      "station": "/vet-ev-charger/images/station.svg",
+      "profile": "/vet-ev-charger/images/logo.svg",
       "dc": "2/4",
       "price": "2,000KHR/kWh",
       "gbt": "2/4",
@@ -149,7 +157,7 @@
           "status": "2/4"
         },
         {
-          "icon": "/icons/ccs2DC.svg",
+          "icon": "/vet-ev-charger/icons/ccs2DC.svg",
           "name": "CCS2 (DC)",
           "power": "120 kW",
           "price": "2,000KHR/kWh",
@@ -164,12 +172,12 @@
         },
         {
           "type": "telegram",
-          "icon": "/icons/telegram.svg",
+          "icon": "/vet-ev-charger/icons/telegram.svg",
           "colorClass": "bg-transparent"
         },
         {
           "type": "messenger",
-          "icon": "/icons/messenger.svg",
+          "icon": "/vet-ev-charger/icons/messenger.svg",
           "colorClass": "bg-transparent"
         }
       ],
@@ -181,9 +189,9 @@
       "name": "VET - Kampong Speu Highway",
       "status": "Closed",
       "type": "Highway Stop",
-      "image": "/images/blue_ev_charging.jpg",
-      "station": "/images/station.svg",
-      "profile": "/images/logo.svg",
+      "image": "/vet-ev-charger/images/blue_ev_charging.jpg",
+      "station": "/vet-ev-charger/images/station.svg",
+      "profile": "/vet-ev-charger/images/logo.svg",
       "dc": "0/2",
       "price": "2,000KHR/kWh",
       "gbt": "0/2",
@@ -213,7 +221,7 @@
           "status": "0/2"
         },
         {
-          "icon": "/icons/ccs2DC.svg",
+          "icon": "/vet-ev-charger/icons/ccs2DC.svg",
           "name": "CCS2 (DC)",
           "power": "120 kW",
           "price": "2,000KHR/kWh",
@@ -228,12 +236,12 @@
         },
         {
           "type": "telegram",
-          "icon": "/icons/telegram.svg",
+          "icon": "/vet-ev-charger/icons/telegram.svg",
           "colorClass": "bg-transparent"
         },
         {
           "type": "messenger",
-          "icon": "/icons/messenger.svg",
+          "icon": "/vet-ev-charger/icons/messenger.svg",
           "colorClass": "bg-transparent"
         }
       ],
@@ -245,9 +253,9 @@
       "name": "VET - Siem Reap Airport",
       "status": "Open",
       "type": "Airport Station",
-      "image": "/images/blue_ev_charging.jpg",
-      "station": "/images/station.svg",
-      "profile": "/images/logo.svg",
+      "image": "/vet-ev-charger/images/blue_ev_charging.jpg",
+      "station": "/vet-ev-charger/images/station.svg",
+      "profile": "/vet-ev-charger/images/logo.svg",
       "dc": "3/6",
       "price": "2,000KHR/kWh",
       "gbt": "3/6",
@@ -280,7 +288,7 @@
           "status": "3/6"
         },
         {
-          "icon": "/icons/ccs2DC.svg",
+          "icon": "/vet-ev-charger/icons/ccs2DC.svg",
           "name": "CCS2 (DC)",
           "power": "120 kW",
           "price": "2,000KHR/kWh",
@@ -295,12 +303,12 @@
         },
         {
           "type": "telegram",
-          "icon": "/icons/telegram.svg",
+          "icon": "/vet-ev-charger/icons/telegram.svg",
           "colorClass": "bg-transparent"
         },
         {
           "type": "messenger",
-          "icon": "/icons/messenger.svg",
+          "icon": "/vet-ev-charger/icons/messenger.svg",
           "colorClass": "bg-transparent"
         }
       ],
@@ -312,9 +320,9 @@
       "name": "VET - Battambang Central",
       "status": "Open",
       "type": "City Station",
-      "image": "/images/blue_ev_charging.jpg",
-      "station": "/images/station.svg",
-      "profile": "/images/logo.svg",
+      "image": "/vet-ev-charger/images/blue_ev_charging.jpg",
+      "station": "/vet-ev-charger/images/station.svg",
+      "profile": "/vet-ev-charger/images/logo.svg",
       "dc": "4/8",
       "price": "2,000KHR/kWh",
       "gbt": "4/8",
@@ -349,7 +357,7 @@
           "status": "4/8"
         },
         {
-          "icon": "/icons/ccs2DC.svg",
+          "icon": "/vet-ev-charger/icons/ccs2DC.svg",
           "name": "CCS2 (DC)",
           "power": "120 kW",
           "price": "2,000KHR/kWh",
@@ -364,12 +372,12 @@
         },
         {
           "type": "telegram",
-          "icon": "/icons/telegram.svg",
+          "icon": "/vet-ev-charger/icons/telegram.svg",
           "colorClass": "bg-transparent"
         },
         {
           "type": "messenger",
-          "icon": "/icons/messenger.svg",
+          "icon": "/vet-ev-charger/icons/messenger.svg",
           "colorClass": "bg-transparent"
         }
       ],
@@ -381,9 +389,9 @@
       "name": "VET - Kampot Riverside",
       "status": "Open",
       "type": "Riverside Station",
-      "image": "/images/blue_ev_charging.jpg",
-      "station": "/images/station.svg",
-      "profile": "/images/logo.svg",
+      "image": "/vet-ev-charger/images/blue_ev_charging.jpg",
+      "station": "/vet-ev-charger/images/station.svg",
+      "profile": "/vet-ev-charger/images/logo.svg",
       "dc": "1/3",
       "price": "2,000KHR/kWh",
       "gbt": "1/3",
@@ -415,7 +423,7 @@
           "status": "1/3"
         },
         {
-          "icon": "/icons/ccs2DC.svg",
+          "icon": "/vet-ev-charger/icons/ccs2DC.svg",
           "name": "CCS2 (DC)",
           "power": "80 kW",
           "price": "2,000KHR/kWh",
@@ -430,12 +438,12 @@
         },
         {
           "type": "telegram",
-          "icon": "/icons/telegram.svg",
+          "icon": "/vet-ev-charger/icons/telegram.svg",
           "colorClass": "bg-transparent"
         },
         {
           "type": "messenger",
-          "icon": "/icons/messenger.svg",
+          "icon": "/vet-ev-charger/icons/messenger.svg",
           "colorClass": "bg-transparent"
         }
       ],
@@ -447,9 +455,9 @@
       "name": "VET - Koh Kong Border",
       "status": "Open",
       "type": "Border Station",
-      "image": "/images/blue_ev_charging.jpg",
-      "station": "/images/station.svg",
-      "profile": "/images/logo.svg",
+      "image": "/vet-ev-charger/images/blue_ev_charging.jpg",
+      "station": "/vet-ev-charger/images/station.svg",
+      "profile": "/vet-ev-charger/images/logo.svg",
       "dc": "2/4",
       "price": "2,000KHR/kWh",
       "gbt": "2/4",
@@ -480,7 +488,7 @@
           "status": "2/4"
         },
         {
-          "icon": "/icons/ccs2DC.svg",
+          "icon": "/vet-ev-charger/icons/ccs2DC.svg",
           "name": "CCS2 (DC)",
           "power": "120 kW",
           "price": "2,000KHR/kWh",
@@ -495,12 +503,12 @@
         },
         {
           "type": "telegram",
-          "icon": "/icons/telegram.svg",
+          "icon": "/vet-ev-charger/icons/telegram.svg",
           "colorClass": "bg-transparent"
         },
         {
           "type": "messenger",
-          "icon": "/icons/messenger.svg",
+          "icon": "/vet-ev-charger/icons/messenger.svg",
           "colorClass": "bg-transparent"
         }
       ],
@@ -512,9 +520,9 @@
       "name": "VET - Takeo Province",
       "status": "Busy",
       "type": "Provincial Station",
-      "image": "/images/blue_ev_charging.jpg",
-      "station": "/images/station.svg",
-      "profile": "/images/logo.svg",
+      "image": "/vet-ev-charger/images/blue_ev_charging.jpg",
+      "station": "/vet-ev-charger/images/station.svg",
+      "profile": "/vet-ev-charger/images/logo.svg",
       "dc": "5/6",
       "price": "2,000KHR/kWh",
       "gbt": "5/6",
@@ -546,7 +554,7 @@
           "status": "5/6"
         },
         {
-          "icon": "/icons/ccs2DC.svg",
+          "icon": "/vet-ev-charger/icons/ccs2DC.svg",
           "name": "CCS2 (DC)",
           "power": "120 kW",
           "price": "2,000KHR/kWh",
@@ -561,12 +569,12 @@
         },
         {
           "type": "telegram",
-          "icon": "/icons/telegram.svg",
+          "icon": "/vet-ev-charger/icons/telegram.svg",
           "colorClass": "bg-transparent"
         },
         {
           "type": "messenger",
-          "icon": "/icons/messenger.svg",
+          "icon": "/vet-ev-charger/icons/messenger.svg",
           "colorClass": "bg-transparent"
         }
       ],
@@ -578,9 +586,9 @@
       "name": "VET - Kompong Cham Bridge",
       "status": "Open",
       "type": "Bridge Station",
-      "image": "/images/blue_ev_charging.jpg",
-      "station": "/images/station.svg",
-      "profile": "/images/logo.svg",
+      "image": "/vet-ev-charger/images/blue_ev_charging.jpg",
+      "station": "/vet-ev-charger/images/station.svg",
+      "profile": "/vet-ev-charger/images/logo.svg",
       "dc": "2/5",
       "price": "2,000KHR/kWh",
       "gbt": "2/5",
@@ -611,7 +619,7 @@
           "status": "2/5"
         },
         {
-          "icon": "/icons/ccs2DC.svg",
+          "icon": "/vet-ev-charger/icons/ccs2DC.svg",
           "name": "CCS2 (DC)",
           "power": "100 kW",
           "price": "2,000KHR/kWh",
@@ -626,12 +634,12 @@
         },
         {
           "type": "telegram",
-          "icon": "/icons/telegram.svg",
+          "icon": "/vet-ev-charger/icons/telegram.svg",
           "colorClass": "bg-transparent"
         },
         {
           "type": "messenger",
-          "icon": "/icons/messenger.svg",
+          "icon": "/vet-ev-charger/icons/messenger.svg",
           "colorClass": "bg-transparent"
         }
       ],
@@ -643,9 +651,9 @@
       "name": "VET - Preah Sihanouk Port",
       "status": "Open",
       "type": "Port Station",
-      "image": "/images/blue_ev_charging.jpg",
-      "station": "/images/station.svg",
-      "profile": "/images/logo.svg",
+      "image": "/vet-ev-charger/images/blue_ev_charging.jpg",
+      "station": "/vet-ev-charger/images/station.svg",
+      "profile": "/vet-ev-charger/images/logo.svg",
       "dc": "3/6",
       "price": "2,000KHR/kWh",
       "gbt": "3/6",
@@ -680,7 +688,7 @@
           "status": "3/6"
         },
         {
-          "icon": "/icons/ccs2DC.svg",
+          "icon": "/vet-ev-charger/icons/ccs2DC.svg",
           "name": "CCS2 (DC)",
           "power": "120 kW",
           "price": "2,000KHR/kWh",
@@ -695,12 +703,12 @@
         },
         {
           "type": "telegram",
-          "icon": "/icons/telegram.svg",
+          "icon": "/vet-ev-charger/icons/telegram.svg",
           "colorClass": "bg-transparent"
         },
         {
           "type": "messenger",
-          "icon": "/icons/messenger.svg",
+          "icon": "/vet-ev-charger/icons/messenger.svg",
           "colorClass": "bg-transparent"
         }
       ],
@@ -713,21 +721,21 @@
       "id": 1,
       "title": "New Charging Station!",
       "description": "Explore the cutting-edge features and benefits of the Volta electric vehicle...",
-      "image": "/images/blue_ev_charging.jpg",
+      "image": "/vet-ev-charger/images/blue_ev_charging.jpg",
       "date": "14 Jan 2025, 5:15 PM"
     },
     {
       "id": 2,
       "title": "EV Subsidy Program 2026",
       "description": "Government announces new subsidies for electric vehicle owners starting this month.",
-      "image": "/images/blue_ev_charging.jpg",
+      "image": "/vet-ev-charger/images/blue_ev_charging.jpg",
       "date": "14 Jan 2025, 10:00 AM"
     },
     {
       "id": 3,
       "title": "Battery Tech Breakthrough",
       "description": "New solid state batteries promise double the range and half the charging time.",
-      "image": "/images/blue_ev_charging.jpg",
+      "image": "/vet-ev-charger/images/blue_ev_charging.jpg",
       "date": "14 Jan 2025, 5:15 PM"
     }
   ],

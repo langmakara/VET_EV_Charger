@@ -14,14 +14,16 @@ import { chevronForward } from 'ionicons/icons';
 import Icon from '~/components/Icon/icon.vue';
 import ContactModal from './contactModal.vue';
 import { sendTitleToFlutter } from '~/composables/useNativeBridge';
+import evChargerData from '~/data/ev_charger_data.json';
 
 onMounted(() => {
   sendTitleToFlutter('Profile');
 });
 
-// User information
-const userName = ref('Chan Makara');
-const userAvatar = ref('/images/profile_chan_makara.png');
+// User information from centralized data
+const { profile } = evChargerData;
+const userName = ref(profile.fullName);
+const userAvatar = ref(profile.avatar);
 
 // Language definitions
 interface LanguageOption {
@@ -70,7 +72,7 @@ const handleItemClick = (type: string) => {
       isLanguageModalOpen.value = true;
       break;
     case 'faq':
-      triggerToast('Frequently Asked Questions');
+      navigateTo('/faq');
       break;
     case 'contact':
       isContactModalOpen.value = true;
