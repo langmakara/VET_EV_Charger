@@ -4,10 +4,17 @@
   import CameraComponent from '~/components/Camera/CameraComponent.vue'
   import AlertComponent from '~/components/Modal/AlertComponent.vue'
   import IconButton from '~/components/Button/IconButton.vue'
-import Icon from '~/components/Icon/icon.vue'
+  import Icon from '~/components/Icon/icon.vue'
+  import { useFlashlight } from '~/composables/useFlashlight'
 
   const router = useRouter()
   const cameraRef = ref<InstanceType<typeof CameraComponent> | null>(null)
+  const cameraStream = ref<MediaStream | null>(null)
+  const { isOn: isFlashlightOn, toggle: toggleFlashlight, turnOff: turnOffFlashlight } = useFlashlight(cameraStream)
+
+  function onCameraReady(payload: { stream: MediaStream }) {
+    cameraStream.value = payload.stream
+  }
 
   const result = ref('')
   const scanning = ref(true)
@@ -29,6 +36,7 @@ import Icon from '~/components/Icon/icon.vue'
 
   onBeforeUnmount(() => {
     if (plugTimer) clearTimeout(plugTimer)
+    turnOffFlashlight()
   })
 
   function onCameraFrame({ canvas }: { canvas: HTMLCanvasElement }) {
@@ -107,7 +115,7 @@ import Icon from '~/components/Icon/icon.vue'
   <ion-page>
     <ion-content ion-content :fullscreen="true" :scroll-y="false" class="camera-content">
       <div class="camera-wrapper">
-        <CameraComponent ref="cameraRef" @frame="onCameraFrame">
+        <CameraComponent ref="cameraRef" @frame="onCameraFrame" @ready="onCameraReady">
           <!-- Custom Page Overlay -->
           <div class="overlay-container">
             <!-- Top bar with Back button -->
@@ -126,7 +134,7 @@ import Icon from '~/components/Icon/icon.vue'
             <!-- Top: Scan frame guide -->
             <div class="scan-guide">
               <div class="scan-box">
-                <Icon name="Corner" size="300px" class="scan-corners" color="white" />
+                <Icon name="Corner" size="250px" class="scan-corners" color="white" />
               </div>
             </div>
             <div class="scan-info">
@@ -141,7 +149,10 @@ import Icon from '~/components/Icon/icon.vue'
                 buttonSize="64px"
                 iconSize="26px"
                 rounded
-                color="light"
+                :color="isFlashlightOn ? 'warning' : 'light'"
+                :class="{ 'flashlight-btn--active': isFlashlightOn }"
+                aria-label="Flashlight"
+                @click="toggleFlashlight"
               />
               <br />
               <ion-text class="flashlight-label">Flashlight</ion-text>
@@ -199,7 +210,7 @@ import Icon from '~/components/Icon/icon.vue'
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
-    margin-top: 150px;
+    margin-top: 100px;
   }
 
   .scan-box {
@@ -224,7 +235,12 @@ import Icon from '~/components/Icon/icon.vue'
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    margin-bottom: 90px;
+    margin-bottom: 20px;
+    pointer-events: auto;
+  }
+  .flashlight-btn--active {
+    --box-shadow: 0 0 18px rgba(255, 196, 9, 0.8);
+    filter: drop-shadow(0 0 12px rgba(255, 196, 9, 0.7));
   }
   .flashlight-label {
     font-size: var(--app-font-size-title);

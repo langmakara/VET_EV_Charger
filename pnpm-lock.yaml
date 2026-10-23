@@ -17,6 +17,9 @@ importers:
       '@capacitor/google-maps':
         specifier: ^8.0.1
         version: 8.0.1(@capacitor/core@6.2.2)
+      '@capawesome/capacitor-torch':
+        specifier: ^8.0.2
+        version: 8.0.2(@capacitor/core@6.2.2)
       '@nuxtjs/i18n':
         specifier: 9.5.6
         version: 9.5.6(@vue/compiler-dom@3.5.43)(eslint@10.11.0(jiti@2.7.0)(supports-color@10.2.2))(magicast@0.5.5)(rollup@4.63.4)(supports-color@10.2.2)(vue@3.5.43(typescript@5.9.3))
@@ -244,6 +247,11 @@ packages:
 
   '@capacitor/google-maps@8.0.1':
     resolution: {integrity: sha512-XSOyanbtOeO5KrSfoJOpbcSW4EXvfdxp+SUy6umdIGFeR2WJKNnPC6isXn+zjJgJH8kblT2X4fF0dxhZV8wLBg==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
+  '@capawesome/capacitor-torch@8.0.2':
+    resolution: {integrity: sha512-SsmzBZ1SCMeireH7rALvEdqBjGMmwJW0rGalGdQk7qsDDWjS8AruLq6yA05OqEEAgVsgpt7Tx7Vw+w7Z/LGOEg==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
@@ -5179,6 +5187,10 @@ snapshots:
       '@googlemaps/js-api-loader': 2.1.1
       '@googlemaps/markerclusterer': 2.6.2
       '@types/google.maps': 3.66.3
+
+  '@capawesome/capacitor-torch@8.0.2(@capacitor/core@6.2.2)':
+    dependencies:
+      '@capacitor/core': 6.2.2
 
   '@clack/core@1.5.1':
     dependencies:

@@ -46,8 +46,8 @@
     mode="ios"
     :handle="true"
     @didDismiss="emit('didDismiss')"
-    :initial-breakpoint="0.42"
-    :breakpoints="[0, 0.42]"
+    :initial-breakpoint="0.50"
+    :breakpoints="[0, 0.50]"
   >
     <ion-content class="ion-no-padding">
       <ion-card class="modal-card">

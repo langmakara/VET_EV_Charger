@@ -15,20 +15,25 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { IonPage, IonContent, IonSpinner, IonText } from "@ionic/vue";
-import { usePrivacyTermsQuery } from "~/composables/queries/useTermsQueries";
+import { termsRepository } from "~/apis/terms.repository";
 
 const { t, locale } = useI18n();
 
-const { data: termsResponse, isPending: pending, error } = usePrivacyTermsQuery(2);
+const { data: termsResponse, pending, error } = await termsRepository.getPrivacyTerms(2);
 
 const termsContent = computed(() => {
   const data = termsResponse.value?.data;
-  if (!data) return "";
+  if (!data) return '';
 
   const loc = locale.value;
-  if (loc === "km") return data.descriptionKh || "";
-  if (loc === "zh") return data.descriptionZh || "";
-  return data.descriptionEn || data.descriptionKh || "";
+  let content = '';
+  if (loc === 'km') content = data.descriptionKh || '';
+  else if (loc === 'zh') content = data.descriptionZh || '';
+  else content = data.descriptionEn || data.descriptionKh || '';
+
+  // Replace &nbsp; and non-breaking space characters with normal spaces
+  // so text wraps naturally between words instead of breaking mid-word
+  return content.replace(/&nbsp;|\u00a0/gi, ' ');
 });
 </script>
 

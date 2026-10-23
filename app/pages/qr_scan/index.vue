@@ -4,8 +4,48 @@ import jsQR from 'jsQR'
 import CameraComponent from '~/components/Camera/CameraComponent.vue'
 import AlertComponent from '~/components/Modal/AlertComponent.vue'
 import ModalPlug from './modalPlug.vue'
+import Icon from '~/components/Icon/icon.vue'
 
 const router = useRouter()
+
+const chargingSteps = [
+  {
+    step: 1,
+    icon: 'qr-code',
+    title: 'Scan QR code',
+    description: 'Scan the QR code on the charging machine.'
+  },
+  {
+    step: 2,
+    icon: 'amount',
+    title: 'Set charging amount',
+    description: 'Choose your charging amount (or kWh / price).'
+  },
+  {
+    step: 3,
+    icon: 'confirmPayment',
+    title: 'Confirm payment',
+    description: 'Review the details and confirm your payment.'
+  },
+  {
+    step: 4,
+    icon: 'PlugCharger',
+    title: 'Plug charger to vehicle',
+    description: 'Connect the charger to your EV and wait for charging to start.'
+  },
+  {
+    step: 5,
+    icon: 'TrackCharging',
+    title: 'Track your charging',
+    description: 'View the progress and final details in the app.'
+  },
+  {
+    step: 6,
+    icon: 'PlugCharger',
+    title: 'Unplug charger',
+    description: 'Safely disconnect the charger and return it to the station once finish.'
+  }
+]
 const cameraRef = ref<InstanceType<typeof CameraComponent> | null>(null)
 
 const result = ref('')
@@ -82,7 +122,7 @@ function ClosePlugModal() {
 
 function handlePlugSelect(_plug: any) {
   showModalPlug.value = false
-  navigateTo('/charging')
+  navigateTo('/chargingInfor')
 }
 
 function ScanAgain() {
@@ -181,7 +221,46 @@ function handleBack() {
             </div>
 
             <!-- Bottom: Charger Card -->
-            <div class="charger"></div>
+            <div class="charger">
+              <!-- Watermark Logo -->
+              <!-- <div class="charger-watermark" aria-hidden="true">VET</div> -->
+
+              <!-- Header -->
+              <div class="charger-header">
+                <div class="header-icon-box">
+                  <Icon name="Vector-color" size="26px" color="#DE5D0A" />
+                </div>
+                <div class="header-info">
+                  <h3 class="header-title">How to charge</h3>
+                  <p class="header-subtitle">Follow these simple steps to start charging your EV.</p>
+                </div>
+              </div>
+
+              <!-- Steps Grid -->
+              <ion-grid class="steps-grid ion-no-padding">
+                <ion-row>
+                  <ion-col
+                    v-for="item in chargingSteps"
+                    :key="item.step"
+                    size="6"
+                    class="step-col"
+                  >
+                    <div class="step-item">
+                      <div class="step-badge-wrapper">
+                        <div class="step-icon-box">
+                          <Icon :name="item.icon" size="22px" color="#DE5D0A" />
+                        </div>
+                        <span class="step-number">{{ item.step }}</span>
+                      </div>
+                      <div class="step-text">
+                        <span class="step-title">{{ item.title }}</span>
+                        <span class="step-desc">{{ item.description }}</span>
+                      </div>
+                    </div>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </div>
           </div>
         </CameraComponent>
 
@@ -232,8 +311,7 @@ function handleBack() {
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  padding: calc(1rem + env(safe-area-inset-top, 0px)) 10px
-    calc(1.5rem + env(safe-area-inset-bottom, 0px)) 10px;
+  padding: 10px;
   pointer-events: none;
   z-index: 10;
 }
@@ -273,12 +351,12 @@ function handleBack() {
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  margin-top: 20%;
+  margin-top: clamp(0.75rem, 5vh, 2.5rem);
 }
 
 .scan-box {
   position: relative;
-  width: min(65vw, 240px);
+  width: min(58vw, 220px);
   aspect-ratio: 1;
   border-radius: 2.25rem;
   display: flex;
@@ -302,15 +380,154 @@ function handleBack() {
 
 .charger {
   width: 100%;
-  height: 500px;
-  max-height: 38vh;
-  min-height: 160px;
-  padding: 10px;
-  border-radius: 1rem;
-  background-color: rgba(var(--ion-color-primary-rgb), 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  border-radius: 1.25rem;
+  background-color: #DE5D0A;
+  padding: 14px 12px 10px;
+  position: relative;
+  overflow: hidden;
   margin-top: auto;
   pointer-events: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  max-height: 50vh;
+  /* overflow-y: auto; */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  z-index: 10;
+}
+
+.charger::-webkit-scrollbar {
+  display: none;
+}
+
+.charger-watermark {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%) skewX(-12deg);
+  font-size: 115px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  user-select: none;
+  line-height: 1;
+  letter-spacing: -3px;
+  z-index: 0;
+}
+
+.charger-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.header-icon-box {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 14px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.header-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.header-title {
+  margin: 0;
+  font-size: 14px !important;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.25;
+}
+
+.header-subtitle {
+  margin: 3px 0 0 0;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.35;
+}
+
+.steps-grid {
+  position: relative;
+  z-index: 1;
+}
+
+.step-col {
+  padding: 6px 4px;
+}
+
+.step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  height: 100%;
+}
+
+.step-badge-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.step-icon-box {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 12px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+}
+
+.step-number {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background-color: #DE5D0A;
+  border: 1.5px solid #ffffff;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.step-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.charger .step-title,
+.step-title {
+  font-size: 12px !important;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.25;
+  margin-bottom: 2px;
+}
+
+.charger .step-desc,
+.step-desc {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.3;
 }
 </style>
