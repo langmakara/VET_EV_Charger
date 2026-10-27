@@ -14,6 +14,8 @@
   import { chevronForward, chevronDown } from 'ionicons/icons'
   import { sendTitleToFlutter } from '~/composables/useNativeBridge'
   import AccountModal, { type AccountItem } from './accountModal.vue'
+  import VoucherModal from './voucherModal.vue'
+  import PointModal from './pointModal.vue'
   import Icon from '~/components/Icon/icon.vue'
 
   // Set mini-app title for ABA Mini App wrapper
@@ -94,64 +96,22 @@
   const voucherDiscountPercent = ref<number>(5)
   const isVoucherSheetOpen = ref(false)
 
-  const voucherActionSheetButtons = [
-    {
-      text: '5% OFF - Welcome Voucher (Active)',
-      data: { percent: 5 },
-      handler: () => {
-        voucherDiscountPercent.value = 5
-      }
-    },
-    {
-      text: '10% OFF - Green Mobility Voucher',
-      data: { percent: 10 },
-      handler: () => {
-        voucherDiscountPercent.value = 10
-      }
-    },
-    {
-      text: 'Remove Voucher (0%)',
-      role: 'destructive',
-      data: { percent: 0 },
-      handler: () => {
-        voucherDiscountPercent.value = 0
-      }
-    },
-    {
-      text: 'Cancel',
-      role: 'cancel'
-    }
-  ]
+  const handleApplyVoucher = (payload: { percent: number; code: string; voucher: any }) => {
+    voucherDiscountPercent.value = payload.percent
+    toastMessage.value = `Applied ${payload.percent}% OFF voucher!`
+    showToast.value = true
+  }
 
   // Point state
   const pointsApplied = ref<number>(0)
   const isPointSheetOpen = ref(false)
 
-  const pointActionSheetButtons = [
-    {
-      text: 'Redeem 4,000 Points (-4,000 KHR)',
-      handler: () => {
-        pointsApplied.value = 4000
-      }
-    },
-    {
-      text: 'Redeem 2,000 Points (-2,000 KHR)',
-      handler: () => {
-        pointsApplied.value = 2000
-      }
-    },
-    {
-      text: 'Do not use points',
-      role: 'destructive',
-      handler: () => {
-        pointsApplied.value = 0
-      }
-    },
-    {
-      text: 'Cancel',
-      role: 'cancel'
-    }
-  ]
+  const handleApplyPoints = (payload: { points: number; kwh: number }) => {
+    pointsApplied.value = payload.points
+    toastMessage.value =
+      payload.points > 0 ? `Applied ${formatNumber(payload.points)} Points!` : 'Points removed'
+    showToast.value = true
+  }
 
   // Accounts state matching the bottom sheet design
   const accounts = ref([
@@ -426,20 +386,20 @@
       @select="selectAccount"
     />
 
-    <!-- Action Sheets for Interactive Options -->
-    <!-- <ion-action-sheet
-      :is-open="isVoucherSheetOpen"
-      header="Select Voucher"
-      :buttons="voucherActionSheetButtons"
-      @didDismiss="isVoucherSheetOpen = false"
-    ></ion-action-sheet> -->
+    <!-- Apply Voucher Centered Dialog Modal Component -->
+    <VoucherModal
+      v-model:is-open="isVoucherSheetOpen"
+      :selected-percent="voucherDiscountPercent"
+      @apply="handleApplyVoucher"
+    />
 
-    <!-- <ion-action-sheet
-      :is-open="isPointSheetOpen"
-      header="Redeem Points"
-      :buttons="pointActionSheetButtons"
-      @didDismiss="isPointSheetOpen = false"
-    ></ion-action-sheet> -->
+    <!-- Apply Point Centered Dialog Modal Component -->
+    <PointModal
+      v-model:is-open="isPointSheetOpen"
+      :selected-points="pointsApplied"
+      :current-points="120"
+      @apply="handleApplyPoints"
+    />
 
     <!-- Notification Toast -->
     <ion-toast

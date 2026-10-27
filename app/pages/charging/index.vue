@@ -9,13 +9,9 @@ import {
   IonText,
   IonCard,
   IonCardContent,
-  IonIcon,
   IonButton
 } from '@ionic/vue';
-import { 
-  flash, 
-  powerOutline 
-} from 'ionicons/icons';
+import Icon from '~/components/Icon/icon.vue';
 import AlertComponent from '~/components/Modal/AlertComponent.vue';
 
 const isStopAlertOpen = ref(false);
@@ -77,7 +73,9 @@ const progressColor = computed(() => {
                 :style="{ stroke: progressColor }" />
             </svg>
             <span class="progress-inner">
-              <ion-icon :icon="flash" class="center-flash-icon"></ion-icon>
+              <span class="center-flash-icon">
+                <Icon name="flash" size="20px" color="#A4C214" />
+              </span>
               <ion-text class="progress-text">
                 <span class="value">{{ batteryProgress }}</span>
                 <span class="symbol">%</span>
@@ -102,11 +100,7 @@ const progressColor = computed(() => {
                 <ion-text class="stat-label"><p>Time Elapsed</p></ion-text>
                 <ion-row class="ion-align-items-center ion-nowrap stat-row-inner">
                   <span class="stat-icon icon-orange">
-                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="12" cy="12" r="9"></circle>
-                      <polyline points="12 7 12 12 15 12"></polyline>
-                      <path d="M10 2h4"></path>
-                    </svg>
+                    <Icon name="time-elapsed" size="22px" color="white" />
                   </span>
                   <ion-text class="stat-value"><span>14 mins</span></ion-text>
                 </ion-row>
@@ -121,10 +115,7 @@ const progressColor = computed(() => {
                 <ion-text class="stat-label"><p>Current</p></ion-text>
                 <ion-row class="ion-align-items-center ion-nowrap stat-row-inner">
                   <span class="stat-icon icon-green">
-                    <svg viewBox="0 0 24 24" width="22" height="22">
-                      <circle cx="12" cy="12" r="10" fill="white" />
-                      <text x="12" y="16" fill="#009B4D" font-size="12" font-weight="900" font-family="sans-serif" text-anchor="middle">A</text>
-                    </svg>
+                    <Icon name="current" size="22px" />
                   </span>
                   <ion-text class="stat-value"><span>60 A</span></ion-text>
                 </ion-row>
@@ -139,11 +130,7 @@ const progressColor = computed(() => {
                 <ion-text class="stat-label"><p>Voltage</p></ion-text>
                 <ion-row class="ion-align-items-center ion-nowrap stat-row-inner">
                   <span class="stat-icon icon-blue">
-                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 3l9 16H3z"></path>
-                      <path d="M12 9v4"></path>
-                      <path d="M12 17h.01"></path>
-                    </svg>
+                    <Icon name="voltage" size="22px" color="white" />
                   </span>
                   <ion-text class="stat-value"><span>500 V</span></ion-text>
                 </ion-row>
@@ -158,9 +145,7 @@ const progressColor = computed(() => {
                 <ion-text class="stat-label"><p>Energy</p></ion-text>
                 <ion-row class="ion-align-items-center ion-nowrap stat-row-inner">
                   <span class="stat-icon icon-red">
-                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M9 2v4M15 2v4M7 6h10v6a5 5 0 0 1-5 5v0a5 5 0 0 1-5-5V6zM12 17v5"></path>
-                    </svg>
+                    <Icon name="energy" size="22px" color="white" />
                   </span>
                   <ion-text class="stat-value"><span>6 / 15 kWh</span></ion-text>
                 </ion-row>
@@ -177,10 +162,7 @@ const progressColor = computed(() => {
                 <ion-text class="stat-label"><p>Estimated Cost</p></ion-text>
                 <ion-row class="ion-align-items-center ion-nowrap stat-row-inner">
                   <span class="stat-icon icon-yellow">
-                    <svg viewBox="0 0 24 24" width="22" height="22">
-                      <circle cx="12" cy="12" r="10" fill="white" />
-                      <text x="12" y="16" fill="#FFB300" font-size="14" font-weight="900" font-family="sans-serif" text-anchor="middle">$</text>
-                    </svg>
+                    <Icon name="cost" size="22px" />
                   </span>
                   <ion-text class="stat-value"><span>៛2,000.00</span></ion-text>
                 </ion-row>
@@ -209,7 +191,7 @@ const progressColor = computed(() => {
           <ion-col size="3" class="stop-col ion-text-right">
             <ion-button class="stop-button" expand="block" @click="isStopAlertOpen = true">
               <span class="stop-button-content">
-                <ion-icon :icon="powerOutline" class="stop-icon"></ion-icon>
+                <Icon name="power" size="24px" color="#E53935" class="stop-icon" />
                 <ion-text class="stop-text">Stop</ion-text>
               </span>
             </ion-button>
@@ -238,14 +220,7 @@ const progressColor = computed(() => {
         @didDismiss="isFullyChargedAlertOpen = false"
       >
         <template #icon>
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="8" y="20" width="44" height="24" rx="4" stroke="#000000" stroke-width="3"/>
-            <path d="M52 28H54C55.1046 28 56 28.8954 56 30V34C56 35.1046 55.1046 36 54 36H52V28Z" fill="#000000"/>
-            <rect x="12" y="24" width="8" height="16" rx="1" fill="#65C449"/>
-            <rect x="22" y="24" width="8" height="16" rx="1" fill="#65C449"/>
-            <rect x="32" y="24" width="8" height="16" rx="1" fill="#65C449"/>
-            <rect x="42" y="24" width="8" height="16" rx="1" fill="#65C449"/>
-          </svg>
+          <Icon name="battery-full" size="64px" color="#000000" />
         </template>
       </AlertComponent>
     </ion-content>
@@ -304,10 +279,12 @@ const progressColor = computed(() => {
 
 .center-flash-icon {
   background-color: #558B2F;
-  color: #A4C214;
-  padding: 6px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 5px;
 }
 

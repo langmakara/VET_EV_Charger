@@ -21,9 +21,17 @@ onMounted(() => {
 });
 
 // User information from centralized data
+// Profile user data from useUserProfile with fallback to centralized JSON
 const { profile } = evChargerData;
-const userName = ref(profile.fullName);
-const userAvatar = ref(profile.avatar);
+const { userProfile} = useUserProfile();
+
+const user = computed(() => ({
+  fullName: userProfile.value?.fullName || profile.fullName,
+  email: userProfile.value?.email || profile.email,
+  address: userProfile.value?.address || profile.address,
+  phoneNumber: userProfile.value?.phoneNumber || profile.phoneNumber,
+  avatar: userProfile.value?.avatar || profile.avatar
+}));
 
 // Language definitions
 interface LanguageOption {
@@ -92,9 +100,9 @@ const handleItemClick = (type: string) => {
         <!-- 1. Centered Avatar & User Name -->
         <div class="avatar-section">
           <ion-avatar class="main-avatar">
-            <img :src="userAvatar" :alt="userName" />
+            <img :src="user.avatar" :alt="user.fullName" />
           </ion-avatar>
-          <h1 class="user-display-name">{{ userName }}</h1>
+          <h1 class="user-display-name">{{ user.fullName }}</h1>
         </div>
 
         <!-- 2. Profile Item -->

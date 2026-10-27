@@ -36,7 +36,7 @@ import Icon from '~/components/Icon/icon.vue';
             </ion-item>
         </ion-content>
         <ion-footer class="footer-btn">
-            <AppButton label="Back to Homescreen" color="primary" fill="outline" class="custom-outline" expand="block" @click="navigateTo('/')" />
+            <AppButton label="Back to Homescreen" color="primary" fill="outline" class="custom-outline" expand="block" @click="navigateTo('/ev_charger')" />
         </ion-footer>
     </ion-page>
 </template>

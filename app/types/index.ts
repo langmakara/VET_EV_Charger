@@ -20,4 +20,9 @@ export type {
   MembershipBenefit,
 } from './ev-charger'
 
+export type {
+  HistoryDetailItem,
+  TransactionDetailItem,
+} from './transaction'
+
 

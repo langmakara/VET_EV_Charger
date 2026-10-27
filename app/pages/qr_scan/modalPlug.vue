@@ -12,6 +12,12 @@
   import Icon from '~/components/Icon/icon.vue'
   import AppButton from '~/components/Button/AppButton.vue'
 
+  export interface Plug {
+    id: string
+    name: string
+    status: string
+  }
+
   const props = withDefaults(
     defineProps<{
       isOpen?: boolean
@@ -24,19 +30,27 @@
   const emit = defineEmits<{
     (e: 'didDismiss'): void
     (e: 'close'): void
-    (e: 'select', plug: { id: string; name: string; status: string }): void
+    (e: 'select', plug: Plug): void
+    (e: 'continue', plug: Plug): void
   }>()
 
-  const plugs = ref([
+  const plugs = ref<Plug[]>([
     { id: 'plugA', name: 'Plug A', status: 'Available' },
     { id: 'plugB', name: 'Plug B', status: 'Available' }
   ])
 
   const selectedPlug = ref('plugA')
 
-  function handleSelect(plug: (typeof plugs.value)[0]) {
+  function handleSelect(plug: Plug) {
     selectedPlug.value = plug.id
     emit('select', plug)
+  }
+
+  function handleContinue() {
+    const current = plugs.value.find((p) => p.id === selectedPlug.value) ?? plugs.value[0]
+    if (current) {
+      emit('continue', current)
+    }
   }
 </script>
 
@@ -81,29 +95,18 @@
 
               <!-- Selection Checkmark -->
               <div class="plug-check">
-                <svg
+                <Icon
                   v-if="selectedPlug === plug.id"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <circle cx="12" cy="12" r="10.5" stroke="#2563eb" stroke-width="2.2" />
-                  <path
-                    d="M7.5 12.2L10.5 15.2L16.5 9.2"
-                    stroke="#2563eb"
-                    stroke-width="2.2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
+                  name="check-circle"
+                  size="24px"
+                  color="#2563eb"
+                />
               </div>
             </div>
           </div>
         </ion-card-content>
         <div class="modal-footer">
-          <AppButton label="Contiue" expand="block" />
+          <AppButton label="Continue" expand="block" @click="handleContinue" />
         </div>
       </ion-card>
     </ion-content>

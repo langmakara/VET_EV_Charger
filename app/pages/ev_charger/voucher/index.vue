@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { IonPage, IonContent, IonGrid, IonRow, IonCol } from '@ionic/vue';
 import AppInputField from '~/components/Controls/AppInputField.vue';
 import IconButton from '~/components/Button/IconButton.vue';
-import VoucherCard from './voucherCard.vue';
+import VoucherCard from '../../../components/Card/VoucherCard.vue';
 import AlertComponent from '~/components/Modal/AlertComponent.vue';
 import ToastAlert from '~/components/Alert/ToastAlert.vue';
 import evData from '~/data/ev_charger_data.json';

@@ -60,7 +60,6 @@ defineEmits<{
 .voucher-header {
   background-color: #e66a15;
   padding: var(--ion-padding);
-  /* display: flex; */
   align-items: center;
   justify-content: center;
   position: relative;
@@ -97,7 +96,6 @@ defineEmits<{
   display: flex;
   flex-direction: column;
   width: 100%;
-  /* no justify-content here: margin-top: auto on the expiry handles the bottom */
 }
 
 .top-meta {

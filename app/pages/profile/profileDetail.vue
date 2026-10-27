@@ -13,15 +13,17 @@ onMounted(() => {
   sendTitleToFlutter('Profile Details');
 });
 
-// Profile user data from centralized JSON
+// Profile user data from useUserProfile with fallback to centralized JSON
 const { profile } = evChargerData;
-const user = ref({
-  fullName: profile.fullName,
-  email: profile.email,
-  address: profile.address,
-  phoneNumber: profile.phoneNumber,
-  avatar: profile.avatar
-});
+const { userProfile} = useUserProfile();
+
+const user = computed(() => ({
+  fullName: userProfile.value?.fullName || profile.fullName,
+  email: userProfile.value?.email || profile.email,
+  address: userProfile.value?.address || profile.address,
+  phoneNumber: userProfile.value?.phoneNumber || profile.phoneNumber,
+  avatar: userProfile.value?.avatar || profile.avatar
+}));
 
 // Toast feedback
 const showToast = ref(false);
@@ -222,5 +224,9 @@ const handleCameraClick = () => {
   font-weight: 400;
   color: #94a3b8;
   letter-spacing: -0.1px;
+}
+
+.bridge-inspect-box {
+  margin-top: 28px;
 }
 </style>

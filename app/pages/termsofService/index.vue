@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { IonPage, IonContent, IonToast } from '@ionic/vue';
 import AppButton from '~/components/Button/AppButton.vue';
-import { sendTitleToFlutter } from '~/composables/useNativeBridge';
+import { sendTitleToFlutter, useNativeBridge } from '~/composables/useNativeBridge';
 import LoadingPage from '~/components/loading/loadingPage.vue';
 
 interface Props {
@@ -14,6 +14,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const router = useRouter();
+const { closeApp } = useNativeBridge();
 
 // Startup loading state (loads for 5s by default)
 const showStartupLoading = ref(props.showLoading);
@@ -46,15 +47,15 @@ const handleAccept = () => {
   }
   triggerToast('Terms accepted');
   setTimeout(() => {
-    navigateTo('/ev_charger');
+    navigateTo('/ev_charger', { replace: true });
   }, 400);
 };
 
 const handleCancel = () => {
-  if (typeof window !== 'undefined' && window.history.length > 1) {
+  if (typeof window !== 'undefined' && window.history.length > 1 && window.history.state?.back) {
     router.back();
   } else {
-    triggerToast('Cancelled');
+    closeApp();
   }
 };
 

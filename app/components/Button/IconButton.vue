@@ -70,7 +70,7 @@ const configs = computed(() => ({
   'qr-code': { icon: 'qr-code', iconLabel: 'QR Code', colorScheme: 'gray', iconOnly: true },
   heart: { icon: 'heart', iconLabel: 'Favorite', colorScheme: 'brand', variant: 'clear', iconOnly: true },
   filter: { icon: 'filter', iconLabel: t('label.filter') || 'Filter', colorScheme: 'gray', iconOnly: true },
-  close: { icon: 'x', iconLabel: 'Close', colorScheme: 'gray', variant: 'clear', iconOnly: true },
+  close: { icon: 'close', iconLabel: 'Close', colorScheme: 'gray', variant: 'clear', iconOnly: true },
   flashlight: { icon: 'flashlight', iconLabel: 'Flashlight', colorScheme: 'gray', iconOnly: true },
 }))
 

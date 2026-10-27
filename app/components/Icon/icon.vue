@@ -229,6 +229,24 @@
       ...defaultOutline,
       body: '<circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />'
     },
+    'check-circle': {
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: '#2563eb',
+      strokeWidth: '2.2',
+      strokeLinecap: 'round',
+      strokeLinejoin: 'round',
+      body: '<circle cx="12" cy="12" r="10.5" /><path d="M7.5 12.2L10.5 15.2L16.5 9.2" />'
+    },
+    checkCircle: {
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: '#2563eb',
+      strokeWidth: '2.2',
+      strokeLinecap: 'round',
+      strokeLinejoin: 'round',
+      body: '<circle cx="12" cy="12" r="10.5" /><path d="M7.5 12.2L10.5 15.2L16.5 9.2" />'
+    },
     filter: {
       viewBox: '0 0 24 24',
       ...defaultOutline,
@@ -239,6 +257,56 @@
       viewBox: '0 0 24 24',
       ...defaultOutline,
       body: '<path d="M18 6 6 18M6 6l12 12" />'
+    },
+    x: {
+      viewBox: '0 0 24 24',
+      ...defaultOutline,
+      body: '<path d="M18 6 6 18M6 6l12 12" />'
+    },
+    'time-elapsed': {
+      viewBox: '0 0 24 24',
+      ...defaultOutline,
+      body: '<circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 12" /><path d="M10 2h4" />'
+    },
+    current: {
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      body: '<circle cx="12" cy="12" r="10" fill="white" /><text x="12" y="16" fill="#009B4D" font-size="12" font-weight="900" font-family="sans-serif" text-anchor="middle">A</text>'
+    },
+    ampere: {
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      body: '<circle cx="12" cy="12" r="10" fill="white" /><text x="12" y="16" fill="#009B4D" font-size="12" font-weight="900" font-family="sans-serif" text-anchor="middle">A</text>'
+    },
+    voltage: {
+      viewBox: '0 0 24 24',
+      ...defaultOutline,
+      body: '<path d="M12 3l9 16H3z" /><path d="M12 9v4" /><path d="M12 17h.01" />'
+    },
+    energy: {
+      viewBox: '0 0 24 24',
+      ...defaultOutline,
+      body: '<path d="M9 2v4M15 2v4M7 6h10v6a5 5 0 0 1-5 5v0a5 5 0 0 1-5-5V6zM12 17v5" />'
+    },
+    cost: {
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      body: '<circle cx="12" cy="12" r="10" fill="white" /><text x="12" y="16" fill="#FFB300" font-size="14" font-weight="900" font-family="sans-serif" text-anchor="middle">$</text>'
+    },
+    power: {
+      viewBox: '0 0 24 24',
+      ...defaultOutline,
+      body: '<path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" />'
+    },
+    powerOutline: {
+      viewBox: '0 0 24 24',
+      ...defaultOutline,
+      body: '<path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" />'
+    },
+    'battery-full': {
+      viewBox: '0 0 64 64',
+      fill: 'none',
+      body: '<rect x="8" y="20" width="44" height="24" rx="4" stroke="currentColor" stroke-width="3"/><path d="M52 28H54C55.1046 28 56 28.8954 56 30V34C56 35.1046 55.1046 36 54 36H52V28Z" fill="currentColor"/><rect x="12" y="24" width="8" height="16" rx="1" fill="#65C449"/><rect x="22" y="24" width="8" height="16" rx="1" fill="#65C449"/><rect x="32" y="24" width="8" height="16" rx="1" fill="#65C449"/><rect x="42" y="24" width="8" height="16" rx="1" fill="#65C449"/>'
     },
     flashlight: {
       viewBox: '0 0 22 22',

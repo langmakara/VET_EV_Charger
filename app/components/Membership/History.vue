@@ -13,18 +13,26 @@
     IonNote,
     IonText
   } from '@ionic/vue'
+  import { useRoute } from 'vue-router'
   import evChargerData from '~/data/ev_charger_data.json'
   import TransactionModal from '~/components/Modal/TransactionModal.vue'
-  import { useRoute } from 'vue-router'
+  import DetailModal from '~/pages/charging_history/detailModal.vue'
+  import type { HistoryItem } from '~/types'
 
   const props = withDefaults(
     defineProps<{
       dataSource?: 'pointsHistory' | 'chargingHistory'
+      disableDefaultModal?: boolean
     }>(),
     {
-      dataSource: 'pointsHistory'
+      dataSource: 'pointsHistory',
+      disableDefaultModal: false
     }
   )
+
+  const emit = defineEmits<{
+    (e: 'itemClick', item: HistoryItem): void
+  }>()
 
   const route = useRoute()
   const isChargingHistory = computed(
@@ -59,7 +67,10 @@
 
   const openTransactionModal = (item: HistoryItem) => {
     selectedItem.value = item
-    isModalOpen.value = true
+    emit('itemClick', item)
+    if (!props.disableDefaultModal) {
+      isModalOpen.value = true
+    }
   }
 
   const isEarned = computed(() => selectedItem.value?.type === 'earned')
@@ -133,7 +144,14 @@
           <ion-label class="date-label">{{ dateLabel }}</ion-label>
         </ion-list-header>
 
-        <ion-item v-for="item in items" :key="item.id" class="history-card" lines="none" @click="openTransactionModal(item)" button>
+        <ion-item
+          v-for="item in items"
+          :key="item.id"
+          class="history-card"
+          lines="none"
+          button
+          @click="openTransactionModal(item)"
+        >
           <!-- Icon -->
           <ion-avatar
             slot="start"
@@ -178,11 +196,21 @@
       </ion-text>
     </div>
 
-    <!-- Transaction Modal Inline -->
-    <TransactionModal 
-      :is-open="isModalOpen" 
+    <!-- Charging History Modal (Session Detail / Transaction Detail) -->
+    <DetailModal
+      v-if="isChargingHistory && !disableDefaultModal"
+      :is-open="isModalOpen"
+      :item="selectedItem"
+      :type="selectedItem?.type === 'earned' ? 'session' : 'transaction'"
+      @close="isModalOpen = false"
+    />
+
+    <!-- Points History Transaction Modal -->
+    <TransactionModal
+      v-else-if="!isChargingHistory && !disableDefaultModal"
+      :is-open="isModalOpen"
       :title="modalTitle"
-      @did-dismiss="isModalOpen = false" 
+      @did-dismiss="isModalOpen = false"
     >
       <template v-if="selectedItem">
         <!-- Top-up Detail (Earned) -->
@@ -197,7 +225,9 @@
           </ion-item>
           <ion-item lines="none">
             <ion-label color="medium">Point Earned</ion-label>
-            <ion-note slot="end" class="points-earned">+ {{ selectedItem.points.toLocaleString() }} Points</ion-note>
+            <ion-note slot="end" class="points-earned"
+              >+ {{ selectedItem.points.toLocaleString() }} Points</ion-note
+            >
           </ion-item>
         </template>
 
@@ -209,7 +239,9 @@
           </ion-item>
           <ion-item>
             <ion-label color="medium">Station Name</ion-label>
-            <ion-note slot="end" color="dark">{{ selectedItem.stationName || selectedItem.title }}</ion-note>
+            <ion-note slot="end" color="dark">{{
+              selectedItem.stationName || selectedItem.title
+            }}</ion-note>
           </ion-item>
           <ion-item>
             <ion-label color="medium">Order Date</ion-label>
@@ -217,23 +249,29 @@
           </ion-item>
           <ion-item>
             <ion-label color="medium">Sub Total</ion-label>
-            <ion-note slot="end" color="dark">{{ selectedItem.subTotal  }}</ion-note>
+            <ion-note slot="end" color="dark">{{ selectedItem.subTotal }}</ion-note>
           </ion-item>
           <ion-item>
             <ion-label color="medium">Discount (20%)</ion-label>
-            <ion-note slot="end" color="dark">{{ selectedItem.discount}}</ion-note>
+            <ion-note slot="end" color="dark">{{ selectedItem.discount }}</ion-note>
           </ion-item>
           <ion-item>
             <ion-label color="medium">Total Amount</ion-label>
-            <ion-note slot="end" class="bold-value">{{ selectedItem.totalAmount || (selectedItem.formattedAmount ?? 'KHR (៛) 44,000') }}</ion-note>
+            <ion-note slot="end" class="bold-value">{{
+              selectedItem.totalAmount ||
+              selectedItem.formattedAmount ||
+              'KHR (៛) 44,000'
+            }}</ion-note>
           </ion-item>
           <ion-item>
             <ion-label color="medium">Total kWh</ion-label>
-            <ion-note slot="end" class="bold-value">{{ selectedItem.totalKwh  }}</ion-note>
+            <ion-note slot="end" class="bold-value">{{ selectedItem.totalKwh }}</ion-note>
           </ion-item>
           <ion-item lines="none">
             <ion-label color="medium">Point Spend</ion-label>
-            <ion-note slot="end" class="points-spend">- {{ Math.abs(selectedItem.points).toLocaleString() }} Points</ion-note>
+            <ion-note slot="end" class="points-spend"
+              >- {{ Math.abs(selectedItem.points).toLocaleString() }} Points</ion-note
+            >
           </ion-item>
         </template>
       </template>
@@ -242,7 +280,6 @@
 </template>
 
 <style scoped>
- 
   ion-page {
     padding: 0 !important;
   }
@@ -274,7 +311,6 @@
     overscroll-behavior-y: contain;
     padding: 0 10px 10px 10px;
   }
-  
 
   .history-group {
     margin-top: 12px;

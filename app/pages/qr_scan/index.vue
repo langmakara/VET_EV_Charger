@@ -1,155 +1,158 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import jsQR from 'jsQR'
-import CameraComponent from '~/components/Camera/CameraComponent.vue'
-import AlertComponent from '~/components/Modal/AlertComponent.vue'
-import ModalPlug from './modalPlug.vue'
-import Icon from '~/components/Icon/icon.vue'
+  import { ref, onMounted, onBeforeUnmount } from 'vue'
+  import jsQR from 'jsQR'
+  import CameraComponent from '~/components/Camera/CameraComponent.vue'
+  import AlertComponent from '~/components/Modal/AlertComponent.vue'
+  import ModalPlug from './modalPlug.vue'
+  import Icon from '~/components/Icon/icon.vue'
 
-const router = useRouter()
+  const router = useRouter()
 
-const chargingSteps = [
-  {
-    step: 1,
-    icon: 'qr-code',
-    title: 'Scan QR code',
-    description: 'Scan the QR code on the charging machine.'
-  },
-  {
-    step: 2,
-    icon: 'amount',
-    title: 'Set charging amount',
-    description: 'Choose your charging amount (or kWh / price).'
-  },
-  {
-    step: 3,
-    icon: 'confirmPayment',
-    title: 'Confirm payment',
-    description: 'Review the details and confirm your payment.'
-  },
-  {
-    step: 4,
-    icon: 'PlugCharger',
-    title: 'Plug charger to vehicle',
-    description: 'Connect the charger to your EV and wait for charging to start.'
-  },
-  {
-    step: 5,
-    icon: 'TrackCharging',
-    title: 'Track your charging',
-    description: 'View the progress and final details in the app.'
-  },
-  {
-    step: 6,
-    icon: 'PlugCharger',
-    title: 'Unplug charger',
-    description: 'Safely disconnect the charger and return it to the station once finish.'
+  const chargingSteps = [
+    {
+      step: 1,
+      icon: 'qr-code',
+      title: 'Scan QR code',
+      description: 'Scan the QR code on the charging machine.'
+    },
+    {
+      step: 2,
+      icon: 'amount',
+      title: 'Set charging amount',
+      description: 'Choose your charging amount (or kWh / price).'
+    },
+    {
+      step: 3,
+      icon: 'confirmPayment',
+      title: 'Confirm payment',
+      description: 'Review the details and confirm your payment.'
+    },
+    {
+      step: 4,
+      icon: 'PlugCharger',
+      title: 'Plug charger to vehicle',
+      description: 'Connect the charger to your EV and wait for charging to start.'
+    },
+    {
+      step: 5,
+      icon: 'TrackCharging',
+      title: 'Track your charging',
+      description: 'View the progress and final details in the app.'
+    },
+    {
+      step: 6,
+      icon: 'PlugCharger',
+      title: 'Unplug charger',
+      description: 'Safely disconnect the charger and return it to the station once finish.'
+    }
+  ]
+  const cameraRef = ref<InstanceType<typeof CameraComponent> | null>(null)
+
+  const result = ref('')
+  const scanning = ref(true)
+  const showAlert = ref(false)
+  const showModalPlug = ref(false)
+
+  const SCAN_MAX_SIZE = 640 // downscale frames before decoding
+  const SCAN_INTERVAL = 150 // ms between decode attempts
+
+  let scanCanvas: HTMLCanvasElement | null = null
+  let scanCtx: CanvasRenderingContext2D | null = null
+  let lastScanTime = 0
+  let plugTimer: any = null
+
+  onMounted(() => {
+    scanCanvas = document.createElement('canvas')
+    scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true })
+  })
+
+  onBeforeUnmount(() => {
+    if (plugTimer) clearTimeout(plugTimer)
+  })
+
+  function onCameraFrame({ canvas }: { canvas: HTMLCanvasElement }) {
+    if (!scanning.value || !canvas || !scanCanvas || !scanCtx) return
+
+    const now = performance.now()
+    if (now - lastScanTime < SCAN_INTERVAL) return
+    lastScanTime = now
+
+    const cWidth = canvas.width
+    const cHeight = canvas.height
+    if (!cWidth || !cHeight) return
+
+    const scale = Math.min(1, SCAN_MAX_SIZE / Math.max(cWidth, cHeight))
+    const sw = Math.round(cWidth * scale)
+    const sh = Math.round(cHeight * scale)
+
+    if (scanCanvas.width !== sw || scanCanvas.height !== sh) {
+      scanCanvas.width = sw
+      scanCanvas.height = sh
+    }
+
+    scanCtx.drawImage(canvas, 0, 0, sw, sh)
+    const image = scanCtx.getImageData(0, 0, sw, sh)
+    const code = jsQR(image.data, sw, sh, { inversionAttempts: 'dontInvert' })
+
+    if (code && code.data) {
+      result.value = code.data
+      scanning.value = false
+      showAlert.value = true
+      if (navigator.vibrate) navigator.vibrate(100)
+
+      // Show ModalPlug 2 seconds after successful scan
+      clearTimeout(plugTimer)
+      plugTimer = setTimeout(() => {
+        showAlert.value = false
+        showModalPlug.value = true
+      }, 2000)
+    }
   }
-]
-const cameraRef = ref<InstanceType<typeof CameraComponent> | null>(null)
 
-const result = ref('')
-const scanning = ref(true)
-const showAlert = ref(false)
-const showModalPlug = ref(false)
-
-const SCAN_MAX_SIZE = 640 // downscale frames before decoding
-const SCAN_INTERVAL = 150 // ms between decode attempts
-
-let scanCanvas: HTMLCanvasElement | null = null
-let scanCtx: CanvasRenderingContext2D | null = null
-let lastScanTime = 0
-let plugTimer: any = null
-
-onMounted(() => {
-  scanCanvas = document.createElement('canvas')
-  scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true })
-})
-
-onBeforeUnmount(() => {
-  if (plugTimer) clearTimeout(plugTimer)
-})
-
-function onCameraFrame({ canvas }: { canvas: HTMLCanvasElement }) {
-  if (!scanning.value || !canvas || !scanCanvas || !scanCtx) return
-
-  const now = performance.now()
-  if (now - lastScanTime < SCAN_INTERVAL) return
-  lastScanTime = now
-
-  const cWidth = canvas.width
-  const cHeight = canvas.height
-  if (!cWidth || !cHeight) return
-
-  const scale = Math.min(1, SCAN_MAX_SIZE / Math.max(cWidth, cHeight))
-  const sw = Math.round(cWidth * scale)
-  const sh = Math.round(cHeight * scale)
-
-  if (scanCanvas.width !== sw || scanCanvas.height !== sh) {
-    scanCanvas.width = sw
-    scanCanvas.height = sh
-  }
-
-  scanCtx.drawImage(canvas, 0, 0, sw, sh)
-  const image = scanCtx.getImageData(0, 0, sw, sh)
-  const code = jsQR(image.data, sw, sh, { inversionAttempts: 'dontInvert' })
-
-  if (code && code.data) {
-    result.value = code.data
-    scanning.value = false
-    showAlert.value = true
-    if (navigator.vibrate) navigator.vibrate(100)
-
-    // Show ModalPlug 2 seconds after successful scan
+  function ProceedToPlug() {
     clearTimeout(plugTimer)
-    plugTimer = setTimeout(() => {
-      showAlert.value = false
-      showModalPlug.value = true
-    }, 2000)
+    showAlert.value = false
+    showModalPlug.value = true
   }
-}
 
-function ProceedToPlug() {
-  clearTimeout(plugTimer)
-  showAlert.value = false
-  showModalPlug.value = true
-}
-
-function ClosePlugModal() {
-  showModalPlug.value = false
-  ScanAgain()
-}
-
-function handlePlugSelect(_plug: any) {
-  showModalPlug.value = false
-  navigateTo('/chargingInfor')
-}
-
-function ScanAgain() {
-  clearTimeout(plugTimer)
-  result.value = ''
-  showAlert.value = false
-  showModalPlug.value = false
-  scanning.value = true
-}
-
-function handleBack() {
-  if (window.history.length > 1) {
-    router.back()
-  } else {
-    navigateTo('/')
+  function ClosePlugModal() {
+    showModalPlug.value = false
+    ScanAgain()
   }
-}
+
+  const selectedPlug = ref<any>(null)
+
+  function handlePlugSelect(plug: any) {
+    selectedPlug.value = plug
+  }
+
+  function handlePlugContinue(_plug?: any) {
+    showModalPlug.value = false
+    navigateTo('/chargingInfor')
+  }
+
+  function ScanAgain() {
+    clearTimeout(plugTimer)
+    result.value = ''
+    showAlert.value = false
+    showModalPlug.value = false
+    scanning.value = true
+  }
+
+  function handleBack() {
+    if (window.history.length > 1) {
+      router.back()
+    } else {
+      navigateTo('/')
+    }
+  }
 </script>
 
 <template>
   <ion-page>
     <ion-content :fullscreen="true" :scroll-y="false" class="camera-content">
       <div class="camera-wrapper">
-        <CameraComponent
-          ref="cameraRef"
-          @frame="onCameraFrame"
-        >
+        <CameraComponent ref="cameraRef" @frame="onCameraFrame">
           <!-- Custom Page Overlay -->
           <div class="overlay-container">
             <!-- Top bar with Back button -->
@@ -177,45 +180,7 @@ function handleBack() {
             <!-- Top: Scan frame guide -->
             <div class="scan-guide">
               <div class="scan-box">
-                <svg
-                  class="scan-corners"
-                  viewBox="0 0 240 240"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <!-- Top-left -->
-                  <path
-                    d="M 12 84 V 52 A 40 40 0 0 1 52 12 H 84"
-                    stroke="white"
-                    stroke-width="5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <!-- Top-right -->
-                  <path
-                    d="M 156 12 H 188 A 40 40 0 0 1 228 52 V 84"
-                    stroke="white"
-                    stroke-width="5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <!-- Bottom-right -->
-                  <path
-                    d="M 228 156 V 188 A 40 40 0 0 1 188 228 H 156"
-                    stroke="white"
-                    stroke-width="5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <!-- Bottom-left -->
-                  <path
-                    d="M 84 228 H 52 A 40 40 0 0 1 12 188 V 156"
-                    stroke="white"
-                    stroke-width="5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
+                <Icon name="Corner" size="250px" class="scan-corners" color="white" />
               </div>
               <p class="scan-hint">Point the camera at a QR code</p>
             </div>
@@ -232,19 +197,16 @@ function handleBack() {
                 </div>
                 <div class="header-info">
                   <h3 class="header-title">How to charge</h3>
-                  <p class="header-subtitle">Follow these simple steps to start charging your EV.</p>
+                  <p class="header-subtitle">
+                    Follow these simple steps to start charging your EV.
+                  </p>
                 </div>
               </div>
 
               <!-- Steps Grid -->
               <ion-grid class="steps-grid ion-no-padding">
                 <ion-row>
-                  <ion-col
-                    v-for="item in chargingSteps"
-                    :key="item.step"
-                    size="6"
-                    class="step-col"
-                  >
+                  <ion-col v-for="item in chargingSteps" :key="item.step" size="6" class="step-col">
                     <div class="step-item">
                       <div class="step-badge-wrapper">
                         <div class="step-icon-box">
@@ -280,6 +242,7 @@ function handleBack() {
           @didDismiss="ClosePlugModal"
           @close="ClosePlugModal"
           @select="handlePlugSelect"
+          @continue="handlePlugContinue"
         />
       </div>
     </ion-content>
@@ -287,247 +250,249 @@ function handleBack() {
 </template>
 
 <style scoped>
-.camera-content {
-  --background: #000;
-  --padding-top: 0;
-  --padding-bottom: 0;
-  --padding-start: 0;
-  --padding-end: 0;
-}
+  .camera-content {
+    --background: #000;
+    --padding-top: 0;
+    --padding-bottom: 0;
+    --padding-start: 0;
+    --padding-end: 0;
+  }
 
-.camera-wrapper {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background-color: #000;
-}
+  .camera-wrapper {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #000;
+  }
 
-.overlay-container {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  pointer-events: none;
-  z-index: 10;
-}
+  .overlay-container {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    pointer-events: none;
+    z-index: 10;
+  }
 
-.top-bar {
-  width: 100%;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  padding: 0 0.5rem;
-  pointer-events: auto;
-}
+  .top-bar {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 0 0.5rem;
+    pointer-events: auto;
+  }
 
-.back-btn {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  transition: transform 0.15s ease, background 0.15s ease;
-}
+  .back-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition:
+      transform 0.15s ease,
+      background 0.15s ease;
+  }
 
-.back-btn:active {
-  transform: scale(0.92);
-  background: rgba(0, 0, 0, 0.6);
-}
+  .back-btn:active {
+    transform: scale(0.92);
+    background: rgba(0, 0, 0, 0.6);
+  }
 
-.scan-guide {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: clamp(0.75rem, 5vh, 2.5rem);
-}
+  .scan-guide {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: clamp(0.75rem, 5vh, 2.5rem);
+  }
 
-.scan-box {
-  position: relative;
-  width: min(58vw, 220px);
-  aspect-ratio: 1;
-  border-radius: 2.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  .scan-box {
+    position: relative;
+    width: min(58vw, 220px);
+    aspect-ratio: 1;
+    border-radius: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-.scan-corners {
-  width: 100%;
-  height: 100%;
-  display: block;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
-}
+  .scan-corners {
+    width: 100%;
+    height: 100%;
+    display: block;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+  }
 
-.scan-hint {
-  color: #fff;
-  font-size: 0.95rem;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
-  margin: 0;
-}
+  .scan-hint {
+    color: #fff;
+    font-size: 0.95rem;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+    margin: 0;
+  }
 
-.charger {
-  width: 100%;
-  border-radius: 1.25rem;
-  background-color: #DE5D0A;
-  padding: 14px 12px 10px;
-  position: relative;
-  overflow: hidden;
-  margin-top: auto;
-  pointer-events: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-  max-height: 50vh;
-  /* overflow-y: auto; */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  z-index: 10;
-}
+  .charger {
+    width: 100%;
+    border-radius: 1.25rem;
+    background-color: #de5d0a;
+    padding: 14px 12px 10px;
+    position: relative;
+    overflow: hidden;
+    margin-top: auto;
+    pointer-events: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    max-height: 50vh;
+    /* overflow-y: auto; */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    z-index: 10;
+  }
 
-.charger::-webkit-scrollbar {
-  display: none;
-}
+  .charger::-webkit-scrollbar {
+    display: none;
+  }
 
-.charger-watermark {
-  position: absolute;
-  bottom: -20px;
-  left: 50%;
-  transform: translateX(-50%) skewX(-12deg);
-  font-size: 115px;
-  font-weight: 900;
-  color: rgba(255, 255, 255, 0.08);
-  pointer-events: none;
-  user-select: none;
-  line-height: 1;
-  letter-spacing: -3px;
-  z-index: 0;
-}
+  .charger-watermark {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%) skewX(-12deg);
+    font-size: 115px;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+    user-select: none;
+    line-height: 1;
+    letter-spacing: -3px;
+    z-index: 0;
+  }
 
-.charger-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-  position: relative;
-  z-index: 1;
-}
+  .charger-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+  }
 
-.header-icon-box {
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  border-radius: 14px;
-  background: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
+  .header-icon-box {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 14px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
 
-.header-info {
-  display: flex;
-  flex-direction: column;
-}
+  .header-info {
+    display: flex;
+    flex-direction: column;
+  }
 
-.header-title {
-  margin: 0;
-  font-size: 14px !important;
-  font-weight: 700;
-  color: #ffffff;
-  line-height: 1.25;
-}
+  .header-title {
+    margin: 0;
+    font-size: 14px !important;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.25;
+  }
 
-.header-subtitle {
-  margin: 3px 0 0 0;
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.9);
-  line-height: 1.35;
-}
+  .header-subtitle {
+    margin: 3px 0 0 0;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.35;
+  }
 
-.steps-grid {
-  position: relative;
-  z-index: 1;
-}
+  .steps-grid {
+    position: relative;
+    z-index: 1;
+  }
 
-.step-col {
-  padding: 6px 4px;
-}
+  .step-col {
+    padding: 6px 4px;
+  }
 
-.step-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  height: 100%;
-}
+  .step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    height: 100%;
+  }
 
-.step-badge-wrapper {
-  position: relative;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
+  .step-badge-wrapper {
+    position: relative;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
 
-.step-icon-box {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  border-radius: 12px;
-  background: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
-}
+  .step-icon-box {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 12px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  }
 
-.step-number {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 17px;
-  height: 17px;
-  border-radius: 50%;
-  background-color: #DE5D0A;
-  border: 1.5px solid #ffffff;
-  color: #ffffff;
-  font-size: 9.5px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
+  .step-number {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    background-color: #de5d0a;
+    border: 1.5px solid #ffffff;
+    color: #ffffff;
+    font-size: 9.5px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
 
-.step-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
+  .step-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
 
-.charger .step-title,
-.step-title {
-  font-size: 12px !important;
-  font-weight: 700;
-  color: #ffffff;
-  line-height: 1.25;
-  margin-bottom: 2px;
-}
+  .charger .step-title,
+  .step-title {
+    font-size: 12px !important;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.25;
+    margin-bottom: 2px;
+  }
 
-.charger .step-desc,
-.step-desc {
-  font-size: 9px;
-  color: rgba(255, 255, 255, 0.88);
-  line-height: 1.3;
-}
+  .charger .step-desc,
+  .step-desc {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.88);
+    line-height: 1.3;
+  }
 </style>

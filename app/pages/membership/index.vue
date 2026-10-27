@@ -3,7 +3,7 @@
   import { ref, computed, watch, onMounted } from 'vue'
   import IconButton from '../../components/Button/IconButton.vue'
   import Icon from '~/components/Icon/icon.vue'
-  import history from './history.vue'
+  import History from '~/components/Membership/History.vue'
 
   const route = useRoute()
   const router = useRouter()
