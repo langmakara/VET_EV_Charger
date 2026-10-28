@@ -212,6 +212,20 @@
       ...defaultFill,
       body: '<path d="M12 2L19.07 19.07L12 15.93L4.93 19.07L12 2Z" />'
     },
+    map: {
+      viewBox: '0 0 512 512',
+      fill: 'none',
+      stroke: 'currentColor',
+      strokeWidth: '36',
+      strokeLinecap: 'round',
+      strokeLinejoin: 'round',
+      body: '<path d="M313.27 124.64 198.73 51.36a32 32 0 0 0-29.28.35L56.51 127.49A16 16 0 0 0 48 141.63v295.8a16 16 0 0 0 23.49 14.14l97.82-63.79a32 32 0 0 1 29.5-.24l111.86 73a32 32 0 0 0 29.27-.11l115.43-75.94a16 16 0 0 0 8.63-14.2V74.57a16 16 0 0 0-23.49-14.14l-98 63.86a32 32 0 0 1-29.24.35M328 128v336M184 48v336" />'
+    },
+    'scan-charge': {
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      body: '<path d="M4 8V6C4 4.89543 4.89543 4 6 4H8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 4H18C19.1046 4 20 4.89543 20 6V8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 16V18C20 19.1046 19.1046 20 18 20H16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 20H6C4.89543 20 4 19.1046 4 18V16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="9.5" r="1.3" fill="currentColor"/><circle cx="14.5" cy="9.5" r="1.3" fill="currentColor"/><circle cx="9.5" cy="14.5" r="1.3" fill="currentColor"/><circle cx="14.5" cy="14.5" r="1.3" fill="currentColor"/>'
+    },
     scan: {
       viewBox: '0 0 24 24',
       ...defaultOutline,

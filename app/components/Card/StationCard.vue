@@ -90,17 +90,6 @@ const isFavorite = computed(() => {
   return Boolean(props.station?.isFavorite ?? (props.station as any)?.isFavorites)
 })
 
-function handlefavoriteClick(e: Event) {
-  e.stopPropagation()
-  if (props.station) {
-    const next = !isFavorite.value
-    props.station.isFavorite = next
-    props.station.isFavorites = next
-    emit('favorite-click', props.station)
-    emit('toggle-favorite', props.station)
-  }
-}
-
 const { baseUrl: evChargerBaseUrl } = useApiUrl('/vetEvChargerCustomerAPi', 5697)
 
 const stationImage = computed(() => {
@@ -187,7 +176,6 @@ const distanceText = computed(() => {
                 size="20px"
                 class="heart-btn"
                 :color="isFavorite ? 'primary' : 'medium'"
-                @click.stop="handlefavoriteClick"
               />
             </ion-col>
           </ion-row>

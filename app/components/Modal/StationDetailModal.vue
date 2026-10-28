@@ -11,8 +11,10 @@
     timeOutline,
     checkmarkOutline
   } from 'ionicons/icons'
+  import { useRouter } from 'vue-router'
   import Icon from '~/components/Icon/icon.vue'
   import IconButton from '~/components/Button/IconButton.vue'
+  import AppButton from '~/components/Button/AppButton.vue'
   import { abaBridge } from '~/composables/useNativeBridge'
   import { useFindStationQuery, useAddFavoritesMutation } from '~/composables/queries'
   import type { StationData, StationDetailData } from '~/api/types'
@@ -83,6 +85,12 @@
         window.open(url, '_blank')
       })
     }
+  }
+
+  const router = useRouter()
+  const handleScanToCharge = () => {
+    // emit('close')
+    router.push('/qr_scan')
   }
 
   const { baseUrl: evChargerBaseUrl } = useApiUrl('/vetEvChargerCustomerAPi', 5697)
@@ -492,9 +500,24 @@
         </div>
       </div>
 
-      <!-- Fixed button: stays at the right of the screen while content scrolls -->
-      <div slot="fixed" class="direction-fab">
-        <IconButton buttonType="direction" @click="openDirection" />
+      <!-- Fixed Bottom Action Bar -->
+      <div slot="fixed" class="bottom-action-bar">
+        <IconButton
+          buttonType="direction"
+          color="light"
+          size="lg"
+          @click="openDirection"
+        />
+        <AppButton
+          class="scan-charge-btn"
+          expand="block"
+          @click="handleScanToCharge"
+        >
+          <template #start>
+            <Icon name="scan-charge" size="22px" class="scan-btn-icon" />
+          </template>
+          Scan to Charge
+        </AppButton>
       </div>
     </ion-content>
   </ion-modal>
@@ -514,28 +537,46 @@
     --padding-end: 0px;
   }
 
-  /* Fixed floating direction button */
+  /* Fixed Bottom Action Bar */
+  .bottom-action-bar,
   .direction-fab {
+    padding: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
     position: absolute;
+    left: 16px;
     right: 16px;
     bottom: calc(16px + env(safe-area-inset-bottom));
+    display: flex;
+    align-items: center;
+    gap: 12px;
     z-index: 10;
-    padding-right: var(--ion-padding);
   }
-  .direction-fab :deep(ion-button) {
-    --background: #e85d04;
-    --background-activated: #c44d00;
-    --background-hover: #c44d00;
-    --color: #ffffff;
-    --border-radius: 50%;
-    --padding-start: 0;
-    --padding-end: 0;
-    --padding-top: 0;
-    --padding-bottom: 0;
-    --box-shadow: 0 4px 16px rgba(232, 93, 4, 0.45);
-    width: 52px;
+  .scan-charge-btn {
+    flex: 1;
     height: 52px;
+    min-height: 52px;
     margin: 0;
+    --background: linear-gradient(135deg, #f95700 0%, #ea580c 100%);
+    --background-hover: #e04f00;
+    --background-activated: #d44800;
+    --color: #ffffff;
+    --border-radius: 22px;
+    --box-shadow: 0 6px 18px rgba(234, 88, 12, 0.35);
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .scan-charge-btn::part(native) {
+    border-radius: 22px;
+    background: linear-gradient(135deg, #f95700 0%, #ea580c 100%);
+    box-shadow: 0 6px 18px rgba(234, 88, 12, 0.35);
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .scan-btn-icon {
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
   }
 
   .modal-header-image {

@@ -35,7 +35,7 @@ const {
   isFetchingNextPage,
 } = useStationInfinite(filter)
 
-// 3. Flatten all pagination pages into a single station list
+// Flatten all pagination pages into a single station list
 const rawStations = computed<StationData[]>(() => {
   return (
     data.value?.pages.flatMap((page) => {
@@ -50,7 +50,7 @@ const stations = computed(() => {
   return rawStations.value.map((s) => ({
     ...s,
     // StationCard uses station.station for thumbnail
-    station: s.imageUrl || '/images/station.svg',
+    station: s.imageUrl,
     status: s.isOpen ? 'Open' : 'Closed',
     price: s.pricePerKwh ? `${s.pricePerKwh.toLocaleString()} KHR/kWh` : '',
     distance: s.value ? `${Number(s.value).toFixed(1)} km` : '',

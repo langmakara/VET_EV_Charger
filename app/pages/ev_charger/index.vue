@@ -26,6 +26,8 @@
 
   import evChargerData from '~/data/ev_charger_data.json'
   import IconButton from '~/components/Button/IconButton.vue'
+import { useStationInfinite } from '~/composables/queries/useStation.ts'
+import type { StationData } from '~/api/types.ts'
 
   const { actions, nearbyStations, newsFeeds, profile } = evChargerData
 
@@ -38,12 +40,33 @@
   const { userProfile } = useUserProfile()
 
   const user = computed(() => ({
-    fullName: userProfile.value?.fullName || profile.fullName,
-    email: userProfile.value?.email || profile.email,
-    address: userProfile.value?.address || profile.address,
-    phoneNumber: userProfile.value?.phoneNumber || profile.phoneNumber,
+    fullName: userProfile.value?.fullName,
+    email: userProfile.value?.email,
+    address: userProfile.value?.address,
+    phoneNumber: userProfile.value?.phoneNumber,
     avatar: userProfile.value?.avatar || profile.avatar
   }))
+
+  // Reactive query parameters (filter payload for POST /station/list)
+const filter = ref({
+  rowsPerPage: 5,
+  lats: 11.556374,
+  longs: 104.928207,
+})
+
+  const {data, isLoading, isError} = useStationInfinite(filter)
+
+  // Flatten all pagination pages
+  const rawStations = computed<StationData[]>(() => {
+    return (
+      data.value?.pages.flatMap((page) => {
+        const res = (page as any)?.data ?? page?.body?.data
+        return Array.isArray(res) ? res : res?.list ?? []
+      }) ?? []
+    )
+  })
+
+  // Filter by lat and lng
 
   const isCharging = computed(() => {
     const status = chargingInfo.value.status?.toLowerCase() || ''
