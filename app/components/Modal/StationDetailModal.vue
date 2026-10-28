@@ -1,6 +1,8 @@
 <script setup lang="ts">
+  import { computed } from 'vue'
   import { IonModal, IonContent, IonIcon } from '@ionic/vue'
   import {
+    heart,
     heartOutline,
     closeOutline,
     flashOutline,
@@ -12,11 +14,34 @@
   import Icon from '~/components/Icon/icon.vue'
   import IconButton from '~/components/Button/IconButton.vue'
   import { abaBridge } from '~/composables/useNativeBridge'
+  import { useFindStationQuery, useAddFavoritesMutation } from '~/composables/queries'
+  import type { StationData, StationDetailData } from '~/api/types'
 
   const props = defineProps<{
     isOpen: boolean
-    station: any
+    station: StationData | StationDetailData | any
   }>()
+
+  const stationId = computed(() => props.station?.id)
+
+  const {
+    data: detailResponse,
+    isLoading,
+    isError,
+    error
+  } = useFindStationQuery(stationId, {
+    enabled: computed(() => props.isOpen && !!stationId.value)
+  })
+
+  // Unwrap array from API response (data: [ StationDetailData ]) and merge with props
+  const station = computed<Record<string, any>>(() => {
+    const raw = (detailResponse.value as any)?.data ?? detailResponse.value?.body?.data
+    const apiDetail = Array.isArray(raw) ? raw[0] : raw
+    if (apiDetail) {
+      return { ...props.station, ...apiDetail }
+    }
+    return props.station || {}
+  })
 
   const emit = defineEmits<{
     (e: 'close'): void
@@ -26,10 +51,32 @@
     emit('close')
   }
 
+  const { mutate: addFavorite, isPending: isAddingFavorite } = useAddFavoritesMutation()
+
+  const isFavorite = computed(() => {
+    return Boolean(station.value?.isFavorite ?? station.value?.isFavorites)
+  })
+
+  const toggleFavorite = () => {
+    const id = station.value?.id
+    if (!id || isFavorite.value || isAddingFavorite.value) return
+
+    addFavorite(id, {
+      onSuccess: () => {
+        if (station.value) {
+          station.value.isFavorite = true
+        }
+        if (props.station) {
+          props.station.isFavorite = true
+        }
+      }
+    })
+  }
+
   const openDirection = () => {
-    if (props.station?.lat && props.station?.lng) {
-      const lat = Number(props.station.lat)
-      const lng = Number(props.station.lng)
+    const lat = Number(station.value?.lats)
+    const lng = Number(station.value?.longs)
+    if (lat && lng) {
       abaBridge.openMap({ lat, lng }).catch(() => {
         // Fallback to web Google Maps if outside mobile app or bridge fails
         const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
@@ -37,18 +84,256 @@
       })
     }
   }
+
+  const { baseUrl: evChargerBaseUrl } = useApiUrl('/vetEvChargerCustomerAPi', 5697)
+
+  const stationImage = computed(() => {
+    const img = station.value?.imageUrl || props.station?.imageUrl
+    if (!img) return '/images/station.svg'
+    if (img.startsWith('http') || img.startsWith('data:')) return img
+    if (
+      img.startsWith('/images') ||
+      img.startsWith('/icons') ||
+      img.startsWith('/vet-ev-charger')
+    ) {
+      return img
+    }
+    return `${evChargerBaseUrl}${img.startsWith('/') ? '' : '/'}${img}`
+  })
+
+  const franchiseProfile = computed(() => {
+    const img = station.value?.franchiseProfileUrl || props.station?.franchiseProfileUrl
+    if (!img) return ''
+    if (img.startsWith('http') || img.startsWith('data:')) return img
+    if (
+      img.startsWith('/images') ||
+      img.startsWith('/icons') ||
+      img.startsWith('/vet-ev-charger')
+    ) {
+      return img
+    }
+    return `${evChargerBaseUrl}${img.startsWith('/') ? '' : '/'}${img}`
+  })
+
+  const stationCountDisplay = computed(() => {
+    return (
+      station.value?.isHasCharger ?? 0
+    )
+  })
+
+  const plugCountDisplay = computed(() => {
+    if (station.value?.plugCount != null) return station.value.plugCount
+    if (
+      station.value?.chargerGuns &&
+      Array.isArray(station.value.chargerGuns) &&
+      station.value.chargerGuns.length > 0
+    ) {
+      const available = station.value.chargerGuns.reduce(
+        (sum: number, g: any) => sum + (g.qtyAvailable || 0),
+        0
+      )
+      const total = station.value.chargerGuns.reduce((sum: number, g: any) => sum + (g.qty || 0), 0)
+      return `${available}/${total}`
+    }
+    if (station.value?.totalChargerAvailable != null) {
+      return `${station.value.totalChargerAvailable}/${station.value.totalCharger || 0}`
+    }
+    return '0'
+  })
+
+  const distanceDisplay = computed(() => {
+    if (station.value?.distance) return station.value.distance
+    if (station.value?.value) return `${Number(station.value.value).toFixed(1)} km`
+    return ''
+  })
+
+  const isOpenStatus = computed(() => {
+    if (station.value?.isOpen !== undefined) {
+      return Boolean(station.value.isOpen)
+    }
+    if (station.value?.is24Hours === 1) return true
+    return true
+  })
+
+  const openHoursDisplay = computed(() => {
+    if (station.value?.openHour) {
+      return station.value.openHour
+    }
+    if (station.value?.is24Hours === 1) {
+      return '24/7'
+    }
+    if (station.value?.openTime && station.value?.closeTime) {
+      return `${station.value.openTime} - ${station.value.closeTime}`
+    }
+    return station.value?.hours || '24/7'
+  })
+
+  const stationConnectors = computed(() => {
+    // 1. From chargerGuns (/station/find/{id})
+    if (station.value?.chargerGuns && Array.isArray(station.value.chargerGuns)) {
+      return station.value.chargerGuns.map((gun: any) => {
+        const nameLower = (gun.name || '').toLowerCase()
+        const isGbt = nameLower.includes('gb/t') || nameLower.includes('gbt')
+        const isCcs2 = nameLower.includes('ccs')
+        const icon = isGbt ? 'gbt' : isCcs2 ? '/icons/ccs2DC.svg' : 'plug'
+
+        const power = gun.maxAmperage ? `${gun.maxAmperage} A` : gun.power || ''
+        const price =
+          gun.pricePerKwh != null ? `${Number(gun.pricePerKwh).toLocaleString()} KHR/kWh` : ''
+        const available = gun.qtyAvailable ?? 0
+        const total = gun.qty ?? 0
+        const status = total > 0 ? `${available}/${total}` : 'Available'
+        const isAvailable = available > 0
+
+        return {
+          id: gun.chargerGunId,
+          name: gun.name,
+          icon,
+          power,
+          price,
+          status,
+          isAvailable
+        }
+      })
+    }
+
+    // 2. Fallback to connectors from props (mock/legacy)
+    if (station.value?.connectors && Array.isArray(station.value.connectors)) {
+      return station.value.connectors.map((c: any) => ({
+        ...c,
+        isAvailable: c.status !== 'In use' && c.status !== 'Unavailable'
+      }))
+    }
+
+    // 3. Fallback to gunInform from station list
+    if (station.value?.gunInform && Array.isArray(station.value.gunInform)) {
+      return station.value.gunInform.map((gun: any) => {
+        const nameLower = (gun.name || '').toLowerCase()
+        const isGbt = nameLower.includes('gb/t') || nameLower.includes('gbt')
+        const isCcs2 = nameLower.includes('ccs')
+        const icon = isGbt ? 'gbt' : isCcs2 ? '/icons/ccs2DC.svg' : 'plug'
+        const price =
+          station.value?.pricePerKwh != null
+            ? `${Number(station.value.pricePerKwh).toLocaleString()} KHR/kWh`
+            : ''
+
+        return {
+          id: gun.chargerGunId,
+          name: gun.name,
+          icon,
+          power: '',
+          price,
+          status: `${gun.qtyAvailable ?? 0}/${gun.qty ?? 0}`,
+          isAvailable: (gun.qtyAvailable ?? 0) > 0
+        }
+      })
+    }
+
+    return []
+  })
+
+  const operatorName = computed(() => {
+    return (
+      station.value?.franchiseName ||
+      station.value?.companyName ||
+      station.value?.operator ||
+      'VET EV Charger'
+    )
+  })
+
+  const stationContacts = computed(() => {
+    if (station.value?.contactUs && Array.isArray(station.value.contactUs)) {
+      return station.value.contactUs.map((contact: any) => {
+        const typeName = (contact.contactTypeName || '').toLowerCase()
+        let icon = ''
+        let colorClass = 'bg-gray-btn'
+
+        if (typeName.includes('phone') || contact.contactTypeId === 1) {
+          icon = 'phone'
+          colorClass = 'bg-gray-btn'
+        } else if (typeName.includes('telegram') || contact.contactTypeId === 2) {
+          icon = 'telegram'
+          colorClass = 'bg-transparent'
+        } else if (typeName.includes('messenger') || contact.contactTypeId === 3) {
+          icon = 'messenger'
+          colorClass = 'bg-transparent'
+        } else {
+          icon = contact.icon || 'phone'
+        }
+
+        return {
+          id: contact.id,
+          name: contact.name,
+          link: contact.link,
+          icon,
+          colorClass
+        }
+      })
+    }
+
+    if (station.value?.contacts && Array.isArray(station.value.contacts)) {
+      return station.value.contacts
+    }
+
+    return []
+  })
+
+  const handleContactClick = (contact: any) => {
+    if (!contact?.link) return
+    const linkStr = String(contact.link).trim()
+    if (linkStr.startsWith('http://') || linkStr.startsWith('https://')) {
+      window.open(linkStr, '_blank')
+    } else if (linkStr.startsWith('tel:')) {
+      window.open(linkStr, '_self')
+    } else if (/^\d+$/.test(linkStr.replace(/[\s-+()]/g, ''))) {
+      window.open(`tel:${linkStr}`, '_self')
+    } else {
+      window.open(linkStr, '_blank')
+    }
+  }
+
+  const stationAmenities = computed(() => {
+    const list = station.value?.amenities
+    if (!Array.isArray(list)) return []
+    return list.map((item: any, idx: number) => {
+      if (typeof item === 'string') {
+        return { id: idx, name: item }
+      }
+      return {
+        id: item.id ?? idx,
+        name: item.name ?? item.nameKh ?? ''
+      }
+    })
+  })
+
+  const stationSurroundings = computed(() => {
+    const list = station.value?.surroundings
+    if (!Array.isArray(list)) return []
+    return list.map((item: any, idx: number) => {
+      if (typeof item === 'string') {
+        return { id: idx, name: item }
+      }
+      return {
+        id: item.id ?? idx,
+        name: item.name ?? item.nameKh ?? ''
+      }
+    })
+  })
 </script>
 
 <template>
   <ion-modal :is-open="isOpen" mode="ios" @didDismiss="handleClose" class="custom-station-modal">
     <ion-content fullscreen class="station-modal-bg">
       <!-- Header Image -->
-      <div class="modal-header-image" :style="{ backgroundImage: `url(${station?.image})` }">
+      <div class="modal-header-image" :style="{ backgroundImage: `url(${stationImage})` }">
         <div class="modal-top-bar">
           <span class="modal-title-overlay">{{ station?.name }}</span>
           <div class="modal-top-actions">
-            <button class="circle-btn translucent">
-              <ion-icon :icon="heartOutline" />
+            <button :disabled="isFavorite || isAddingFavorite" class="circle-btn translucent" @click="toggleFavorite">
+              <ion-icon
+                :icon="isFavorite ? heart : heartOutline"
+                :style="{ color: isFavorite ? '#e85d04' : '#ffffff' }"
+              />
             </button>
             <button class="circle-btn translucent" @click="handleClose">
               <ion-icon :icon="closeOutline" />
@@ -57,13 +342,13 @@
         </div>
         <div class="modal-header-stats">
           <div class="stat-pill">
-            <img src="/icons/Vector.svg" class="stat-icon" style="width: 14px; height: 14px" />{{
-              station?.stationCount
-            }}
+            <img src="/icons/Vector.svg" class="stat-icon" style="width: 14px; height: 14px" />
+            {{ stationCountDisplay }}
             <span class="stat-divider">|</span>
-            <Icon name="plug" class="stat-icon" size="14px" /> {{ station?.plugCount }}
+            <Icon name="plug" class="stat-icon" size="14px" /> {{ plugCountDisplay }}
             <span class="stat-divider">|</span>
-            <img src="/icons/way.svg" class="stat-icon" style="width: 14px; height: 14px" /> {{ station?.distance }}
+            <img src="/icons/way.svg" class="stat-icon" style="width: 14px; height: 14px" />
+            {{ distanceDisplay }}
           </div>
         </div>
       </div>
@@ -73,19 +358,24 @@
         <div class="station-title-row">
           <div class="logo-circle bg-orange">
             <span class="logo-text">
-              <img v-if="station?.profile" :src="station?.profile" :alt="station?.name" />
+              <img v-if="franchiseProfile" :src="franchiseProfile" :alt="station?.name" />
+              <span v-else>{{ (operatorName || 'V')[0] }}</span>
             </span>
           </div>
           <div class="title-text">
             <h2>{{ station?.name }}</h2>
-            <p>{{ station?.type }}</p>
+            <p>
+              {{ station?.companyName || station?.franchiseName || station?.type || 'EV Station' }}
+            </p>
           </div>
         </div>
 
         <!-- Location Pill -->
-        <div class="location-pill">
+        <div class="location-pill" @click="openDirection" style="cursor: pointer">
           <ion-icon :icon="arrowUpOutline" class="loc-icon" />
-          <span>{{ station?.location }}</span>
+          <span>{{
+            station?.address || 'Address unavailable'
+          }}</span>
         </div>
 
         <!-- Charge Point Info -->
@@ -94,95 +384,110 @@
         <!-- Open Status Card -->
         <div class="info-card flex-row status-card">
           <ion-icon :icon="timeOutline" class="clock-icon" />
-          <span class="status-text"
-            ><span class="text-green">{{ station?.status }}</span> {{ station?.hours }}</span
-          >
+          <span class="status-text">
+            <span :class="isOpenStatus ? 'text-green' : 'text-danger'">{{
+              isOpenStatus ? 'Open' : 'Close'
+            }}</span>
+            {{ openHoursDisplay }}
+          </span>
         </div>
 
         <!-- Detailed Chargers Card -->
         <div class="info-card chargers-card">
-          <template v-for="(connector, index) in station?.connectors" :key="index">
+          <template v-for="(connector, index) in stationConnectors" :key="connector.id || index">
             <div class="connector-row">
               <div class="connector-left">
                 <div class="connector-icon-wrapper">
                   <img
-                    v-if="connector.icon.includes('.svg')"
+                    v-if="connector.icon && connector.icon.includes('.svg')"
                     :src="connector.icon"
                     style="width: 24px; height: 24px"
                   />
-                  <Icon v-else :name="connector.icon" size="24px" />
+                  <Icon v-else-if="connector.icon" :name="connector.icon" size="24px" />
+                  <Icon v-else name="plug" size="24px" />
                 </div>
                 <span class="connector-name">{{ connector.name }}</span>
               </div>
               <div class="connector-mid">
-                <div class="power-info">
+                <div class="power-info" v-if="connector.power">
                   <ion-icon :icon="flashOutline" /> {{ connector.power }}
                 </div>
-                <div class="price-info">
+                <div class="price-info" v-if="connector.price">
                   <ion-icon :icon="flashOutline" /> {{ connector.price }}
                 </div>
               </div>
               <div class="connector-right">
-                <span class="text-orange">{{ connector.status }}</span>
+                <span :class="connector.isAvailable ? 'text-orange' : 'text-danger'">{{
+                  connector.status
+                }}</span>
               </div>
             </div>
-            <div
-              v-if="station?.connectors && index !== station.connectors.length - 1"
-              class="hr-divider"
-            ></div>
+            <div v-if="index !== stationConnectors.length - 1" class="hr-divider"></div>
           </template>
 
-          <div class="hr-divider"></div>
+          <div v-if="stationConnectors.length > 0" class="hr-divider"></div>
 
           <!-- Operator & Actions -->
           <div class="operator-row">
             <div class="operator-left">
               <div class="logo-circle small-logo bg-orange">
                 <span class="logo-text-small">
-                  <img v-if="station?.profile" :src="station?.profile" :alt="station?.name" />
+                  <img v-if="franchiseProfile" :src="franchiseProfile" :alt="operatorName" />
+                  <span v-else>{{ (operatorName || 'V')[0] }}</span>
                 </span>
               </div>
               <div class="operator-info">
                 <span class="op-label">Operated by</span>
-                <span class="op-name">{{ station?.operator }}</span>
+                <span class="op-name">{{ operatorName }}</span>
               </div>
             </div>
             <div class="operator-actions">
               <button
-                v-for="(contact, index) in station?.contacts"
-                :key="index"
+                v-for="(contact, index) in stationContacts"
+                :key="contact.id || index"
                 :class="['action-circle', contact.colorClass]"
+                :title="contact.name"
+                @click="handleContactClick(contact)"
               >
                 <img
-                  v-if="contact.icon.includes('.svg')"
+                  v-if="contact.icon && contact.icon.includes('.svg')"
                   :src="contact.icon"
                   style="width: 100%; height: 100%; border-radius: 50%"
                 />
-                <Icon v-else :name="contact.icon" size="16px" />
+                <Icon
+                  v-else-if="contact.icon"
+                  :name="contact.icon"
+                  :size="contact.icon === 'phone' ? '16px' : '32px'"
+                />
               </button>
             </div>
           </div>
         </div>
 
         <!-- Amenities -->
-        <div class="section-heading">Amenities</div>
-        <div class="info-card amenities-card">
+        <div class="section-heading" v-if="stationAmenities.length > 0">Amenities</div>
+        <div class="info-card amenities-card" v-if="stationAmenities.length > 0">
           <div class="amenities-grid">
-            <div class="amenity-item" v-for="(amenity, index) in station?.amenities" :key="index">
-              <ion-icon :icon="checkmarkOutline" class="text-green check-icon" /> {{ amenity }}
+            <div
+              class="amenity-item"
+              v-for="(amenity, index) in stationAmenities"
+              :key="amenity.id || index"
+            >
+              <ion-icon :icon="checkmarkOutline" class="text-green check-icon" /> {{ amenity.name }}
             </div>
           </div>
         </div>
 
         <!-- Surroundings -->
-        <div class="section-heading">Surroundings</div>
+        <div class="section-heading" v-if="stationSurroundings.length > 0">Surroundings</div>
         <div
           class="info-card flex-between surroundings-card"
-          v-for="(surrounding, index) in station?.surroundings"
-          :key="index"
+          v-for="(surrounding, index) in stationSurroundings"
+          :key="surrounding.id || index"
         >
           <div class="amenity-item">
-            <ion-icon :icon="checkmarkOutline" class="text-green check-icon" /> {{ surrounding }}
+            <ion-icon :icon="checkmarkOutline" class="text-green check-icon" />
+            {{ surrounding.name }}
           </div>
         </div>
       </div>
@@ -317,9 +622,7 @@
     color: white;
     font-weight: bold;
   }
-  .bg-orange {
-    background: #e85d04;
-  }
+
   .logo-text {
     font-size: 16px;
   }

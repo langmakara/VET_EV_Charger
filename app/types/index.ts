@@ -3,10 +3,7 @@
  * Import from '~/types' to access all type definitions.
  */
 
-export type {
-  ApiResponseWrapper,
-  UserProfile,
-} from './api'
+export type { ApiResponseWrapper, UserProfile } from './api'
 
 export type {
   ChargingStationSummary,
@@ -17,12 +14,7 @@ export type {
   HistoryItem,
   ChargingHistoryItem,
   Voucher,
-  MembershipBenefit,
+  MembershipBenefit
 } from './ev-charger'
 
-export type {
-  HistoryDetailItem,
-  TransactionDetailItem,
-} from './transaction'
-
-
+export type { HistoryDetailItem, TransactionDetailItem } from './transaction'

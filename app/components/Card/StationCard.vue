@@ -1,105 +1,168 @@
 <script setup lang="ts">
   import { computed } from 'vue'
-  import {
-    IonCard,
-    IonItem,
-    IonThumbnail,
-    IonLabel,
-    IonGrid,
-    IonRow,
-    IonCol,
-    IonText
-  } from '@ionic/vue'
-  import Icon from '~/components/Icon/icon.vue'
-  import IconButton from '../Button/IconButton.vue';
+import {
+  IonCard,
+  IonItem,
+  IonThumbnail,
+  IonLabel,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonText
+} from '@ionic/vue'
+import Icon from '~/components/Icon/icon.vue'
+import IconButton from '../Button/IconButton.vue'
+import type { StationData } from '~/api/types'
 
-  const props = withDefaults(
-    defineProps<{
-      station: any
-      address?: boolean | string
-      price?: boolean | string
-      mode?: 'address' | 'price' | string
-      heart?: boolean | string
-      status?: boolean | string
-      customClass?: string
-    }>(),
-    {
-      address: false,
-      price: false,
-      mode: '',
-      heart: false,
-      status: false,
-      customClass: ''
-    }
-  )
-
-  const showAddress = computed(() => {
-    return (
-      props.address === true ||
-      props.address === '' ||
-      props.address === 'true' ||
-      props.mode === 'address'
-    )
-  })
-
-  const showPrice = computed(() => {
-    if (
-      props.price === true ||
-      props.price === '' ||
-      props.price === 'true' ||
-      props.mode === 'price'
-    ) {
-      return true
-    }
-    // If address is explicitly enabled and price wasn't specified, hide price
-    if (showAddress.value) {
-      return false
-    }
-    // Default fallback: show price
-    return true
-  })
-
-  const showHeart = computed(() => {
-    return (
-      props.heart === true ||
-      props.heart === '' ||
-      props.heart === 'true'
-    )
-  })
-
-  const showStatus = computed(() => {
-    if (
-      props.status === true ||
-      props.status === '' ||
-      props.status === 'true'
-    ) {
-      return true
-    }
-    // If heart is explicitly enabled and status wasn't specified, hide status
-    if (showHeart.value) {
-      return false
-    }
-    // Default fallback: show status
-    return true
-  })
-
-  const emit = defineEmits(['favorite-click', 'toggle-favorite'])
-
-  function handlefavoriteClick(e: Event) {
-    e.stopPropagation()
-    if (props.station) {
-      props.station.isFavorites = !props.station.isFavorites
-      emit('favorite-click', props.station)
-      emit('toggle-favorite', props.station)
-    }
+const props = withDefaults(
+  defineProps<{
+    station: StationData
+    address?: boolean | string
+    price?: boolean | string
+    mode?: 'address' | 'price' | string
+    heart?: boolean | string
+    status?: boolean | string
+    customClass?: string
+  }>(),
+  {
+    address: false,
+    price: false,
+    mode: '',
+    heart: false,
+    status: false,
+    customClass: ''
   }
+)
+
+const showAddress = computed(() => {
+  return (
+    props.address === true ||
+    props.address === '' ||
+    props.address === 'true' ||
+    props.mode === 'address'
+  )
+})
+
+const showPrice = computed(() => {
+  if (
+    props.price === true ||
+    props.price === '' ||
+    props.price === 'true' ||
+    props.mode === 'price'
+  ) {
+    return true
+  }
+  // If address is explicitly enabled and price wasn't specified, hide price
+  if (showAddress.value) {
+    return false
+  }
+  // Default fallback: show price
+  return true
+})
+
+const showHeart = computed(() => {
+  return (
+    props.heart === true ||
+    props.heart === '' ||
+    props.heart === 'true'
+  )
+})
+
+const showStatus = computed(() => {
+  if (
+    props.status === true ||
+    props.status === '' ||
+    props.status === 'true'
+  ) {
+    return true
+  }
+  // If heart is explicitly enabled and status wasn't specified, hide status
+  if (showHeart.value) {
+    return false
+  }
+  // Default fallback: show status
+  return true
+})
+
+const emit = defineEmits(['favorite-click', 'toggle-favorite'])
+
+const isFavorite = computed(() => {
+  return Boolean(props.station?.isFavorite ?? (props.station as any)?.isFavorites)
+})
+
+function handlefavoriteClick(e: Event) {
+  e.stopPropagation()
+  if (props.station) {
+    const next = !isFavorite.value
+    props.station.isFavorite = next
+    props.station.isFavorites = next
+    emit('favorite-click', props.station)
+    emit('toggle-favorite', props.station)
+  }
+}
+
+const { baseUrl: evChargerBaseUrl } = useApiUrl('/vetEvChargerCustomerAPi', 5697)
+
+const stationImage = computed(() => {
+  const img = props.station?.imageUrl || (props.station as any)?.station
+  if (!img) return '/images/station.svg'
+  if (img.startsWith('http') || img.startsWith('data:')) return img
+  if (img.startsWith('/images') || img.startsWith('/icons') || img.startsWith('/vet-ev-charger')) {
+    return img
+  }
+  return `${evChargerBaseUrl}${img.startsWith('/') ? '' : '/'}${img}`
+})
+
+const isOpen = computed(() => {
+  if (props.station?.isOpen !== undefined) {
+    return Boolean(props.station.isOpen)
+  }
+  return (props.station as any)?.status === 'Open' || (props.station as any)?.status === 'open'
+})
+
+const statusLabel = computed(() => {
+  return isOpen.value ? 'Open' : 'Close'
+})
+
+const formattedPrice = computed(() => {
+  if (props.station?.pricePerKwh != null) {
+    return `${Number(props.station.pricePerKwh).toLocaleString()} KHR/kWh`
+  }
+  return (props.station as any)?.price || ''
+})
+
+const gbtInfo = computed(() => {
+  const gun = props.station?.gunInform?.find((g) => g.name?.includes('GB/T'))
+  if (gun) {
+    return `${gun.qtyAvailable}/${gun.qty}`
+  }
+  return (props.station as any)?.gbt || (props.station as any)?.qty || '0/0'
+})
+
+const ccs2Info = computed(() => {
+  const gun = props.station?.gunInform?.find((g) => g.name?.includes('CCS2'))
+  if (gun) {
+    return `${gun.qtyAvailable}/${gun.qty}`
+  }
+  return (props.station as any)?.ccs2 || '0/0'
+})
+
+const distanceText = computed(() => {
+  if ((props.station as any)?.distance) {
+    return (props.station as any).distance
+  }
+  if (props.station?.value) {
+    return `${Number(props.station.value).toFixed(1)} km`
+  }
+  return ''
+})
 </script>
 
 <template>
   <ion-card :class="['station-card', customClass]" style="background: #f8fafc">
     <ion-item lines="none" class="station-item">
       <ion-thumbnail slot="start" class="station-thumbnail">
-        <img :src="station.station" :alt="station.name" />
+        <img :src="stationImage" :alt="station.name" />
       </ion-thumbnail>
 
       <ion-label class="station-info ion-text-wrap">
@@ -113,17 +176,17 @@
             <ion-col class="status" size="4">
               <ion-text
                 v-if="showStatus"
-                :color="station.status === 'Open' ? 'success' : 'danger'"
+                :color="isOpen ? 'success' : 'danger'"
                 class="station-status"
               >
-                • {{ station.status }}
+                • {{ statusLabel }}
               </ion-text>
               <IconButton
                 v-if="showHeart"
                 name="heart"
                 size="20px"
                 class="heart-btn"
-                :color="station.isFavorites ? 'primary' : 'medium'"
+                :color="isFavorite ? 'primary' : 'medium'"
                 @click.stop="handlefavoriteClick"
               />
             </ion-col>
@@ -132,13 +195,13 @@
           <ion-row v-if="showPrice" class="info-row">
             <ion-col size="12" class="info-item">
               <Icon name="dollar" class="info-icon" size="14px" />
-              <ion-text class="highlight">{{ station.price }}</ion-text>
+              <ion-text class="highlight">{{ formattedPrice }}</ion-text>
             </ion-col>
           </ion-row>
 
           <ion-row v-if="showAddress" class="info-row">
             <ion-col size="12" class="info-item">
-              <ion-text class="highlight"># {{ station.address || station.location }}</ion-text>
+              <ion-text class="highlight"># {{ station.address }}</ion-text>
             </ion-col>
           </ion-row>
 
@@ -147,12 +210,12 @@
             <ion-col size="4" size-md="4" size-lg="4" class="info-item">
               <Icon name="gbt" class="info-icon" size="14px" />
               <ion-text color="medium">GB/T </ion-text>
-              <ion-text class="highlight">{{ station.gbt }}</ion-text>
+              <ion-text class="highlight">{{ gbtInfo }}</ion-text>
             </ion-col>
             <ion-col size="8" size-md="8" size-lg="8" class="info-item">
               <img src="/icons/ccs2DC.svg" class="info-icon" style="width: 14px; height: 14px" />
               <ion-text color="medium">CCS2 (DC) </ion-text>
-              <ion-text class="highlight">{{ station.ccs2 }}</ion-text>
+              <ion-text class="highlight">{{ ccs2Info }}</ion-text>
             </ion-col>
           </ion-row>
 
@@ -174,7 +237,7 @@
             </ion-col>
             <ion-col style="display: flex; align-items: center; padding: 0">
               <ion-text color="medium" class="distance-text" style="line-height: 1">{{
-                station.distance
+                distanceText
               }}</ion-text>
             </ion-col>
           </ion-row>

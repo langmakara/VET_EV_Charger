@@ -1,4 +1,4 @@
-export const useApiUrl = () => {
+export const useApiUrl = (contextPath: string = "", devPort?: number) => {
   const config = useRuntimeConfig().public;
 
   const activeEnv = (config.nodeEnv || "dev").toLowerCase().trim();
@@ -20,10 +20,21 @@ export const useApiUrl = () => {
   } else if (activeEnv === "local") {
     baseUrl = apiUrlLocal || apiUrlDev;
   } else {
-    baseUrl = apiUrlDev;
+    baseUrl = devPort ? `http://phea.local:${devPort}` : apiUrlDev;
   }
 
   baseUrl = baseUrl.replace(/\/+$/, "");
+
+  // If a contextPath (e.g. "/utSystemHrAPi") is provided, attach or swap context
+  if (contextPath) {
+    try {
+      const url = new URL(baseUrl);
+      url.pathname = contextPath.replace(/^\/+/, "/");
+      baseUrl = url.origin + url.pathname;
+    } catch {
+      baseUrl = `${baseUrl}/${contextPath.replace(/^\/+/, "")}`;
+    }
+  }
 
   return { activeEnv, baseUrl };
 };
