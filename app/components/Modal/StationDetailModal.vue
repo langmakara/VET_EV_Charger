@@ -11,6 +11,7 @@
   } from 'ionicons/icons'
   import Icon from '~/components/Icon/icon.vue'
   import IconButton from '~/components/Button/IconButton.vue'
+  import { abaBridge } from '~/composables/useNativeBridge'
 
   const props = defineProps<{
     isOpen: boolean
@@ -27,8 +28,13 @@
 
   const openDirection = () => {
     if (props.station?.lat && props.station?.lng) {
-      const url = `https://www.google.com/maps/search/?api=1&query=${props.station.lat},${props.station.lng}`
-      window.open(url, '_blank')
+      const lat = Number(props.station.lat)
+      const lng = Number(props.station.lng)
+      abaBridge.openMap({ lat, lng }).catch(() => {
+        // Fallback to web Google Maps if outside mobile app or bridge fails
+        const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+        window.open(url, '_blank')
+      })
     }
   }
 </script>

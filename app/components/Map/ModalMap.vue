@@ -15,7 +15,7 @@
               />
             </ion-col>
             <ion-col size="2">
-              <IconButton name="filter" color="light" size="md" @click="$emit('filter-click')"/>
+              <IconButton name="filter" color="light" size="md" @click="$emit('filter-click')" />
             </ion-col>
           </ion-row>
         </ion-grid>

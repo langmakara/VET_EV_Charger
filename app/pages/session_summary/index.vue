@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import AppButton from '~/components/Button/AppButton.vue';
 import Icon from '~/components/Icon/icon.vue';
+import { abaBridge } from '~/composables/useNativeBridge';
+
+ const handleBackToHome = () => {
+    abaBridge.backToHomePage()
+ }
 
 
 </script>
@@ -36,7 +41,7 @@ import Icon from '~/components/Icon/icon.vue';
             </ion-item>
         </ion-content>
         <ion-footer class="footer-btn">
-            <AppButton label="Back to Homescreen" color="primary" fill="outline" class="custom-outline" expand="block" @click="navigateTo('/ev_charger')" />
+            <AppButton label="Back to Homescreen" color="primary" fill="outline" class="custom-outline" expand="block" @click="handleBackToHome" />
         </ion-footer>
     </ion-page>
 </template>

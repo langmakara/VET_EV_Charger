@@ -25,7 +25,7 @@
   import StationCard from '~/components/Card/StationCard.vue'
 
   import evChargerData from '~/data/ev_charger_data.json'
-import IconButton from '~/components/Button/IconButton.vue'
+  import IconButton from '~/components/Button/IconButton.vue'
 
   const { actions, nearbyStations, newsFeeds, profile } = evChargerData
 
@@ -34,6 +34,16 @@ import IconButton from '~/components/Button/IconButton.vue'
     estTime: '24 mins',
     battery: '70%'
   })
+
+  const { userProfile } = useUserProfile()
+
+  const user = computed(() => ({
+    fullName: userProfile.value?.fullName || profile.fullName,
+    email: userProfile.value?.email || profile.email,
+    address: userProfile.value?.address || profile.address,
+    phoneNumber: userProfile.value?.phoneNumber || profile.phoneNumber,
+    avatar: userProfile.value?.avatar || profile.avatar
+  }))
 
   const isCharging = computed(() => {
     const status = chargingInfo.value.status?.toLowerCase() || ''
@@ -116,11 +126,11 @@ import IconButton from '~/components/Button/IconButton.vue'
         <ion-card-content class="profile-card-content">
           <ion-item class="profile-item" lines="none" :detail="false">
             <ion-avatar slot="start" class="profile-avatar">
-              <img :src="profile.avatar" :alt="profile.fullName" />
+              <img :src="user.avatar" :alt="user.fullName" />
             </ion-avatar>
             <ion-label class="profile-info-label">
-              <h2 class="profile-user-name">{{ profile.fullName }}</h2>
-              <p class="profile-user-greeting">{{ profile.greeting }}</p>
+              <h2 class="profile-user-name">{{ user.fullName }}</h2>
+              <p class="profile-user-greeting">Wellcome</p>
             </ion-label>
             <ion-icon slot="end" :icon="chevronForward" class="profile-chevron"></ion-icon>
           </ion-item>
@@ -128,7 +138,10 @@ import IconButton from '~/components/Button/IconButton.vue'
       </AppCard>
 
       <!-- Charging Card -->
-      <AppCard class="ChargingCard charging-active-card" bgColor="linear-gradient(135deg, #f7eee6 0%, #ebdad0 100%)">
+      <AppCard
+        class="ChargingCard charging-active-card"
+        bgColor="linear-gradient(135deg, #f7eee6 0%, #ebdad0 100%)"
+      >
         <ion-card-content class="charging-card-content">
           <div class="charging-header">
             <div class="charging-status">
@@ -137,7 +150,12 @@ import IconButton from '~/components/Button/IconButton.vue'
               </div>
               <span class="status-text">{{ chargingInfo.status }}</span>
             </div>
-            <AppButton size="small" fill="solid" class="btn-view-detail" @click="handleViewDetail()">
+            <AppButton
+              size="small"
+              fill="solid"
+              class="btn-view-detail"
+              @click="handleViewDetail()"
+            >
               View Detail
             </AppButton>
           </div>
