@@ -90,10 +90,17 @@ export default defineNuxtConfig({
       ],
     },
   },
+  build: {
+    transpile: ["@tanstack/vue-query"],
+  },
   runtimeConfig: {
     // Private: ONLY available inside the server/ directory
     apiBaseUrl: "",
     public: {
+      apiBase:
+        process.env.NUXT_PUBLIC_API_BASE ||
+        process.env.VITE_API_URL_QA ||
+        "https://qacltom.udaya-tech.com/vetEvChargerCustomerAPi",
       nodeEnv: process.env.VITE_NODE_ENV || "qa",
       appName: process.env.VITE_APP_NAME || "VET EV Charger",
       apiUrl: process.env.VITE_API_URL || "",

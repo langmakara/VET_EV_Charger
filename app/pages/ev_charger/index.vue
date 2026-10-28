@@ -26,10 +26,10 @@
 
   import evChargerData from '~/data/ev_charger_data.json'
   import IconButton from '~/components/Button/IconButton.vue'
-import { useStationInfinite } from '~/composables/queries/useStation.ts'
-import type { StationData } from '~/api/types.ts'
+  import { useStationInfinite } from '~/composables/queries/useStation.ts'
+  import type { StationData } from '~/api/types.ts'
 
-  const { actions, nearbyStations, newsFeeds, profile } = evChargerData
+  const { actions, nearbyStations, newsFeeds} = evChargerData
 
   const chargingInfo = ref({
     status: 'Your vehicle is charging',
@@ -44,24 +44,24 @@ import type { StationData } from '~/api/types.ts'
     email: userProfile.value?.email,
     address: userProfile.value?.address,
     phoneNumber: userProfile.value?.phoneNumber,
-    avatar: userProfile.value?.avatar || profile.avatar
+    avatar: userProfile.value?.avatar
   }))
 
   // Reactive query parameters (filter payload for POST /station/list)
-const filter = ref({
-  rowsPerPage: 5,
-  lats: 11.556374,
-  longs: 104.928207,
-})
+  const filter = ref({
+    rowsPerPage: 5,
+    lats: 11.556374,
+    longs: 104.928207
+  })
 
-  const {data, isLoading, isError} = useStationInfinite(filter)
+  const { data, isLoading, isError } = useStationInfinite(filter)
 
   // Flatten all pagination pages
   const rawStations = computed<StationData[]>(() => {
     return (
       data.value?.pages.flatMap((page) => {
         const res = (page as any)?.data ?? page?.body?.data
-        return Array.isArray(res) ? res : res?.list ?? []
+        return Array.isArray(res) ? res : (res?.list ?? [])
       }) ?? []
     )
   })

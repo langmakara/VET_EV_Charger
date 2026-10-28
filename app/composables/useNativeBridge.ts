@@ -151,39 +151,39 @@ export const requestLocationPermission = async (): Promise<boolean> => {
   return true
 }
 
-export const getCurrentNativeLocation = async (): Promise<{
-  lat: number
-  lng: number
-  accuracy?: number
-} | null> => {
-  if (!import.meta.client) return null
+// export const getCurrentNativeLocation = async (): Promise<{
+//   lat: number
+//   lng: number
+//   accuracy?: number
+// } | null> => {
+//   if (!import.meta.client) return null
 
-  try {
-    // 1. Try ABA Native Bridge First
-    const loc: any = await abaBridge.requestCurrentLocation()
-    if (loc && typeof loc.lat !== 'undefined') {
-      return {
-        lat: Number(loc.lat),
-        lng: Number(loc.lng),
-        accuracy: 10 // Default to 10 if not provided by ABA
-      }
-    }
-  } catch (e) {
-    console.warn('ABA Location failed, falling back to Capacitor', e)
-  }
+//   try {
+//     // 1. Try ABA Native Bridge First
+//     const loc: any = await abaBridge.requestCurrentLocation()
+//     if (loc && typeof loc.lat !== 'undefined') {
+//       return {
+//         lat: Number(loc.lat),
+//         lng: Number(loc.lng),
+//         accuracy: 10 // Default to 10 if not provided by ABA
+//       }
+//     }
+//   } catch (e) {
+//     console.warn('ABA Location failed, falling back to Capacitor', e)
+//   }
 
-  // 2. Fallback to HTML5/Capacitor Geolocation
-  try {
-    const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true })
-    return {
-      lat: position.coords.latitude,
-      lng: position.coords.longitude,
-      accuracy: position.coords.accuracy
-    }
-  } catch {}
+//   // 2. Fallback to HTML5/Capacitor Geolocation
+//   try {
+//     const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true })
+//     return {
+//       lat: position.coords.latitude,
+//       lng: position.coords.longitude,
+//       accuracy: position.coords.accuracy
+//     }
+//   } catch {}
 
-  return null
-}
+//   return null
+// }
 
 // ─── THE COMPOSABLE ────────────────────────────────────────────────────────
 
@@ -209,7 +209,7 @@ export const useNativeBridge = () => {
   return {
     sendTitleToFlutter,
     requestLocationPermission,
-    getCurrentNativeLocation,
+    // getCurrentNativeLocation,
     openDeeplink,
     showToast,
     closeApp,
@@ -250,9 +250,9 @@ if (import.meta.client) {
     responseCallback({ success: true })
   })
 
-  registerHandler('getCurrentLocation', (data, responseCallback) => {
-    getCurrentNativeLocation().then((loc) => {
-      responseCallback({ success: true, location: loc })
-    })
-  })
+  // registerHandler('getCurrentLocation', (data, responseCallback) => {
+  //   getCurrentNativeLocation().then((loc) => {
+  //     responseCallback({ success: true, location: loc })
+  //   })
+  // })
 }

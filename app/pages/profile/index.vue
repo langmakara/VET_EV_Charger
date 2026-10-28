@@ -14,7 +14,6 @@ import { chevronForward } from 'ionicons/icons';
 import Icon from '~/components/Icon/icon.vue';
 import ContactModal from './contactModal.vue';
 import { sendTitleToFlutter } from '~/composables/useNativeBridge';
-import evChargerData from '~/data/ev_charger_data.json';
 
 onMounted(() => {
   sendTitleToFlutter('Profile');
@@ -22,15 +21,14 @@ onMounted(() => {
 
 // User information from centralized data
 // Profile user data from useUserProfile with fallback to centralized JSON
-const { profile } = evChargerData;
 const { userProfile} = useUserProfile();
 
 const user = computed(() => ({
-  fullName: userProfile.value?.fullName || profile.fullName,
-  email: userProfile.value?.email || profile.email,
-  address: userProfile.value?.address || profile.address,
-  phoneNumber: userProfile.value?.phoneNumber || profile.phoneNumber,
-  avatar: userProfile.value?.avatar || profile.avatar
+  fullName: userProfile.value?.fullName,
+  email: userProfile.value?.email,
+  address: userProfile.value?.address,
+  phoneNumber: userProfile.value?.phoneNumber,
+  avatar: userProfile.value?.avatar
 }));
 
 // Language definitions
