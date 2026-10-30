@@ -221,7 +221,7 @@
       <!-- Profile Card -->
       <AppCard
         class="profile-card"
-        bgColor="linear-gradient(135deg, #f8ede6 0%, #ead3c7 100%)"
+        bgColor="var(--app-color-default-rg)"
         button="true"
         @click="handleProfileClick"
       >
@@ -242,7 +242,7 @@
       <!-- Charging Card -->
       <AppCard
         class="ChargingCard charging-active-card"
-        bgColor="linear-gradient(135deg, #f7eee6 0%, #ebdad0 100%)"
+        bgColor="var(--app-color-default-rg)"
       >
         <ion-card-content class="charging-card-content">
           <div class="charging-header">
@@ -286,7 +286,7 @@
       <!-- Points Card -->
       <AppCard
         class="ChargingCard"
-        bgColor="linear-gradient(135deg, #f8e9e1, #ead1c5)"
+        bgColor="var(--app-color-default-rg)"
         customClass="points-card"
         button="true"
         @click="handlePointsClick"

@@ -209,13 +209,13 @@
 
   .track-circle {
     fill: white;
-    stroke: #f8d3b3;
+    stroke: var(--app-color-default-rg);
     stroke-width: 10;
   }
 
   .progress-circle {
     fill: none;
-    stroke: #df5e0e;
+    stroke: var(--ion-color-primary);
     stroke-width: 10;
     stroke-linecap: round;
     transition: stroke-dashoffset 0.5s ease;
