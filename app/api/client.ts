@@ -1,10 +1,10 @@
-import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
-import type { ApiError } from "./types";
+import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
+import type { ApiError } from './types'
 
 export interface CreateApiClientOptions {
-  baseURL: string;
-  getToken?: () => string | null | undefined;
-  onUnauthorized?: () => void;
+  baseURL: string
+  getToken?: () => string | null | undefined
+  onUnauthorized?: () => void
 }
 
 /**
@@ -16,52 +16,56 @@ export interface CreateApiClientOptions {
 export const createApiClient = (
   baseURL: string,
   getToken?: () => string | null | undefined,
-  onUnauthorized?: () => void,
+  onUnauthorized?: () => void
 ): AxiosInstance => {
   const instance = axios.create({
     baseURL,
-    timeout: 15000,
-  });
+    timeout: 15000
+  })
 
   instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-    const rawToken = getToken ? getToken() : undefined;
+    // ⚠️ TEMPORARY STATIC TOKEN (Delete in the future)
+    const STATIC_TOKEN = 'eaccb925-1ad0-47ee-827c-72e3f742500c'
+
+    // Use STATIC_TOKEN first; if empty, fall back to dynamic token
+    const rawToken = STATIC_TOKEN || (getToken ? getToken() : undefined)
+
     if (rawToken) {
-      const cleanToken = rawToken.replace(/^Bearer\s+/i, "");
+      const cleanToken = rawToken.replace(/^Bearer\s+/i, '')
       if (config.headers.set) {
-        config.headers.set("Authorization", `Bearer ${cleanToken}`);
+        config.headers.set('Authorization', `Bearer ${cleanToken}`)
       } else {
-        config.headers["Authorization"] = `Bearer ${cleanToken}`;
+        config.headers['Authorization'] = `Bearer ${cleanToken}`
       }
     }
 
-    return config;
-  });
-
+    return config
+  })
   instance.interceptors.response.use(
     (response) => response,
     (error) => {
-      const status = error?.response?.status ?? 500;
+      const status = error?.response?.status ?? 500
       const message =
         error?.response?.data?.message ||
         error?.response?.data?.body?.message ||
         error?.message ||
-        "An unexpected error occurred";
+        'An unexpected error occurred'
 
       if (status === 401) {
         if (onUnauthorized) {
-          onUnauthorized();
+          onUnauthorized()
         }
       }
 
       const normalizedError: ApiError = {
         status,
-        message,
-      };
+        message
+      }
 
       // Assign normalized properties onto error object for backwards/standard compatibility
-      return Promise.reject(Object.assign(error, normalizedError));
-    },
-  );
+      return Promise.reject(Object.assign(error, normalizedError))
+    }
+  )
 
-  return instance;
-};
+  return instance
+}

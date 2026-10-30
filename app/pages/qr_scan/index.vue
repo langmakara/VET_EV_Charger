@@ -1,6 +1,5 @@
 <script setup lang="ts">
-  import { ref, onMounted, onBeforeUnmount } from 'vue'
-  import jsQR from 'jsQR'
+  import { ref, onBeforeUnmount } from 'vue'
   import CameraComponent from '~/components/Camera/CameraComponent.vue'
   import AlertComponent from '~/components/Modal/AlertComponent.vue'
   import ModalPlug from './modalPlug.vue'
@@ -53,60 +52,26 @@
   const showAlert = ref(false)
   const showModalPlug = ref(false)
 
-  const SCAN_MAX_SIZE = 640 // downscale frames before decoding
-  const SCAN_INTERVAL = 150 // ms between decode attempts
-
-  let scanCanvas: HTMLCanvasElement | null = null
-  let scanCtx: CanvasRenderingContext2D | null = null
-  let lastScanTime = 0
   let plugTimer: any = null
-
-  onMounted(() => {
-    scanCanvas = document.createElement('canvas')
-    scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true })
-  })
 
   onBeforeUnmount(() => {
     if (plugTimer) clearTimeout(plugTimer)
   })
 
-  function onCameraFrame({ canvas }: { canvas: HTMLCanvasElement }) {
-    if (!scanning.value || !canvas || !scanCanvas || !scanCtx) return
+  function handleScan(scannedCode: string) {
+    if (!scanning.value || !scannedCode) return
 
-    const now = performance.now()
-    if (now - lastScanTime < SCAN_INTERVAL) return
-    lastScanTime = now
+    result.value = scannedCode
+    scanning.value = false
+    showAlert.value = true
+    if (navigator.vibrate) navigator.vibrate(100)
 
-    const cWidth = canvas.width
-    const cHeight = canvas.height
-    if (!cWidth || !cHeight) return
-
-    const scale = Math.min(1, SCAN_MAX_SIZE / Math.max(cWidth, cHeight))
-    const sw = Math.round(cWidth * scale)
-    const sh = Math.round(cHeight * scale)
-
-    if (scanCanvas.width !== sw || scanCanvas.height !== sh) {
-      scanCanvas.width = sw
-      scanCanvas.height = sh
-    }
-
-    scanCtx.drawImage(canvas, 0, 0, sw, sh)
-    const image = scanCtx.getImageData(0, 0, sw, sh)
-    const code = jsQR(image.data, sw, sh, { inversionAttempts: 'dontInvert' })
-
-    if (code && code.data) {
-      result.value = code.data
-      scanning.value = false
-      showAlert.value = true
-      if (navigator.vibrate) navigator.vibrate(100)
-
-      // Show ModalPlug 2 seconds after successful scan
-      clearTimeout(plugTimer)
-      plugTimer = setTimeout(() => {
-        showAlert.value = false
-        showModalPlug.value = true
-      }, 2000)
-    }
+    // Show ModalPlug 2 seconds after successful scan
+    clearTimeout(plugTimer)
+    plugTimer = setTimeout(() => {
+      showAlert.value = false
+      showModalPlug.value = true
+    }, 2000)
   }
 
   function ProceedToPlug() {
@@ -152,7 +117,7 @@
   <ion-page>
     <ion-content :fullscreen="true" :scroll-y="false" class="camera-content">
       <div class="camera-wrapper">
-        <CameraComponent ref="cameraRef" @frame="onCameraFrame">
+        <CameraComponent ref="cameraRef" :enable-scan="scanning" @scan="handleScan">
           <!-- Custom Page Overlay -->
           <div class="overlay-container">
             <!-- Top bar with Back button -->

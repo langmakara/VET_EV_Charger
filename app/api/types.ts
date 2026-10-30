@@ -167,4 +167,32 @@ export interface StationDetailData {
   [key: string]: any;
 }
 
+// Type of voucher list
+export interface VoucherDate {
+  id?: number | string;
+  voucherCode?: string;
+  voucherBatchId?: number;
+  batchTitle?: string;
+  banner?: string;
+  bannerName?: string;
+  discountType?: number;
+  discountValue?: number;
+  expiresDate?: string;
+  displayStatus?: number;
+  statusText?: string;
+  isApplied?: number;
+  [key: string]: any;
+}
 
+export interface VoucherListParams {
+  page?: number;
+  rowsPerPage?: number;
+  [key: string]: any;
+}
+
+export interface VoucherSearchParams {
+  code?: string;
+  [key: string]: any;
+}
+
+export type VoucherApplyParams = VoucherSearchParams;

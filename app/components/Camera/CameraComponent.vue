@@ -1,16 +1,23 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import jsQR from 'jsQR'
 
 const props = withDefaults(
   defineProps<{
     facingMode?: 'environment' | 'user'
     autoStart?: boolean
     showError?: boolean
+    enableScan?: boolean
+    scanInterval?: number
+    scanMaxSize?: number
   }>(),
   {
     facingMode: 'environment',
     autoStart: true,
-    showError: true
+    showError: true,
+    enableScan: true,
+    scanInterval: 150,
+    scanMaxSize: 640
   }
 )
 
@@ -26,6 +33,7 @@ const emit = defineEmits<{
     canvas: HTMLCanvasElement
     ctx: CanvasRenderingContext2D
   }): void
+  (e: 'scan', code: string): void
   (e: 'error', error: any): void
   (e: 'stop'): void
 }>()
@@ -41,6 +49,11 @@ const errorMsg = ref('')
 let currentStream: MediaStream | null = null
 let animId: number | null = null
 let resizeObserver: ResizeObserver | null = null
+
+// Internal scanner performance & downscale canvas
+let scanCanvas: HTMLCanvasElement | null = null
+let scanCtx: CanvasRenderingContext2D | null = null
+let lastScanTime = 0
 
 function updateCanvasSize() {
   if (!canvas.value || !container.value) return
@@ -132,10 +145,44 @@ function draw() {
         canvas: canvas.value,
         ctx: ctx.value
       })
+
+      // QR Code Scanning: 1. Throttling & Downscaling, 2. QR Code Decoding
+      if (props.enableScan && scanCanvas && scanCtx) {
+        const now = performance.now()
+        if (now - lastScanTime >= props.scanInterval) {
+          lastScanTime = now
+          decodeQRCode(canvas.value)
+        }
+      }
     }
   }
 
   animId = requestAnimationFrame(draw)
+}
+
+function decodeQRCode(sourceCanvas: HTMLCanvasElement) {
+  if (!scanCanvas || !scanCtx) return
+  const cWidth = sourceCanvas.width
+  const cHeight = sourceCanvas.height
+  if (!cWidth || !cHeight) return
+
+  // Downscale frame to scanMaxSize (default 640px)
+  const scale = Math.min(1, props.scanMaxSize / Math.max(cWidth, cHeight))
+  const sw = Math.round(cWidth * scale)
+  const sh = Math.round(cHeight * scale)
+
+  if (scanCanvas.width !== sw || scanCanvas.height !== sh) {
+    scanCanvas.width = sw
+    scanCanvas.height = sh
+  }
+
+  scanCtx.drawImage(sourceCanvas, 0, 0, sw, sh)
+  const image = scanCtx.getImageData(0, 0, sw, sh)
+  const code = jsQR(image.data, sw, sh, { inversionAttempts: 'dontInvert' })
+
+  if (code && code.data) {
+    emit('scan', code.data)
+  }
 }
 
 function stopCamera() {
@@ -160,6 +207,9 @@ function takePhoto(type: string = 'image/png', quality?: number): string | null 
 }
 
 onMounted(() => {
+  scanCanvas = document.createElement('canvas')
+  scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true })
+
   if (container.value) {
     resizeObserver = new ResizeObserver(updateCanvasSize)
     resizeObserver.observe(container.value)
@@ -178,6 +228,8 @@ onBeforeUnmount(() => {
     resizeObserver = null
   }
   window.removeEventListener('orientationchange', updateCanvasSize)
+  scanCanvas = null
+  scanCtx = null
 })
 
 defineExpose({

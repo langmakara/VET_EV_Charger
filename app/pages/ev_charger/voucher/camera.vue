@@ -1,11 +1,12 @@
 <script setup lang="ts">
-  import { ref, onMounted, onBeforeUnmount } from 'vue'
-  import jsQR from 'jsQR'
+  import { ref, onBeforeUnmount } from 'vue'
+  import { IonPage, IonContent, IonSpinner, IonText } from '@ionic/vue'
   import CameraComponent from '~/components/Camera/CameraComponent.vue'
   import AlertComponent from '~/components/Modal/AlertComponent.vue'
   import IconButton from '~/components/Button/IconButton.vue'
   import Icon from '~/components/Icon/icon.vue'
   import { useFlashlight } from '~/composables/useFlashlight'
+  import { useSearchVoucherMutation } from '~/composables/queries/useVoucher'
 
   const router = useRouter()
   const cameraRef = ref<InstanceType<typeof CameraComponent> | null>(null)
@@ -19,103 +20,179 @@
   const result = ref('')
   const scanning = ref(true)
   const showAlert = ref(false)
-  const showModalPlug = ref(false)
+  const isSuccess = ref(false)
+  const alertTitle = ref('')
+  const alertMessage = ref('')
+  const alertConfirmLabel = ref('OK')
+  const alertType = ref<'success' | 'delete'>('success')
 
-  const SCAN_MAX_SIZE = 640 // downscale frames before decoding
-  const SCAN_INTERVAL = 150 // ms between decode attempts
+  // Use mutation composable from useVoucher.ts
+  const { mutateAsync: searchVoucher, isPending: isSearching } = useSearchVoucherMutation()
 
-  let scanCanvas: HTMLCanvasElement | null = null
-  let scanCtx: CanvasRenderingContext2D | null = null
-  let lastScanTime = 0
-  let plugTimer: any = null
+  // Shared state to pass scanned voucher code back to voucher list without navigateTo query
+  const scannedVoucherCode = useState<string>('scannedVoucherCode', () => '')
 
-  onMounted(() => {
-    scanCanvas = document.createElement('canvas')
-    scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true })
-  })
+  let successTimer: ReturnType<typeof setTimeout> | null = null
+  let isNavigating = false
+
+  function clearSuccessTimer() {
+    if (successTimer) {
+      clearTimeout(successTimer)
+      successTimer = null
+    }
+  }
+
+  function navigateBackToVoucher() {
+    if (isNavigating) return
+    isNavigating = true
+    clearSuccessTimer()
+    showAlert.value = false
+    router.back()
+  }
 
   onBeforeUnmount(() => {
-    if (plugTimer) clearTimeout(plugTimer)
     turnOffFlashlight()
+    clearSuccessTimer()
   })
 
-  function onCameraFrame({ canvas }: { canvas: HTMLCanvasElement }) {
-    if (!scanning.value || !canvas || !scanCanvas || !scanCtx) return
-
-    const now = performance.now()
-    if (now - lastScanTime < SCAN_INTERVAL) return
-    lastScanTime = now
-
-    const cWidth = canvas.width
-    const cHeight = canvas.height
-    if (!cWidth || !cHeight) return
-
-    const scale = Math.min(1, SCAN_MAX_SIZE / Math.max(cWidth, cHeight))
-    const sw = Math.round(cWidth * scale)
-    const sh = Math.round(cHeight * scale)
-
-    if (scanCanvas.width !== sw || scanCanvas.height !== sh) {
-      scanCanvas.width = sw
-      scanCanvas.height = sh
+  /**
+   * Parse code if QR contains JSON or URL
+   */
+  function parseVoucherCode(scannedText: string): string {
+    const text = scannedText.trim()
+    if (text.startsWith('{') && text.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(text)
+        if (parsed.code) return String(parsed.code)
+        if (parsed.voucherCode) return String(parsed.voucherCode)
+      } catch {}
     }
+    if (text.includes('?')) {
+      try {
+        const url = new URL(text)
+        const code =
+          url.searchParams.get('code') ||
+          url.searchParams.get('voucher') ||
+          url.searchParams.get('voucherCode')
+        if (code) return code
+      } catch {}
+    }
+    return text
+  }
 
-    scanCtx.drawImage(canvas, 0, 0, sw, sh)
-    const image = scanCtx.getImageData(0, 0, sw, sh)
-    const code = jsQR(image.data, sw, sh, { inversionAttempts: 'dontInvert' })
+  /**
+   * Handle decoded QR code emitted by CameraComponent
+   */
+  async function handleScan(scannedCode: string) {
+    if (!scanning.value || isSearching.value || !scannedCode) return
 
-    if (code && code.data) {
-      result.value = code.data
-      scanning.value = false
+    const parsed = parseVoucherCode(scannedCode)
+    if (!parsed) return
+
+    result.value = parsed
+    scanning.value = false
+    if (navigator.vibrate) navigator.vibrate(100)
+
+    // Send code using searchVoucher from useVoucher.ts
+    try {
+      const res = await searchVoucher(parsed)
+
+      const rawData = (res as any)?.data ?? res?.body?.data
+      const items = Array.isArray(rawData)
+        ? rawData
+        : rawData?.list ?? (rawData ? [rawData] : [])
+
+      if (items && items.length > 0) {
+        // Success: voucher found
+        const voucher = items[0]
+        scannedVoucherCode.value = parsed
+        isSuccess.value = true
+        alertType.value = 'success'
+        alertTitle.value = 'Success'
+        alertMessage.value = voucher?.batchTitle || 'Voucher found successfully.'
+        showAlert.value = true
+
+        // Show success alert for 4s, then automatically close and back route
+        clearSuccessTimer()
+        successTimer = setTimeout(() => {
+          navigateBackToVoucher()
+        }, 4000)
+      } else {
+        // Not found: response has no data
+        isSuccess.value = false
+        alertType.value = 'delete'
+        alertTitle.value = 'Voucher Not Found'
+        alertMessage.value =
+          res?.body?.message || 'No voucher found. Please try scanning again.'
+        alertConfirmLabel.value = 'Scan Again'
+        showAlert.value = true
+      }
+    } catch (err: any) {
+      console.error('Failed to search voucher:', err)
+      isSuccess.value = false
+      alertType.value = 'delete'
+      alertTitle.value = 'Voucher Not Found'
+      const errRes = err?.response?.data
+      alertMessage.value =
+        errRes?.body?.message ||
+        errRes?.message ||
+        err?.message ||
+        'Voucher was not found. Please try scanning again.'
+      alertConfirmLabel.value = 'Scan Again'
       showAlert.value = true
-      if (navigator.vibrate) navigator.vibrate(100)
-
-      // Show ModalPlug 2 seconds after successful scan
-      clearTimeout(plugTimer)
-      plugTimer = setTimeout(() => {
-        showAlert.value = false
-        showModalPlug.value = true
-      }, 2000)
     }
   }
 
-  function ProceedToPlug() {
-    clearTimeout(plugTimer)
+  function handleAlertConfirm() {
+    clearSuccessTimer()
     showAlert.value = false
-    showModalPlug.value = true
+    if (isSuccess.value) {
+      navigateBackToVoucher()
+    } else {
+      ScanAgain()
+    }
   }
 
-  function ClosePlugModal() {
-    showModalPlug.value = false
-    ScanAgain()
+  function handleAlertCancel() {
+    clearSuccessTimer()
+    showAlert.value = false
+    if (!isSuccess.value) {
+      ScanAgain()
+    }
   }
 
-  function handlePlugSelect(_plug: any) {
-    showModalPlug.value = false
-    navigateTo('/charging')
+  function handleDidDismiss() {
+    if (isSuccess.value) {
+      navigateBackToVoucher()
+    }
   }
 
   function ScanAgain() {
-    clearTimeout(plugTimer)
+    clearSuccessTimer()
+    isNavigating = false
     result.value = ''
     showAlert.value = false
-    showModalPlug.value = false
+    isSuccess.value = false
     scanning.value = true
   }
 
   function handleBack() {
-    if (window.history.length > 1) {
-      router.back()
-    } else {
-      navigateTo('/')
-    }
+    clearSuccessTimer()
+    showAlert.value = false
+    router.back()
   }
 </script>
 
 <template>
   <ion-page>
-    <ion-content ion-content :fullscreen="true" :scroll-y="false" class="camera-content">
+    <ion-content :fullscreen="true" :scroll-y="false" class="camera-content">
       <div class="camera-wrapper">
-        <CameraComponent ref="cameraRef" @frame="onCameraFrame" @ready="onCameraReady">
+        <CameraComponent
+          ref="cameraRef"
+          :enable-scan="scanning && !isSearching"
+          @scan="handleScan"
+          @ready="onCameraReady"
+        >
           <!-- Custom Page Overlay -->
           <div class="overlay-container">
             <!-- Top bar with Back button -->
@@ -140,7 +217,7 @@
             <div class="scan-info">
               <Icon name="QRcode" size="32px"/>
               <ion-text class="scan-info-text"
-                >Please scan the promotion QR Code to confirm</ion-text
+                >Please scan the voucher QR Code to search</ion-text
               >
             </div>
             <div class="flashlight">
@@ -160,14 +237,25 @@
           </div>
         </CameraComponent>
 
-        <!-- Success Alert Modal -->
+        <!-- Verifying Spinner Overlay -->
+        <div v-if="isSearching" class="searching-overlay">
+          <ion-spinner name="crescent" color="light" />
+          <ion-text color="light" class="searching-text">Checking voucher...</ion-text>
+        </div>
+
+        <!-- Alert Modal: Success or Not Found -->
         <AlertComponent
           :is-open="showAlert"
-          type="success"
-          :hide-cancel="true"
-          :hide-confirm="true"
-          @confirm="ProceedToPlug"
-          @didDismiss="ProceedToPlug"
+          :type="alertType"
+          :title="alertTitle"
+          :message="alertMessage"
+          :hide-cancel="isSuccess"
+          :hide-confirm="isSuccess"
+          :label-confirm="alertConfirmLabel"
+          label-cancel="Cancel"
+          @confirm="handleAlertConfirm"
+          @cancel="handleAlertCancel"
+          @didDismiss="handleDidDismiss"
         />
       </div>
     </ion-content>
@@ -276,5 +364,23 @@
   }
   .scan-info-text {
     margin-left: 10px;
+  }
+
+  .searching-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 20;
+    pointer-events: auto;
+  }
+
+  .searching-text {
+    margin-top: 12px;
+    font-size: 16px;
+    font-weight: 500;
   }
 </style>

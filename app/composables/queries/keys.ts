@@ -39,4 +39,14 @@ export const queryKeys = {
     detail: (id: number | string) =>
       [...queryKeys.station.all, "detail", id] as const,
   },
+
+  voucher: {
+    all: ["voucher"] as const,
+    infinite: (params?: Record<string, any>) =>
+      [...queryKeys.voucher.all, "infinite", params ?? {}] as const,
+    search: (params?: Record<string, any>) =>
+      [...queryKeys.voucher.all, "search", params ?? {}] as const,
+    apply: (params?: Record<string, any>) =>
+      [...queryKeys.voucher.all, "apply", params ?? {}] as const,
+  },
 } as const;

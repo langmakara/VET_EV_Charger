@@ -177,7 +177,7 @@ const config = computed(() => {
 }
 
 .modal-body {
-  padding: 32px 24px 24px;
+  padding: 15px;
   text-align: center;
 }
 

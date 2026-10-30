@@ -113,11 +113,7 @@
   import ModalStation from './modalStation.vue'
   import StationDetailModal from '~/components/Modal/StationDetailModal.vue'
   import AppButton from '~/components/Button/AppButton.vue'
-  import {
-    requestLocationPermission,
-    getCurrentNativeLocation,
-    useNativeBridge
-  } from '~/composables/useNativeBridge'
+  import { getCurrentNativeLocation, useNativeBridge } from '~/composables/useNativeBridge'
   import IconButton from '../Button/IconButton.vue'
 
   defineEmits<{
@@ -293,10 +289,7 @@
     const timeoutMs = options?.timeoutMs ?? 8000
     const goodAccuracyMeters = options?.goodAccuracyMeters ?? 20
 
-    // 1. Request location permission from mobile host app
-    await requestLocationPermission()
-
-    // 2. Try native location lookup (Capacitor / Native bridge)
+    // Try native location lookup (Capacitor / Native bridge)
     const nativeLoc = await getCurrentNativeLocation()
     if (nativeLoc) {
       return {

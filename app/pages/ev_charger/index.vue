@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, watch, computed } from 'vue'
+  import { ref, watch, computed, onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import {
     IonPage,
@@ -23,13 +23,14 @@
   import SectionHeader from '~/components/SectionHeader.vue'
   import StationDetailModal from '../../components/Modal/StationDetailModal.vue'
   import StationCard from '~/components/Card/StationCard.vue'
+  import { getCurrentNativeLocation } from '~/composables/useNativeBridge'
 
   import evChargerData from '~/data/ev_charger_data.json'
   import IconButton from '~/components/Button/IconButton.vue'
   import { useStationInfinite } from '~/composables/queries/useStation.ts'
-  import type { StationData } from '~/api/types.ts'
+  import type { StationData, StationListParams } from '~/api/types.ts'
 
-  const { actions, nearbyStations, newsFeeds} = evChargerData
+  const { actions, newsFeeds } = evChargerData
 
   const chargingInfo = ref({
     status: 'Your vehicle is charging',
@@ -48,14 +49,27 @@
   }))
 
   // Reactive query parameters (filter payload for POST /station/list)
-  const filter = ref({
-    rowsPerPage: 5,
-    lats: 11.556374,
-    longs: 104.928207
+  const filter = ref<StationListParams>({
+    rowsPerPage: 5
   })
 
   const { data, isLoading, isError } = useStationInfinite(filter)
 
+  onMounted(async () => {
+    try {
+      const loc = await getCurrentNativeLocation()
+      if (loc?.lat && loc?.lng) {
+        // Updating filter automatically triggers useStationInfinite!
+        filter.value = {
+          ...filter.value,
+          lats: loc.lat,
+          longs: loc.lng
+        }
+      }
+    } catch (err) {
+      console.warn('Could not get GPS location, using fallback:', err)
+    }
+  })
   // Flatten all pagination pages
   const rawStations = computed<StationData[]>(() => {
     return (
@@ -66,6 +80,12 @@
     )
   })
 
+  const displayedStations = computed<StationData[]>(() => {
+    if (rawStations.value.length > 0) {
+      return rawStations.value.slice(0, 5)
+    }
+    return []
+  })
   // Filter by lat and lng
 
   const isCharging = computed(() => {
@@ -270,7 +290,7 @@
       <SectionHeader title="Nearby Station" @view-all="() => navigateTo('/nearBy_Station')" />
       <div class="station-scroll-container">
         <StationCard
-          v-for="station in nearbyStations.slice(0, 5)"
+          v-for="station in displayedStations"
           :key="station.id"
           :station="station"
           @click="handleStationClick(station)"
