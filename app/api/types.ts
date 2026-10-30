@@ -196,3 +196,33 @@ export interface VoucherSearchParams {
 }
 
 export type VoucherApplyParams = VoucherSearchParams;
+
+// dropdown parameter
+export interface DropdownParams {
+  page?: number;
+  rowsPerPage?: number;
+  searchText?: string;
+  [key: string]: any;
+}
+
+export interface NewFeedData {
+  id?: number | string;
+  titleKh?: string;
+  titleEn?: string;
+  titleZh?: string;
+  feedUrl?: string;
+  profileUrl?: string;
+  descriptionKh?: string;
+  descriptionEn?: string;
+  descriptionZh?: string;
+  created?: string;
+  [key: string]: any;
+}
+
+// Charging Status
+export interface ChargingStatusData {
+  isCharging: number; // 1 = charging, 0 = not charging
+  estTime: string;
+  battery: string;
+  [key: string]: any;
+}

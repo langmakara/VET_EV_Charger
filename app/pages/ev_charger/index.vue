@@ -27,16 +27,24 @@
 
   import evChargerData from '~/data/ev_charger_data.json'
   import IconButton from '~/components/Button/IconButton.vue'
-  import { useStationInfinite } from '~/composables/queries/useStation.ts'
-  import type { StationData, StationListParams } from '~/api/types.ts'
+  import { useStationInfinite } from '~/composables/queries/useStation'
+  import type { StationData, StationListParams, NewFeedData, ChargingStatusData } from '~/api/types'
+  import { useNewFeedQuery } from '~/composables/queries/dropdonwQueries'
+  import { useChargingStatusQuery } from '~/composables/queries/useProfile'
 
-  const { actions, newsFeeds } = evChargerData
+  const { actions } = evChargerData
 
   const chargingInfo = ref({
     status: 'Your vehicle is charging',
     estTime: '24 mins',
     battery: '70%'
   })
+
+  const { data: charging } = useChargingStatusQuery()
+  const chargingStatus = computed<ChargingStatusData | null>(() => {
+    return charging.value?.body?.data ?? null
+  })
+  console.log(chargingStatus)
 
   const { userProfile } = useUserProfile()
 
@@ -55,6 +63,54 @@
 
   const { data, isLoading, isError } = useStationInfinite(filter)
 
+  const NewFeedFilter = ref({
+    page: 1,
+    rowsPerPage: 5
+  })
+
+  const {
+    data: newsFeedRes,
+    isLoading: isNewsFeedLoading,
+    isError: isNewsFeedError
+  } = useNewFeedQuery(NewFeedFilter)
+
+  const { baseUrl: evChargerBaseUrl } = useApiUrl('/vetEvChargerCustomerAPi', 5697)
+
+  const resolveNewsImage = (img?: string) => {
+    if (!img) return '/images/station.svg'
+    if (img.startsWith('http') || img.startsWith('data:')) return img
+    if (
+      img.startsWith('/images') ||
+      img.startsWith('/icons') ||
+      img.startsWith('/vet-ev-charger')
+    ) {
+      return img
+    }
+    return `${evChargerBaseUrl}${img.startsWith('/') ? '' : '/'}${img}`
+  }
+
+  // Extract news feed from newsFeedRes and map fields for card template
+  const NewFeed = computed(() => {
+    const raw: any = newsFeedRes.value?.data ?? newsFeedRes.value?.body?.data
+    const list: NewFeedData[] = Array.isArray(raw) ? raw : (raw?.list ?? [])
+    return list.map((item) => ({
+      ...item,
+      title:
+        item.titleEn ||
+        item.titleKh ||
+        item.titleZh ||
+        (item as any).title ||
+        '',
+      description:
+        item.descriptionEn ||
+        item.descriptionKh ||
+        item.descriptionZh ||
+        (item as any).description ||
+        '',
+      image: resolveNewsImage(item.feedUrl || item.profileUrl || (item as any).image)
+    }))
+  })
+
   onMounted(async () => {
     try {
       const loc = await getCurrentNativeLocation()
@@ -70,6 +126,7 @@
       console.warn('Could not get GPS location, using fallback:', err)
     }
   })
+
   // Flatten all pagination pages
   const rawStations = computed<StationData[]>(() => {
     return (
@@ -86,9 +143,11 @@
     }
     return []
   })
-  // Filter by lat and lng
 
   const isCharging = computed(() => {
+    if (chargingStatus.value?.isCharging !== undefined) {
+      return chargingStatus.value.isCharging === 1
+    }
     const status = chargingInfo.value.status?.toLowerCase() || ''
     return status === 'charging' || status.includes('charging')
   })
@@ -300,7 +359,7 @@
       <!-- News feed Section -->
       <SectionHeader title="News feed" @view-all="() => navigateTo('/newsFeed')" />
 
-      <ion-card class="news-card" v-for="news in newsFeeds" :key="news.id">
+      <ion-card class="news-card" v-for="news in NewFeed" :key="news.id">
         <ion-item lines="none" class="news-item">
           <ion-thumbnail slot="start" class="news-thumbnail">
             <img :alt="news.title" :src="news.image" />
@@ -576,7 +635,7 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background-color: #e85d04;
+    background-color: var(--ion-color-primary);
     display: flex;
     align-items: center;
     justify-content: center;

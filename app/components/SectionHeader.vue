@@ -44,13 +44,13 @@ defineEmits(['view-all']);
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #e85d04;
+  color: var(--ion-color-primary);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
 }
 
 .chevron-icon {
-  color: #e85d04;
+  color: var(--ion-color-primary);
 }
 </style>

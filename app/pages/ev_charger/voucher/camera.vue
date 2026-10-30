@@ -11,7 +11,11 @@
   const router = useRouter()
   const cameraRef = ref<InstanceType<typeof CameraComponent> | null>(null)
   const cameraStream = ref<MediaStream | null>(null)
-  const { isOn: isFlashlightOn, toggle: toggleFlashlight, turnOff: turnOffFlashlight } = useFlashlight(cameraStream)
+  const {
+    isOn: isFlashlightOn,
+    toggle: toggleFlashlight,
+    turnOff: turnOffFlashlight
+  } = useFlashlight(cameraStream)
 
   function onCameraReady(payload: { stream: MediaStream }) {
     cameraStream.value = payload.stream
@@ -98,9 +102,7 @@
       const res = await searchVoucher(parsed)
 
       const rawData = (res as any)?.data ?? res?.body?.data
-      const items = Array.isArray(rawData)
-        ? rawData
-        : rawData?.list ?? (rawData ? [rawData] : [])
+      const items = Array.isArray(rawData) ? rawData : (rawData?.list ?? (rawData ? [rawData] : []))
 
       if (items && items.length > 0) {
         // Success: voucher found
@@ -122,8 +124,7 @@
         isSuccess.value = false
         alertType.value = 'delete'
         alertTitle.value = 'Voucher Not Found'
-        alertMessage.value =
-          res?.body?.message || 'No voucher found. Please try scanning again.'
+        alertMessage.value = res?.body?.message || 'No voucher found. Please try scanning again.'
         alertConfirmLabel.value = 'Scan Again'
         showAlert.value = true
       }
@@ -215,10 +216,8 @@
               </div>
             </div>
             <div class="scan-info">
-              <Icon name="QRcode" size="32px"/>
-              <ion-text class="scan-info-text"
-                >Please scan the voucher QR Code to search</ion-text
-              >
+              <Icon name="QRcode" size="32px" />
+              <ion-text class="scan-info-text">Please scan the voucher QR Code to search</ion-text>
             </div>
             <div class="flashlight">
               <IconButton

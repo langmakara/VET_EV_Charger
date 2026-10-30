@@ -12,6 +12,11 @@ export const queryKeys = {
     profile: () => [...queryKeys.user.all, "profile"] as const,
   },
 
+  profile: {
+    all: ["profile"] as const,
+    chargingStatus: () => [...queryKeys.profile.all, "charging-status"] as const,
+  },
+
   membership: {
     all: ["membership"] as const,
     benefits: () => [...queryKeys.membership.all, "benefits"] as const,
@@ -48,5 +53,13 @@ export const queryKeys = {
       [...queryKeys.voucher.all, "search", params ?? {}] as const,
     apply: (params?: Record<string, any>) =>
       [...queryKeys.voucher.all, "apply", params ?? {}] as const,
+  },
+
+  dropdown: {
+    all: ["dropdown"] as const,
+    infinite: (params?: Record<string, any>) =>
+      [...queryKeys.dropdown.all, "infinite", params ?? {}] as const,
+    newsFeed: (params?: Record<string, any>) =>
+      [...queryKeys.dropdown.all, "news-feed", params ?? {}] as const,
   },
 } as const;
