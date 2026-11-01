@@ -1,202 +1,287 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue'
   import {
-    IonGrid,
-    IonRow,
-    IonCol,
-    IonButton,
     IonList,
     IonListHeader,
     IonItem,
     IonAvatar,
     IonLabel,
-    IonNote,
-    IonText
+    IonNote
   } from '@ionic/vue'
-  import { useRoute } from 'vue-router'
-  import evChargerData from '~/data/ev_charger_data.json'
+  import Icon from '~/components/Icon/icon.vue'
   import TransactionModal from '~/components/Modal/TransactionModal.vue'
   import DetailModal from '~/pages/charging_history/detailModal.vue'
+  import type { ChargeHistoryData, ChargeHistoryTransaction, TransactionHistory, TransactionHistoryData } from '~/api/types'
   import type { HistoryItem } from '~/types'
 
   const props = withDefaults(
     defineProps<{
+      item?: ChargeHistoryData | TransactionHistoryData | TransactionHistoryData | TransactionHistory | any
       dataSource?: 'pointsHistory' | 'chargingHistory'
       disableDefaultModal?: boolean
     }>(),
     {
+      item: null,
       dataSource: 'pointsHistory',
       disableDefaultModal: false
     }
   )
 
   const emit = defineEmits<{
-    (e: 'itemClick', item: HistoryItem): void
+    (e: 'itemClick', item: any): void
+    (e: 'click', item: any): void
   }>()
 
-  const route = useRoute()
-  const isChargingHistory = computed(
-    () => props.dataSource === 'chargingHistory' || route?.path?.includes('charging_history')
-  )
+  const isChargingHistory = computed(() => props.dataSource === 'chargingHistory')
 
-  const activeTab = ref('all')
-
-  const ev_charger_data = computed(() => {
-    return (
-      isChargingHistory.value
-        ? ((evChargerData as any).chargingHistory || [])
-        : (evChargerData.pointsHistory || [])
-    ) as (HistoryItem & { formattedAmount?: string })[]
-  })
-
-  const filteredData = computed(() => {
-    if (activeTab.value === 'all') return ev_charger_data.value
-    return ev_charger_data.value.filter((item) => item.type === activeTab.value)
-  })
-
-  const groupedData = computed(() => {
-    const groups: Record<string, HistoryItem[]> = {}
-    for (const item of filteredData.value) {
-      ;(groups[item.dateGroup] ??= []).push(item)
+  function formatDateLabel(dateStr?: string): string {
+    if (!dateStr) return ''
+    const parts = dateStr.split('-')
+    let date: Date
+    if (parts.length === 3) {
+      date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]))
+    } else {
+      date = new Date(dateStr)
     }
-    return groups
+    if (isNaN(date.getTime())) return dateStr
+
+    const today = new Date()
+    const isToday =
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+
+    const yesterday = new Date(today)
+    yesterday.setDate(today.getDate() - 1)
+    const isYesterday =
+      date.getDate() === yesterday.getDate() &&
+      date.getMonth() === yesterday.getMonth() &&
+      date.getFullYear() === yesterday.getFullYear()
+
+    if (isToday) return 'Today'
+    if (isYesterday) return 'Yesterday'
+
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    })
+  }
+
+  // Determine whether `item` is a date group with transactions, or a single transaction
+  const transactions = computed<any[]>(() => {
+    if (Array.isArray(props.item?.transactions)) {
+      return props.item.transactions
+    }
+    return []
   })
 
-  const selectedItem = ref<(HistoryItem & Record<string, any>) | null>(null)
+  const singleTransaction = computed<any | null>(() => {
+    if (!props.item) return null
+    if (Array.isArray(props.item?.transactions)) return null
+    return props.item
+  })
+
+  const dateLabel = computed(() => {
+    if (props.item?.date) {
+      return formatDateLabel(props.item.date)
+    }
+    if (props.item?.dateGroup) {
+      return props.item.dateGroup
+    }
+    return ''
+  })
+
+  const isEarn = (tx: any): boolean => {
+    return (
+      tx.type === 1 ||
+      tx.type === 'earned' ||
+      tx.typeName?.toLowerCase() === 'earn' ||
+      tx.typeName?.toLowerCase() === 'income' ||
+      tx.typeName?.toLowerCase() === 'session'
+    )
+  }
+
+  const getTitle = (tx: any): string => {
+    return tx.description || tx.stationName || tx.title || (isEarn(tx) ? 'Charging Session' : 'Transaction')
+  }
+
+  const getDatetime = (tx: any): string => {
+    return tx.created || tx.createdDate || tx.datetime || ''
+  }
+
+  const getPoints = (tx: any): number => {
+    return Number(tx.points) || 0
+  }
+
+  const selectedItem = ref<any | null>(null)
   const isModalOpen = ref(false)
 
-  const openTransactionModal = (item: HistoryItem) => {
-    selectedItem.value = item
-    emit('itemClick', item)
+  const handleCardClick = (tx: any) => {
+    selectedItem.value = tx
+    emit('itemClick', tx)
+    emit('click', tx)
     if (!props.disableDefaultModal) {
       isModalOpen.value = true
     }
   }
 
-  const isEarned = computed(() => selectedItem.value?.type === 'earned')
+  const isEarnedModal = computed(() => {
+    if (!selectedItem.value) return false
+    return isEarn(selectedItem.value)
+  })
 
   const modalTitle = computed(() => {
-    return isEarned.value ? 'Top-up Detail' : 'Transaction Detail'
+    return isEarnedModal.value ? 'Session Detail' : 'Transaction Detail'
   })
 
   const formattedId = computed(() => {
     if (!selectedItem.value) return '00000'
-    return selectedItem.value.id.toString().padStart(5, '0')
+    const idVal =
+      selectedItem.value.transactionId ??
+      selectedItem.value.code ??
+      selectedItem.value.salesOrderId ??
+      selectedItem.value.id
+    return idVal ? String(idVal) : '00000'
   })
+
+  function formatCurrency(val?: number): string {
+    if (val == null) return ''
+    const num = Math.abs(val)
+    if (num >= 500) {
+      return `KHR (៛) ${Math.round(num).toLocaleString()}`
+    }
+    return `$${num.toFixed(2)}`
+  }
 
   const mockAmount = computed(() => {
     if (!selectedItem.value) return '$0.00'
     if (selectedItem.value.formattedAmount) {
       return selectedItem.value.formattedAmount
     }
+    if (selectedItem.value.amount != null) {
+      return formatCurrency(selectedItem.value.amount)
+    }
+    if (selectedItem.value.kwh) {
+      return `${selectedItem.value.kwh} kWh`
+    }
     return `$${(selectedItem.value.points ?? 0).toFixed(2)}`
   })
 </script>
 
 <template>
-  <div class="history-container">
-    <div class="history-header-tabs">
-      <ion-grid>
-        <ion-row class="tab-row">
-          <ion-col>
-            <ion-button
-              class="tab-btn"
-              :class="{ active: activeTab === 'all' }"
-              expand="block"
-              fill="solid"
-              @click="activeTab = 'all'"
-              >All</ion-button
-            >
-          </ion-col>
-          <ion-col>
-            <ion-button
-              class="tab-btn"
-              :class="{ active: activeTab === 'earned' }"
-              expand="block"
-              fill="solid"
-              @click="activeTab = 'earned'"
-              >Earned</ion-button
-            >
-          </ion-col>
-          <ion-col>
-            <ion-button
-              class="tab-btn"
-              :class="{ active: activeTab === 'spend' }"
-              expand="block"
-              fill="solid"
-              @click="activeTab = 'spend'"
-              >Spend</ion-button
-            >
-          </ion-col>
-        </ion-row>
-      </ion-grid>
-    </div>
+  <div class="history-card-wrapper">
+    <!-- Date Group of Cards -->
+    <ion-list v-if="transactions.length > 0" lines="none" class="history-group">
+      <ion-list-header v-if="dateLabel" class="date-header">
+        <ion-label class="date-label">{{ dateLabel }}</ion-label>
+      </ion-list-header>
 
-    <!-- History List grouped by date -->
-    <div class="history-list-scroll">
-      <ion-list
-        v-for="(items, dateLabel) in groupedData"
-        :key="dateLabel"
+      <ion-item
+        v-for="tx in transactions"
+        :key="tx.id"
+        class="history-card"
         lines="none"
-        class="history-group"
+        button
+        @click="handleCardClick(tx)"
       >
-        <ion-list-header class="date-header">
-          <ion-label class="date-label">{{ dateLabel }}</ion-label>
-        </ion-list-header>
-
-        <ion-item
-          v-for="item in items"
-          :key="item.id"
-          class="history-card"
-          lines="none"
-          button
-          @click="openTransactionModal(item)"
+        <!-- Icon -->
+        <ion-avatar
+          slot="start"
+          class="item-icon"
+          :class="isEarn(tx) ? 'icon-earned' : 'icon-spend'"
         >
-          <!-- Icon -->
-          <ion-avatar
-            slot="start"
-            class="item-icon"
-            :class="item.type === 'earned' ? 'icon-earned' : 'icon-spend'"
-          >
-            <Icon
-              :name="item.type === 'earned' ? 'credit-card-plus' : 'credit-card-minus'"
-              size="22px"
-            />
-          </ion-avatar>
+          <Icon
+            :name="isEarn(tx) ? 'credit-card-plus' : 'credit-card-minus'"
+            size="22px"
+          />
+        </ion-avatar>
 
-          <!-- Info -->
-          <ion-label class="item-info">
-            <h3 class="item-title">{{ item.title }}</h3>
-            <p class="item-datetime">{{ item.datetime }}</p>
-          </ion-label>
+        <!-- Info -->
+        <ion-label class="item-info">
+          <h3 class="item-title">{{ getTitle(tx) }}</h3>
+          <p class="item-datetime">{{ getDatetime(tx) }}</p>
+        </ion-label>
 
-          <!-- Points -->
-          <ion-note
-            slot="end"
-            class="item-points"
-            :class="item.type === 'earned' ? 'points-earned' : 'points-spend'"
-          >
-            <template v-if="item.formattedAmount">
-              {{ item.formattedAmount }}
-            </template>
-            <template v-else>
-              {{
-                item.points > 0
-                  ? `+ ${item.points.toLocaleString()}`
-                  : `- ${Math.abs(item.points).toLocaleString()}`
-              }}
-              Points
-            </template>
-          </ion-note>
-        </ion-item>
-      </ion-list>
+        <!-- Points / Amount -->
+        <ion-note
+          slot="end"
+          class="item-points"
+          :class="isEarn(tx) ? 'points-earned' : 'points-spend'"
+        >
+          <template v-if="tx.formattedAmount">
+            {{ tx.formattedAmount }}
+          </template>
+          <template v-else-if="tx.amount != null && tx.points == null">
+            {{
+              isEarn(tx)
+                ? `+ ${formatCurrency(tx.amount)}`
+                : `- ${formatCurrency(tx.amount)}`
+            }}
+          </template>
+          <template v-else>
+            {{
+              getPoints(tx) > 0
+                ? `+ ${getPoints(tx).toLocaleString()}`
+                : `- ${Math.abs(getPoints(tx)).toLocaleString()}`
+            }}
+            Points
+          </template>
+        </ion-note>
+      </ion-item>
+    </ion-list>
 
-      <ion-text v-if="Object.keys(groupedData).length === 0" class="empty-state">
-        <p>No history found.</p>
-      </ion-text>
-    </div>
+    <!-- Single Transaction Card -->
+    <ion-item
+      v-else-if="singleTransaction"
+      class="history-card single-card"
+      lines="none"
+      button
+      @click="handleCardClick(singleTransaction)"
+    >
+      <ion-avatar
+        slot="start"
+        class="item-icon"
+        :class="isEarn(singleTransaction) ? 'icon-earned' : 'icon-spend'"
+      >
+        <Icon
+          :name="isEarn(singleTransaction) ? 'credit-card-plus' : 'credit-card-minus'"
+          size="22px"
+        />
+      </ion-avatar>
 
-    <!-- Charging History Modal (Session Detail / Transaction Detail) -->
+      <ion-label class="item-info">
+        <h3 class="item-title">{{ getTitle(singleTransaction) }}</h3>
+        <p class="item-datetime">{{ getDatetime(singleTransaction) }}</p>
+      </ion-label>
+
+      <ion-note
+        slot="end"
+        class="item-points"
+        :class="isEarn(singleTransaction) ? 'points-earned' : 'points-spend'"
+      >
+        <template v-if="singleTransaction.formattedAmount">
+          {{ singleTransaction.formattedAmount }}
+        </template>
+        <template v-else-if="singleTransaction.amount != null && singleTransaction.points == null">
+          {{
+            isEarn(singleTransaction)
+              ? `+ ${formatCurrency(singleTransaction.amount)}`
+              : `- ${formatCurrency(singleTransaction.amount)}`
+          }}
+        </template>
+        <template v-else>
+          {{
+            getPoints(singleTransaction) > 0
+              ? `+ ${getPoints(singleTransaction).toLocaleString()}`
+              : `- ${Math.abs(getPoints(singleTransaction)).toLocaleString()}`
+          }}
+          Points
+        </template>
+      </ion-note>
+    </ion-item>
+
+    <!-- Charging History Modal -->
     <DetailModal
       v-if="isChargingHistory && !disableDefaultModal"
       :is-open="isModalOpen"
@@ -210,106 +295,18 @@
       v-else-if="!isChargingHistory && !disableDefaultModal"
       :is-open="isModalOpen"
       :title="modalTitle"
+      :type="isEarnedModal ? 'session' : 'transaction'"
+      :transaction-id="selectedItem?.transactionId || selectedItem?.code || (selectedItem?.id ? String(selectedItem.id) : '')"
+      :item="selectedItem"
       @did-dismiss="isModalOpen = false"
-    >
-      <template v-if="selectedItem">
-        <!-- Top-up Detail (Earned) -->
-        <template v-if="isEarned">
-          <ion-item>
-            <ion-label color="medium">Date</ion-label>
-            <ion-note slot="end" color="dark">{{ selectedItem.datetime }}</ion-note>
-          </ion-item>
-          <ion-item>
-            <ion-label color="medium">Amount</ion-label>
-            <ion-note slot="end" color="dark">{{ mockAmount }}</ion-note>
-          </ion-item>
-          <ion-item lines="none">
-            <ion-label color="medium">Point Earned</ion-label>
-            <ion-note slot="end" class="points-earned"
-              >+ {{ selectedItem.points.toLocaleString() }} Points</ion-note
-            >
-          </ion-item>
-        </template>
-
-        <!-- Transaction Detail (Spend) -->
-        <template v-else>
-          <ion-item>
-            <ion-label color="medium">Transaction id</ion-label>
-            <ion-note slot="end" color="dark">{{ formattedId }}</ion-note>
-          </ion-item>
-          <ion-item>
-            <ion-label color="medium">Station Name</ion-label>
-            <ion-note slot="end" color="dark">{{
-              selectedItem.stationName || selectedItem.title
-            }}</ion-note>
-          </ion-item>
-          <ion-item>
-            <ion-label color="medium">Order Date</ion-label>
-            <ion-note slot="end" color="dark">{{ selectedItem.datetime }}</ion-note>
-          </ion-item>
-          <ion-item>
-            <ion-label color="medium">Sub Total</ion-label>
-            <ion-note slot="end" color="dark">{{ selectedItem.subTotal }}</ion-note>
-          </ion-item>
-          <ion-item>
-            <ion-label color="medium">Discount (20%)</ion-label>
-            <ion-note slot="end" color="dark">{{ selectedItem.discount }}</ion-note>
-          </ion-item>
-          <ion-item>
-            <ion-label color="medium">Total Amount</ion-label>
-            <ion-note slot="end" class="bold-value">{{
-              selectedItem.totalAmount ||
-              selectedItem.formattedAmount ||
-              'KHR (៛) 44,000'
-            }}</ion-note>
-          </ion-item>
-          <ion-item>
-            <ion-label color="medium">Total kWh</ion-label>
-            <ion-note slot="end" class="bold-value">{{ selectedItem.totalKwh }}</ion-note>
-          </ion-item>
-          <ion-item lines="none">
-            <ion-label color="medium">Point Spend</ion-label>
-            <ion-note slot="end" class="points-spend"
-              >- {{ Math.abs(selectedItem.points).toLocaleString() }} Points</ion-note
-            >
-          </ion-item>
-        </template>
-      </template>
-    </TransactionModal>
+      @close="isModalOpen = false"
+    />
   </div>
 </template>
 
 <style scoped>
-  ion-page {
-    padding: 0 !important;
-  }
-
-  .history-container {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 0;
-    overflow: hidden;
+  .history-card-wrapper {
     width: 100%;
-  }
-
-  .history-header-tabs {
-    flex-shrink: 0;
-    padding: 0;
-  }
-
-  .tab-row {
-    padding-top: 10px;
-    margin-bottom: 4px;
-  }
-
-  .history-list-scroll {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-    padding: 0 10px 10px 10px;
   }
 
   .history-group {
@@ -343,6 +340,10 @@
     margin-bottom: 10px;
     border-radius: 14px;
     box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  }
+
+  .single-card {
+    margin-top: 8px;
   }
 
   .item-icon {
@@ -395,43 +396,8 @@
     color: #e84040;
   }
 
-  .empty-state {
-    display: block;
-    text-align: center;
-    color: #8c92a0;
-    margin-top: 48px;
-    font-size: 14px;
-  }
-
   .bold-value {
     font-weight: 600 !important;
     color: #1f232d !important;
-  }
-</style>
-
-<style>
-  ion-button.tab-btn {
-    --border-radius: 12px;
-    --box-shadow: none;
-    --border-width: 0;
-    margin: 0;
-    height: 40px;
-    font-size: 14px;
-    font-weight: 400;
-    text-transform: capitalize;
-    --background: #e5e7eb;
-    --color: #6c7280;
-    --background-hover: #ffe4cc;
-    --color-hover: #c44e05;
-    --background-hover-opacity: 1;
-  }
-
-  ion-button.tab-btn.active {
-    --background: #fff3e6;
-    --color: #df5e0e;
-    --background-hover: #ffe4cc;
-    --color-hover: #c44e05;
-    --background-hover-opacity: 1;
-    font-weight: 600;
   }
 </style>

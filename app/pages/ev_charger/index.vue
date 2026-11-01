@@ -29,7 +29,7 @@
   import IconButton from '~/components/Button/IconButton.vue'
   import { useStationInfinite } from '~/composables/queries/useStation'
   import type { StationData, StationListParams, NewFeedData, ChargingStatusData } from '~/api/types'
-  import { useNewFeedQuery } from '~/composables/queries/dropdonwQueries'
+  import { useNewFeedQuery } from '~/composables/queries/dropdonwQueries.ts'
   import { useChargingStatusQuery } from '~/composables/queries/useProfile'
 
   const { actions } = evChargerData
@@ -44,7 +44,6 @@
   const chargingStatus = computed<ChargingStatusData | null>(() => {
     return charging.value?.body?.data ?? null
   })
-  console.log(chargingStatus)
 
   const { userProfile } = useUserProfile()
 
@@ -95,12 +94,7 @@
     const list: NewFeedData[] = Array.isArray(raw) ? raw : (raw?.list ?? [])
     return list.map((item) => ({
       ...item,
-      title:
-        item.titleEn ||
-        item.titleKh ||
-        item.titleZh ||
-        (item as any).title ||
-        '',
+      title: item.titleEn || item.titleKh || item.titleZh || (item as any).title || '',
       description:
         item.descriptionEn ||
         item.descriptionKh ||
@@ -177,7 +171,7 @@
   }
 
   const handlePurchaseHistory = () => {
-    navigateTo('/charging_history')
+    navigateTo('/transactionHistory')
   }
 
   const isStationModalOpen = ref(false)
@@ -240,10 +234,7 @@
       </AppCard>
 
       <!-- Charging Card -->
-      <AppCard
-        class="ChargingCard charging-active-card"
-        bgColor="var(--app-color-default-rg)"
-      >
+      <AppCard class="ChargingCard charging-active-card" bgColor="var(--app-color-default-rg)">
         <ion-card-content class="charging-card-content">
           <div class="charging-header">
             <div class="charging-status">

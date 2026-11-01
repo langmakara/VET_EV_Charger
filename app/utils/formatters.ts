@@ -1,3 +1,5 @@
+import type { PerkItem } from "~/api/types";
+
 // Available format: "integer", "decimal", "percentage", "currency"
 interface FormatNumberOptions {
   symbol?: string;
@@ -273,3 +275,43 @@ export function formatLocationName(address?: string | null): string {
 }
 
 
+
+/**
+ * Parses a multiline bullet text description into structured perks with sub-bullets.
+ * E.g.
+ * - Base Charging Discount: Standard network rates (no baseline discount).
+ * - In-App Perks:
+ * - Real-time charger availability tracking and route planning.
+ * - Basic digital receipt and carbon footprint tracking history.
+ * - Community: Access to basic community forums and crowdsourced station reviews.
+ */
+export function parsePerks(description?: string): PerkItem[] {
+  if (!description) return [];
+
+  const lines = description
+    .split(/\r?\n/)
+    .map((line) => line.trim().replace(/^[-*•]\s*/, "").trim())
+    .filter(Boolean);
+
+  const perks: PerkItem[] = [];
+  let currentGroup: PerkItem | null = null;
+
+  for (const line of lines) {
+    if (line.endsWith(":")) {
+      currentGroup = {
+        description: line,
+        subItems: [],
+      };
+      perks.push(currentGroup);
+    } else if (currentGroup && currentGroup.subItems) {
+      currentGroup.subItems.push(line);
+    } else {
+      currentGroup = null;
+      perks.push({
+        description: line,
+      });
+    }
+  }
+
+  return perks;
+}

@@ -475,7 +475,17 @@
       viewBox: '0 0 32 32',
       fill: 'none',
       body: '<rect width="32" height="32" rx="7" fill="#1877F2" /><path d="M21.5 16h-4.2v12h-5V16h-2.8v-4.5h2.8V8.3c0-3.3 1.9-5.3 5.3-5.3 1.6 0 3.2.3 3.2.3v3.8h-1.9c-1.6 0-2.1 1-2.1 2v2.4h4.2l-.7 4.5z" fill="#FFFFFF" />'
-    }
+    },
+    'earn-points': {
+      viewBox: '0 0 24 24',
+      ...defaultOutline,
+      body: '<rect x="3" y="6" width="18" height="13" rx="3" /><line x1="3" y1="11" x2="21" y2="11" /><path d="M12 12v5" /><path d="M9.5 14.5L12 17l2.5-2.5" />'
+    },
+    'use-points': {
+      viewBox: '0 0 24 24',
+      ...defaultOutline,
+      body: '<rect x="3" y="6" width="18" height="13" rx="3" /><line x1="3" y1="11" x2="21" y2="11" /><path d="M12 17v-5" /><path d="M9.5 14.5L12 12l2.5 2.5" />'
+    },
   }
 
   const iconDef = computed(() => icons[props.name])

@@ -3,63 +3,75 @@
  */
 export const queryKeys = {
   terms: {
-    all: ["terms"] as const,
-    privacy: (type?: number) => [...queryKeys.terms.all, "privacy", type ?? 2] as const,
+    all: ['terms'] as const,
+    privacy: (type?: number) => [...queryKeys.terms.all, 'privacy', type ?? 2] as const
   },
 
   user: {
-    all: ["user"] as const,
-    profile: () => [...queryKeys.user.all, "profile"] as const,
+    all: ['user'] as const,
+    profile: () => [...queryKeys.user.all, 'profile'] as const
   },
 
   profile: {
-    all: ["profile"] as const,
-    chargingStatus: () => [...queryKeys.profile.all, "charging-status"] as const,
+    all: ['profile'] as const,
+    chargingStatus: () => [...queryKeys.profile.all, 'charging-status'] as const
   },
 
   membership: {
-    all: ["membership"] as const,
-    benefits: () => [...queryKeys.membership.all, "benefits"] as const,
+    all: ['membership'] as const,
+    benefits: () => [...queryKeys.membership.all, 'benefits'] as const,
+    info: () => [...queryKeys.membership.all, 'info'] as const,
+    chargeHistory: (params?: Record<string, any>) =>
+      [...queryKeys.membership.all, 'charge-history', params ?? {}] as const,
+    transactionDetail: (id: number) =>
+      [...queryKeys.membership.all, 'transaction-detail', id] as const
   },
 
   evCharger: {
-    all: ["ev-charger"] as const,
+    all: ['ev-charger'] as const,
     stations: (params?: Record<string, any>) =>
-      [...queryKeys.evCharger.all, "stations", params ?? {}] as const,
+      [...queryKeys.evCharger.all, 'stations', params ?? {}] as const,
     stationDetail: (id: number | string) =>
-      [...queryKeys.evCharger.all, "station-detail", id] as const,
-    activeSession: () => [...queryKeys.evCharger.all, "active-session"] as const,
+      [...queryKeys.evCharger.all, 'station-detail', id] as const,
+    activeSession: () => [...queryKeys.evCharger.all, 'active-session'] as const,
     session: (sessionId: number | string) =>
-      [...queryKeys.evCharger.all, "session", sessionId] as const,
+      [...queryKeys.evCharger.all, 'session', sessionId] as const,
     sessionHistory: (params?: Record<string, any>) =>
-      [...queryKeys.evCharger.all, "session-history", params ?? {}] as const,
+      [...queryKeys.evCharger.all, 'session-history', params ?? {}] as const
   },
 
   station: {
-    all: ["station"] as const,
+    all: ['station'] as const,
     list: (params?: Record<string, any>) =>
-      [...queryKeys.station.all, "list", params ?? {}] as const,
+      [...queryKeys.station.all, 'list', params ?? {}] as const,
     infinite: (params?: Record<string, any>) =>
-      [...queryKeys.station.all, "infinite", params ?? {}] as const,
-    detail: (id: number | string) =>
-      [...queryKeys.station.all, "detail", id] as const,
+      [...queryKeys.station.all, 'infinite', params ?? {}] as const,
+    detail: (id: number | string) => [...queryKeys.station.all, 'detail', id] as const
   },
 
   voucher: {
-    all: ["voucher"] as const,
+    all: ['voucher'] as const,
     infinite: (params?: Record<string, any>) =>
-      [...queryKeys.voucher.all, "infinite", params ?? {}] as const,
+      [...queryKeys.voucher.all, 'infinite', params ?? {}] as const,
     search: (params?: Record<string, any>) =>
-      [...queryKeys.voucher.all, "search", params ?? {}] as const,
+      [...queryKeys.voucher.all, 'search', params ?? {}] as const,
     apply: (params?: Record<string, any>) =>
-      [...queryKeys.voucher.all, "apply", params ?? {}] as const,
+      [...queryKeys.voucher.all, 'apply', params ?? {}] as const
   },
 
   dropdown: {
-    all: ["dropdown"] as const,
+    all: ['dropdown'] as const,
     infinite: (params?: Record<string, any>) =>
-      [...queryKeys.dropdown.all, "infinite", params ?? {}] as const,
+      [...queryKeys.dropdown.all, 'infinite', params ?? {}] as const,
     newsFeed: (params?: Record<string, any>) =>
-      [...queryKeys.dropdown.all, "news-feed", params ?? {}] as const,
+      [...queryKeys.dropdown.all, 'news-feed', params ?? {}] as const
   },
-} as const;
+
+  saleOrder: {
+    all: ['sale-order'] as const,
+    transactionsHistory: (params?: Record<string, any>) =>
+      [...queryKeys.saleOrder.all, 'transactions-history', params ?? {}] as const,
+    detail: (transactionId: string) =>
+      [...queryKeys.saleOrder.all, 'detail', transactionId] as const
+  }
+} as const

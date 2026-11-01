@@ -1,5 +1,4 @@
 import type { UserProfile } from '~/types'
-import { userRepository } from '~/apis/user.repository'
 
 const STORAGE_KEY = 'vet_ev_user_profile'
 
@@ -64,30 +63,6 @@ export const useUserProfile = () => {
     return normalized
   }
 
-  const fetchUserProfile = async () => {
-    // If user profile is already loaded in shared Nuxt state, reuse cached profile
-    if (isLoaded.value && userProfile.value) {
-      return userProfile.value
-    }
-
-    const { getToken } = useAuthToken()
-    const token = getToken()
-    if (!token) return userProfile.value
-
-    try {
-      const resData = await userRepository.getUserProfile()
-      if (resData?.data) {
-        userProfile.value = resData.data
-        isLoaded.value = true
-        if (import.meta.client) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(resData.data))
-        }
-      }
-    } catch {}
-
-    return userProfile.value
-  }
-
   const clearUserProfile = () => {
     userProfile.value = null
     isLoaded.value = false
@@ -102,7 +77,6 @@ export const useUserProfile = () => {
     userProfile,
     isLoaded,
     saveAbaProfile,
-    fetchUserProfile,
     clearUserProfile,
   }
 }

@@ -1,41 +1,86 @@
 <script setup lang="ts">
+  import { ref, computed, onMounted } from 'vue'
   import {
     IonPage,
     IonContent,
-    IonHeader,
-    IonToolbar,
-    IonButtons,
-    IonBackButton,
+    IonSpinner,
     IonText,
     IonCardHeader,
     IonCardContent
   } from '@ionic/vue'
+  import type { MembershipData } from '~/api/types'
   import AppCard from '~/components/Card/AppCard.vue'
-  import evData from '~/data/ev_charger_data.json'
+  import { useMembershipQuery } from '~/composables/queries/useMembership'
+  import { sendTitleToFlutter } from '~/composables/useNativeBridge'
+  import { parsePerks } from '~/utils/formatters'
 
-  const benefits = evData.membershipBenefits || []
+  onMounted(() => {
+    sendTitleToFlutter('Membership Benefit')
+  })
+
+  const { data: benefits, isLoading, isError, error } = useMembershipQuery()
+
+  const benefitsList = computed<MembershipData[]>(() => {
+    const raw: any = benefits.value?.data ?? benefits.value?.body?.data
+    const list: MembershipData[] = Array.isArray(raw)
+      ? raw
+      : Array.isArray(raw?.list)
+        ? raw.list
+        : []
+
+    return list.map((item) => ({
+      ...item,
+      isCurrentTier: Boolean(item.isYouAreHere),
+      perks:
+        Array.isArray(item.perks) && item.perks.length > 0
+          ? item.perks
+          : parsePerks(item.description)
+    }))
+  })
 </script>
 
 <template>
   <ion-page mode="ios">
     <ion-content :fullscreen="true" class="page-content">
-      <div v-for="benefit in benefits" :key="benefit.id" class="benefit-header">
-        <div v-if="benefit.isCurrentTier" class="ribbon-wrapper">
+      <!-- Loading indicator -->
+      <div v-if="isLoading" class="ion-text-center ion-padding" style="margin-top: 40px">
+        <ion-spinner name="crescent" />
+      </div>
+
+      <!-- Error state -->
+      <div v-else-if="isError" class="ion-text-center ion-padding" style="margin-top: 40px">
+        <ion-text color="danger">{{
+          error?.message || 'Failed to load membership benefits'
+        }}</ion-text>
+      </div>
+
+      <!-- Empty state -->
+      <div
+        v-else-if="benefitsList.length === 0"
+        class="ion-text-center ion-padding"
+        style="margin-top: 40px"
+      >
+        <ion-text color="medium">No membership benefits available</ion-text>
+      </div>
+
+      <!-- Membership tiers list -->
+      <div v-else v-for="tier in benefitsList" :key="tier.id" class="benefit-header">
+        <div v-if="tier.isYouAreHere" class="ribbon-wrapper">
           <div class="ribbon">You are here</div>
         </div>
         <AppCard bgColor="#F3F3F3" class="benefit-card">
           <ion-card-header>
             <ion-text>
-              <h4 class="benefit-name">{{ benefit.level }}</h4>
+              <h4 class="benefit-name">{{ tier.name }}</h4>
             </ion-text>
           </ion-card-header>
           <ion-card-content class="benefit-content">
             <ul class="perk-list">
-              <li v-for="(perk, index) in benefit.perks" :key="index">
-                <span>{{ perk.text }}</span>
-                <ul v-if="perk.subItems" class="sub-perk-list">
-                  <li v-for="(subItem, subIndex) in perk.subItems" :key="subIndex">
-                    {{ subItem }}
+              <li v-for="(perk, index) in tier.perks" :key="index">
+                <span>{{ perk.description }}</span>
+                <ul v-if="perk.subItems && perk.subItems.length" class="sub-perk-list">
+                  <li v-for="(subDesc, subIndex) in perk.subItems" :key="subIndex">
+                    {{ subDesc }}
                   </li>
                 </ul>
               </li>
@@ -59,7 +104,7 @@
   }
 
   .benefit-name {
-    color: #df5e0e;
+    color: var(--ion-color-primary);
     font-weight: 700;
     font-size: 20px !important;
     margin: 0;
@@ -124,14 +169,14 @@
     top: 0;
     left: 29px;
     border-left: 15px solid transparent;
-    border-bottom: 12px solid #a8460a;
+    border-bottom: 12px solid var(--ion-color-primary);
   }
 
   /* Bottom right fold */
   .ribbon-wrapper::after {
     bottom: 20px;
     right: -6px;
-    border-top: 21px solid #a8460a;
+    border-top: 21px solid var(--ion-color-primary);
     border-right: 15px solid transparent;
   }
 
@@ -146,7 +191,7 @@
     right: -30px;
     top: 35px;
     width: 145px;
-    background-color: #df5e0e;
+    background-color: var(--ion-color-primary);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     border-radius: 24px 24px 0 0;
   }

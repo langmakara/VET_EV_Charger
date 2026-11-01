@@ -226,3 +226,138 @@ export interface ChargingStatusData {
   battery: string;
   [key: string]: any;
 }
+
+// membership
+
+export interface PerkItem {
+  description: string;
+  subItems?: string[];
+}
+
+export interface MembershipData {
+  id: number;
+  name: string;
+  requirePoint: number;
+  expireDuration: number;
+  description: string;
+  discount: number;
+  pointMultiplier: number;
+  redeemPoint: number;
+  isYouAreHere: boolean | number;
+  perks?: PerkItem[];
+  [key: string]: any;
+}
+
+export interface MembershipInfoData {
+  id: number;
+  cardId: string;
+  membershipLevelId: number;
+  membershipLevelName: string;
+  currentPoint: number;
+  historyPoint: number;
+  requirePoint: number;
+  currentLevelRequirePoint: number;
+  expireDuration: number;
+  expiringPoint: number;
+  expiringKwh: number;
+  expiringInDays: number;
+  [key: string]: any;
+}
+
+export interface ChargeHistoryTransaction {
+  id: number;
+  type: number;
+  typeName: string;
+  points: number;
+  kwh: number;
+  currentPoint: number;
+  finalPoint: number;
+  description: string;
+  salesOrderId: number;
+  created: string;
+  [key: string]: any;
+}
+
+export interface ChargeHistoryData {
+  date: string;
+  transactions: ChargeHistoryTransaction[];
+  [key: string]: any;
+}
+
+export interface ChargeHistoryParams {
+  page?: number;
+  rowsPerPage?: number;
+  type?: number;
+  [key: string]: any;
+}
+
+export interface TransactionDetailData {
+  transactionId?: string;
+  stationName?: string;
+  orderDate?: string;
+  subTotal?: number;
+  discountAmount?: number;
+  discountPercent?: number;
+  totalAmount?: string;
+  totalKwh?: number;
+  pointSpend?: number;
+  [key: string]: any;
+}
+
+// transaction history
+export interface TransactionHistory {
+  id: number;
+  type: number;
+  transactionId: string;
+  code: string;
+  amount: number;
+  description: string;
+  createdDate: string;
+  [key: string]: any;
+}
+
+export interface TransactionHistoryData {
+  date: string;
+  transactions: TransactionHistory[];
+  [key: string]: any;
+}
+
+export interface WalletTransactionData {
+  totalBalance?: number;
+  groups: TransactionHistoryData[];
+  [key: string]: any;
+}
+
+export interface SaleOrderDetailData {
+  id: number;
+  type: number;
+  orderDate: string;
+  isFullCharge?: number;
+  stationId?: number;
+  stationName?: string;
+  chargerId?: number;
+  chargerName?: string;
+  soCode?: string;
+  transactionId?: string;
+  paymentStatus?: number;
+  orderStatus?: number;
+  totalKwh?: number;
+  totalPrice?: number;
+  totalAmount?: number;
+  totalReturnAmount?: number;
+  chargeAmount?: number;
+  paymentMethod?: number;
+  paymentMethodName?: string;
+  bankName?: string;
+  qrString?: string;
+  subTotal?: number;
+  discount?: number;
+  discountPercent?: number | string;
+  pointSpend?: number;
+  points?: number;
+  timeElapsed?: string;
+  energy?: string;
+  preAuthorisedAmount?: number;
+  finalChargingCost?: number;
+  [key: string]: any;
+}

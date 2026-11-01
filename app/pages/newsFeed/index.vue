@@ -2,7 +2,7 @@
   import { ref, computed } from 'vue'
   import { IonPage, IonContent, IonSpinner, IonText } from '@ionic/vue'
   import NewsFeedCard from './newsFeedCard.vue'
-  import { useNewFeedQuery } from '~/composables/queries/dropdonwQueries'
+  import { useNewFeedQuery } from '~/composables/queries/dropdonwQueries.ts'
   import type { NewFeedData } from '~/api/types'
 
   const filter = ref({
