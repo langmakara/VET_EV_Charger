@@ -18,25 +18,8 @@ const props = withDefaults(
   }>(),
   {
     isOpen: false,
-    selectedId: 'main',
-    accounts: () => [
-      {
-        id: 'main',
-        name: 'Main',
-        number: '004 026 957',
-        currency: 'USD',
-        isDefault: true,
-        color: '#00C0DE'
-      },
-      {
-        id: 'food_and_drink',
-        name: 'Food And Drink',
-        number: '015 841 241',
-        currency: 'KHR',
-        isDefault: false,
-        color: '#9353D3'
-      }
-    ]
+    selectedId: '',
+    accounts: () => []
   }
 );
 
@@ -80,7 +63,7 @@ const handleDismiss = () => {
         <div class="sheet-header-title">Paying with account:</div>
 
         <!-- Account Options List -->
-        <div class="accounts-group">
+        <div v-if="accounts && accounts.length > 0" class="accounts-group">
           <div
             v-for="account in accounts"
             :key="account.id"
@@ -91,7 +74,7 @@ const handleDismiss = () => {
             <!-- Left colored stripe -->
             <div
               class="account-left-stripe"
-              :style="{ backgroundColor: account.color }"
+              :style="{ backgroundColor: account.color || '#00C0DE' }"
             ></div>
 
             <!-- Center info -->
@@ -112,16 +95,19 @@ const handleDismiss = () => {
               <div
                 v-if="selectedId === account.id"
                 class="radio-ring-active"
-                :style="{ borderColor: account.color }"
+                :style="{ borderColor: account.color || '#00C0DE' }"
               >
                 <div
                   class="radio-dot-inner"
-                  :style="{ backgroundColor: account.color }"
+                  :style="{ backgroundColor: account.color || '#00C0DE' }"
                 ></div>
               </div>
               <div v-else class="radio-ring-inactive"></div>
             </div>
           </div>
+        </div>
+        <div v-else class="no-accounts">
+          <p>No accounts available</p>
         </div>
       </div>
     </ion-content>
@@ -261,6 +247,13 @@ const handleDismiss = () => {
   border-radius: 50%;
   border: 2px solid #4a5c6e;
   background: transparent;
+}
+
+.no-accounts {
+  text-align: center;
+  color: #94a3b8;
+  padding: 24px 0;
+  font-size: 14px;
 }
 </style>
 

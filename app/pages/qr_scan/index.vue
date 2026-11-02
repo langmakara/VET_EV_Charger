@@ -1,11 +1,32 @@
 <script setup lang="ts">
-  import { ref, onBeforeUnmount } from 'vue'
+  import { ref, computed, onBeforeUnmount } from 'vue'
   import CameraComponent from '~/components/Camera/CameraComponent.vue'
   import AlertComponent from '~/components/Modal/AlertComponent.vue'
   import ModalPlug from './modalPlug.vue'
   import Icon from '~/components/Icon/icon.vue'
+  import { useGunTypeQuery } from '~/composables/queries'
+  import type { GunTypeData } from '~/api/types'
 
   const router = useRouter()
+
+  const result = ref('')
+  const scanning = ref(true)
+  const showAlert = ref(false)
+  const showModalPlug = ref(false)
+
+  // Reactive filter passing chargerUserName from the scanned QR code
+  const filter = computed(() => ({
+    chargerUserName: result.value || undefined
+  }))
+
+  const { data: gunTypeData, isLoading: isGunTypeLoading } = useGunTypeQuery(filter, {
+    enabled: computed(() => !!result.value)
+  })
+
+  const gunType = computed<GunTypeData[]>(() => {
+    const res: any = gunTypeData.value
+    return res?.data ?? res?.body?.data ?? []
+  })
 
   const chargingSteps = [
     {
@@ -47,11 +68,6 @@
   ]
   const cameraRef = ref<InstanceType<typeof CameraComponent> | null>(null)
 
-  const result = ref('')
-  const scanning = ref(true)
-  const showAlert = ref(false)
-  const showModalPlug = ref(false)
-
   let plugTimer: any = null
 
   onBeforeUnmount(() => {
@@ -61,7 +77,7 @@
   function handleScan(scannedCode: string) {
     if (!scanning.value || !scannedCode) return
 
-    result.value = scannedCode
+    result.value = scannedCode.trim()
     scanning.value = false
     showAlert.value = true
     if (navigator.vibrate) navigator.vibrate(100)
@@ -91,14 +107,23 @@
     selectedPlug.value = plug
   }
 
-  function handlePlugContinue(_plug?: any) {
+  function handlePlugContinue(plug?: any) {
     showModalPlug.value = false
-    navigateTo('/chargingInfor')
+    const chosen = plug ?? selectedPlug.value
+    navigateTo({
+      path: '/chargingInfor',
+      query: {
+        chargerCode: result.value,
+        plugId: chosen?.id ?? chosen?.gunId,
+        plugName: chosen?.name ?? chosen?.gunName
+      }
+    })
   }
 
   function ScanAgain() {
     clearTimeout(plugTimer)
     result.value = ''
+    selectedPlug.value = null
     showAlert.value = false
     showModalPlug.value = false
     scanning.value = true
@@ -204,6 +229,8 @@
         <!-- Plug Selection Modal (opens 2 seconds after scan) -->
         <ModalPlug
           :is-open="showModalPlug"
+          :guntype="gunType"
+          :is-loading="isGunTypeLoading"
           @didDismiss="ClosePlugModal"
           @close="ClosePlugModal"
           @select="handlePlugSelect"

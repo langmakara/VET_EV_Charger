@@ -5,6 +5,8 @@
   import StationCard from '~/components/Card/StationCard.vue'
   import StationDetailModal from '~/components/Modal/StationDetailModal.vue'
   import evChargerData from '~/data/ev_charger_data.json'
+  import type { GunTypeData, StationData } from '~/api/types'
+  import { useGunTypeQuery, useStationInfinite } from '~/composables/queries'
 
   const props = defineProps<{
     isOpen: boolean
@@ -15,7 +17,24 @@
   }>()
 
   // Station list from JSON data
-  const stations = evChargerData.nearbyStations
+  // Reactive query parameters (filter payload for POST /station/list)
+  const filter = ref({
+    rowsPerPage: 20
+  })
+
+  // Call the infinite query composable
+  const { data, isLoading, isError, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useStationInfinite(filter)
+
+  // Flatten all pagination pages into a single station list
+  const Stations = computed<StationData[]>(() => {
+    return (
+      data.value?.pages.flatMap((page) => {
+        const res = (page as any)?.data ?? page?.body?.data
+        return Array.isArray(res) ? res : (res?.list ?? [])
+      }) ?? []
+    )
+  })
 
   // Station detail modal state
   const isStationModalOpen = ref(false)
@@ -73,12 +92,12 @@
 
       <div class="modal-list-header">
         <span class="modal-list-title">Nearby Stations</span>
-        <span class="station-count">{{ stations.length }} stations</span>
+        <span class="station-count">{{ Stations.length }} stations</span>
       </div>
 
       <div class="station-scroll-container">
         <StationCard
-          v-for="station in stations"
+          v-for="station in Stations"
           :key="station.id"
           :station="station"
           customClass="station-card"

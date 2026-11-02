@@ -62,7 +62,7 @@
                 class="station-svg-pin"
                 :class="{
                   'pin-busy': station.status === 'Busy',
-                  'pin-closed': station.status === 'Closed'
+                  'pin-closed': station.status === 'Closed' || station.isOpen === false
                 }"
                 :alt="station.name"
               />
@@ -106,7 +106,8 @@
 <script setup lang="ts">
   import { ref, computed, watch, provide, onBeforeUnmount } from 'vue'
   import { GoogleMap, AdvancedMarker, Marker, CustomMarker } from 'vue3-google-map'
-  import evChargerData from '~/data/ev_charger_data.json'
+  
+  import type { StationData } from '~/api/types'
   import { IonContent, IonSpinner, IonIcon, modalController, onIonViewWillLeave } from '@ionic/vue'
   import { closeOutline, locationOutline, locateOutline } from 'ionicons/icons'
   import SearchMap from './SearchMap.vue'
@@ -126,20 +127,46 @@
       initialCoords?: { lat: number; lng: number } | null
       type?: 'pickup' | 'dropoff' | string
       title?: string
+      stations?: StationData[] | any[]
     }>(),
     {
       initialAddress: '',
       initialCoords: null,
       type: 'pickup',
-      title: ''
+      title: '',
+      stations: () => []
     }
   )
 
   const config = useRuntimeConfig()
   const apiKey = config.public.googleMapApiKey || import.meta.env.VITE_GOOGLE_MAP_API_KEY
 
-  // EV Station data with lat/lng for map markers
-  const stations = evChargerData.nearbyStations
+  // Normalize stations from props to ensure valid lat & lng for markers
+  const stations = computed(() => {
+    const rawList = (props.stations || []) as StationData[]
+    return rawList
+      .map((station) => {
+        const rawLat = (station as any).lat ?? station.lats
+        const rawLng = (station as any).lng ?? station.longs
+        const lat = typeof rawLat === 'number' ? rawLat : parseFloat(String(rawLat))
+        const lng = typeof rawLng === 'number' ? rawLng : parseFloat(String(rawLng))
+
+        // Only include stations with valid coordinates for map markers
+        if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) {
+          return null
+        }
+
+        return {
+          ...station,
+          lat,
+          lng,
+          lats: String(lat),
+          longs: String(lng),
+          status: station.status || (station.isOpen ? 'Open' : 'Closed')
+        }
+      })
+      .filter((s): s is NonNullable<typeof s> => s !== null)
+  })
 
   const mapRef = ref<InstanceType<typeof GoogleMap> | null>(null)
   const selectedAddress = ref<string>(props.initialAddress || '')

@@ -202,6 +202,7 @@ export interface DropdownParams {
   page?: number;
   rowsPerPage?: number;
   searchText?: string;
+  chargerUserName?: string;
   [key: string]: any;
 }
 
@@ -359,5 +360,13 @@ export interface SaleOrderDetailData {
   energy?: string;
   preAuthorisedAmount?: number;
   finalChargingCost?: number;
+  [key: string]: any;
+}
+
+// dropdown/gun/list
+export interface GunTypeData {
+  gunId: number;
+  gunName: string;
+  isAvailable: boolean;
   [key: string]: any;
 }

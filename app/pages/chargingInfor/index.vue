@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, computed, onMounted } from 'vue'
+  import { ref, computed, watch, onMounted } from 'vue'
   import {
     IonPage,
     IonContent,
@@ -8,19 +8,32 @@
     IonRow,
     IonCol,
     IonIcon,
-    IonActionSheet,
     IonToast
   } from '@ionic/vue'
   import { chevronForward, chevronDown } from 'ionicons/icons'
-  import { sendTitleToFlutter } from '~/composables/useNativeBridge'
+  import { sendTitleToFlutter, abaBridge } from '~/composables/useNativeBridge'
   import AccountModal, { type AccountItem } from './accountModal.vue'
   import VoucherModal from './voucherModal.vue'
   import PointModal from './pointModal.vue'
   import Icon from '~/components/Icon/icon.vue'
+  import { useVoucherInfinite } from '~/composables/queries/useVoucher'
+  import type { VoucherDate } from '~/api/types'
 
-  // Set mini-app title for ABA Mini App wrapper
+  const { data: voucher } = useVoucherInfinite()
+
+  const voucherList = computed<VoucherDate[]>(() => {
+    return (
+      voucher.value?.pages.flatMap((page: any) => {
+        const res = page?.data ?? page?.body?.data
+        return Array.isArray(res) ? res : (res?.list ?? [])
+      }) ?? []
+    )
+  })
+
+  // Set mini-app title for ABA Mini App wrapper and load default account from native bridge
   onMounted(() => {
     sendTitleToFlutter('Charging Information')
+    loadDefaultAccount()
   })
 
   // Mode: 'kwh' or 'khr'
@@ -93,13 +106,62 @@
   }
 
   // Voucher state
-  const voucherDiscountPercent = ref<number>(5)
+  const selectedVoucher = ref<VoucherDate | null>(null)
+  const voucherDiscountPercent = ref<number>(0)
   const isVoucherSheetOpen = ref(false)
 
-  const handleApplyVoucher = (payload: { percent: number; code: string; voucher: any }) => {
-    voucherDiscountPercent.value = payload.percent
-    toastMessage.value = `Applied ${payload.percent}% OFF voucher!`
-    showToast.value = true
+  const applyVoucher = (v: VoucherDate | null, showNotification = true) => {
+    selectedVoucher.value = v
+    if (v) {
+      const discountVal = Number(v.discountValue ?? 0)
+      voucherDiscountPercent.value = v.discountType === 1 || v.discountType == null ? discountVal : 0
+      if (showNotification) {
+        const discountLabel =
+          v.discountType === 2
+            ? `${formatNumber(discountVal)} KHR OFF`
+            : `${discountVal}% OFF`
+        toastMessage.value = `Applied ${discountLabel} voucher!`
+        showToast.value = true
+      }
+    } else {
+      voucherDiscountPercent.value = 0
+    }
+  }
+
+  // Auto select (apply) first voucher response from API
+  watch(
+    () => voucherList.value,
+    (newList) => {
+      if (newList && newList.length > 0) {
+        const currentStillExists = selectedVoucher.value
+          ? newList.some(
+              (v) =>
+                (v.id != null && String(v.id) === String(selectedVoucher.value?.id)) ||
+                (v.voucherCode && v.voucherCode === selectedVoucher.value?.voucherCode)
+            )
+          : false
+
+        if (!selectedVoucher.value || !currentStillExists) {
+          applyVoucher(newList[0], false)
+        }
+      }
+    },
+    { immediate: true }
+  )
+
+  const handleApplyVoucher = (payload: { voucher: VoucherDate | null; percent: number; code: string }) => {
+    if (payload.voucher) {
+      applyVoucher(payload.voucher, true)
+    } else if (payload.percent > 0) {
+      selectedVoucher.value = null
+      voucherDiscountPercent.value = payload.percent
+      toastMessage.value = `Applied ${payload.percent}% OFF voucher!`
+      showToast.value = true
+    } else {
+      applyVoucher(null, false)
+      toastMessage.value = 'Voucher removed'
+      showToast.value = true
+    }
   }
 
   // Point state
@@ -113,33 +175,82 @@
     showToast.value = true
   }
 
-  // Accounts state matching the bottom sheet design
-  const accounts = ref([
-    {
-      id: 'main',
-      name: 'Main',
-      number: '004 026 957',
-      currency: 'USD',
-      isDefault: true,
-      color: '#00C0DE'
-    },
-    {
-      id: 'food_and_drink',
-      name: 'Food And Drink',
-      number: '015 841 241',
-      currency: 'KHR',
-      isDefault: false,
-      color: '#9353D3'
-    }
-  ])
+  // Helper to normalize account payload from ABA native bridge
+  function normalizeAbaAccount(item: any, index = 0): AccountItem {
+    const number =
+      item.accountNumber ??
+      item.account ??
+      item.acc ??
+      item.number ??
+      item.accNo ??
+      item.id ??
+      ''
 
-  const selectedAccountId = ref('main')
-  const currentAccount = computed(() => {
-    return accounts.value.find((acc) => acc.id === selectedAccountId.value) || accounts.value[0]
+    const name =
+      item.accountName ??
+      item.accName ??
+      item.name ??
+      item.title ??
+      (index === 0 ? 'Main' : `Account ${index + 1}`)
+
+    const currency = item.currency ?? 'KHR'
+    const id = String(item.id ?? number ?? `acc-${index + 1}`)
+    const isDefault = item.useDefault ?? item.isDefault ?? index === 0
+    const color = item.color ?? (currency === 'USD' ? '#00C0DE' : '#9353D3')
+
+    return { id, name, number, currency, isDefault, color }
+  }
+
+  // Accounts state from ABA native bridge (getDefaultAcc)
+  const accounts = ref<AccountItem[]>([])
+  const selectedAccountId = ref<string>('')
+  const isLoadingAccount = ref(false)
+
+  const currentAccount = computed<AccountItem | null>(() => {
+    if (accounts.value.length === 0) return null
+    return (
+      accounts.value.find((acc) => acc.id === selectedAccountId.value) ||
+      accounts.value.find((acc) => acc.isDefault) ||
+      accounts.value[0]
+    )
   })
   const isAccountModalOpen = ref(false)
 
-  const selectAccount = (account: (typeof accounts.value)[0]) => {
+  const loadDefaultAccount = async () => {
+    isLoadingAccount.value = true
+    try {
+      const payload = {
+        currency: 'KHR',
+        amount: String(totalPrice.value || 0)
+      }
+      const res: any = await abaBridge.getDefaultAcc(payload)
+
+      // Response might be { data: [...] } or a direct object / array
+      const raw = res?.data ?? res?.result ?? res?.body ?? res
+      if (Array.isArray(raw) && raw.length > 0) {
+        accounts.value = raw.map((item: any, idx: number) => normalizeAbaAccount(item, idx))
+      } else if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+        // Accept any object that has at least one recognizable account field
+        const hasAccountField =
+          raw.account || raw.acc || raw.number || raw.accountNumber ||
+          raw.name || raw.accountName || raw.accName || raw.id
+        if (hasAccountField) {
+          accounts.value = [normalizeAbaAccount(raw, 0)]
+        }
+      }
+
+      if (accounts.value.length > 0) {
+        const def = accounts.value.find((a) => a.isDefault) || accounts.value[0]
+        selectedAccountId.value = def.id
+      }
+    } catch (err) {
+      console.warn('Failed to get default account from ABA bridge:', err)
+    } finally {
+      isLoadingAccount.value = false
+    }
+  }
+
+  const selectAccount = (account: AccountItem) => {
     selectedAccountId.value = account.id
     setTimeout(() => {
       isAccountModalOpen.value = false
@@ -157,21 +268,58 @@
     return val
   })
 
-  const discountAmount = computed(() => {
-    // If exactly 20 kWh with 5% discount matching mock visual
+  const voucherDiscountAmount = computed(() => {
+    if (!selectedVoucher.value) {
+      if (voucherDiscountPercent.value > 0) {
+        return subTotal.value * (voucherDiscountPercent.value / 100)
+      }
+      return 0
+    }
+    const discountVal = Number(selectedVoucher.value.discountValue ?? 0)
+    // Fixed amount discount (discountType === 2)
+    if (selectedVoucher.value.discountType === 2) {
+      return discountVal
+    }
+    // Percentage discount
+    const percent = discountVal || voucherDiscountPercent.value || 0
     if (
       selectedMode.value === 'kwh' &&
       Number(inputAmount.value) === 20 &&
-      voucherDiscountPercent.value === 5
+      percent === 5
     ) {
-      return 4000 + pointsApplied.value
+      return 4000
     }
-    const voucherCut = subTotal.value * (voucherDiscountPercent.value / 100)
-    return voucherCut + pointsApplied.value
+    return subTotal.value * (percent / 100)
+  })
+
+  const discountAmount = computed(() => {
+    return voucherDiscountAmount.value + pointsApplied.value
   })
 
   const totalPrice = computed(() => {
     return Math.max(0, subTotal.value - discountAmount.value)
+  })
+
+  const voucherBadgeText = computed(() => {
+    if (!selectedVoucher.value) {
+      return voucherDiscountPercent.value > 0 ? `${voucherDiscountPercent.value}% OFF` : 'None'
+    }
+    const val = Number(selectedVoucher.value.discountValue ?? voucherDiscountPercent.value)
+    if (selectedVoucher.value.discountType === 2) {
+      return `${formatNumber(val)} KHR OFF`
+    }
+    return val > 0 ? `${val}% OFF` : 'None'
+  })
+
+  const voucherLabelText = computed(() => {
+    if (!selectedVoucher.value) {
+      return voucherDiscountPercent.value > 0 ? `(${voucherDiscountPercent.value}%)` : ''
+    }
+    if (selectedVoucher.value.discountType === 2) {
+      return `(${formatNumber(Number(selectedVoucher.value.discountValue ?? 0))} KHR)`
+    }
+    const pct = Number(selectedVoucher.value.discountValue ?? voucherDiscountPercent.value)
+    return pct > 0 ? `(${pct}%)` : ''
   })
 
   // Toast Feedback
@@ -253,7 +401,7 @@
 
             <div class="action-right">
               <span class="action-badge-orange">
-                {{ voucherDiscountPercent > 0 ? `${voucherDiscountPercent}% OFF` : 'None' }}
+                {{ voucherBadgeText }}
               </span>
               <ion-icon :icon="chevronForward" class="action-chevron"></ion-icon>
             </div>
@@ -304,7 +452,7 @@
 
           <div class="summary-line">
             <span class="summary-label">
-              Discount {{ voucherDiscountPercent > 0 ? `(${voucherDiscountPercent}%)` : '' }}
+              Discount {{ voucherLabelText }}
             </span>
             <span class="summary-value discount-text">
               -KHR (៛) {{ formatNumber(discountAmount) }}
@@ -350,14 +498,22 @@
         <!-- Saving Account Selector Box -->
         <div class="account-card" @click="isAccountModalOpen = true">
           <div class="account-top-row">
-            <span class="account-type-title">{{ currentAccount.name }}</span>
+            <span class="account-type-title">{{ currentAccount?.name || 'Account' }}</span>
             <div class="account-dropdown-trigger">
               <span class="account-dropdown-text">Account</span>
               <ion-icon :icon="chevronDown" class="account-chevron-icon"></ion-icon>
             </div>
           </div>
           <div class="account-bottom-row">
-            {{ currentAccount.number }} | {{ currentAccount.currency }}
+            <template v-if="currentAccount">
+              {{ currentAccount.number }} | {{ currentAccount.currency }}
+            </template>
+            <template v-else-if="isLoadingAccount">
+              Loading account...
+            </template>
+            <template v-else>
+              Select account
+            </template>
           </div>
         </div>
 
@@ -389,6 +545,9 @@
     <!-- Apply Voucher Centered Dialog Modal Component -->
     <VoucherModal
       v-model:is-open="isVoucherSheetOpen"
+      :voucherlist="voucherList"
+      :selected-voucher="selectedVoucher"
+      :selected-id="selectedVoucher?.id ?? selectedVoucher?.voucherCode"
       :selected-percent="voucherDiscountPercent"
       @apply="handleApplyVoucher"
     />
@@ -410,6 +569,7 @@
       color="dark"
       @didDismiss="showToast = false"
     ></ion-toast>
+
   </ion-page>
 </template>
 

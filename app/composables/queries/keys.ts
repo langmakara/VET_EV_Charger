@@ -64,7 +64,9 @@ export const queryKeys = {
     infinite: (params?: Record<string, any>) =>
       [...queryKeys.dropdown.all, 'infinite', params ?? {}] as const,
     newsFeed: (params?: Record<string, any>) =>
-      [...queryKeys.dropdown.all, 'news-feed', params ?? {}] as const
+      [...queryKeys.dropdown.all, 'news-feed', params ?? {}] as const,
+    gunType: (params?: Record<string, any>) =>
+      [...queryKeys.dropdown.all, 'gun-type', params ?? {}] as const
   },
 
   saleOrder: {

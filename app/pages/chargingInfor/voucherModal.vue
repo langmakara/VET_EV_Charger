@@ -1,9 +1,8 @@
 <script setup lang="ts">
   import { ref, watch, computed } from 'vue'
-  import { IonModal } from '@ionic/vue'
+  import { IonModal, IonGrid, IonRow, IonCol } from '@ionic/vue'
   import VoucherCard from '~/components/Card/VoucherCard.vue'
-  import evData from '~/data/ev_charger_data.json'
-  import type { Voucher } from '~/types/ev-charger'
+  import type { VoucherDate } from '~/api/types'
   import AppInputField from '~/components/Controls/AppInputField.vue'
   import IconButton from '~/components/Button/IconButton.vue'
 
@@ -22,31 +21,18 @@
     defineProps<{
       isOpen?: boolean
       selectedId?: number | string | null
+      selectedVoucher?: VoucherDate | null
       selectedPercent?: number
-      vouchers?: VoucherModalItem[]
+      voucherlist?: VoucherDate[] | any[]
+      vouchers?: VoucherDate[] | any[]
     }>(),
     {
       isOpen: false,
-      selectedId: 1,
-      selectedPercent: 5,
-      vouchers: () => [
-        {
-          id: 1,
-          discountRate: '5.0%',
-          conditions: '5% off with any charge',
-          voucherLabel: 'Voucher Code',
-          voucherExpiry: 'Valid Till - 31 December 2024',
-          isActive: true
-        },
-        {
-          id: 2,
-          discountRate: '5.0%',
-          conditions: '5% off with any charge',
-          voucherLabel: 'Voucher Code',
-          voucherExpiry: 'Valid Till - 31 December 2024',
-          isActive: true
-        }
-      ]
+      selectedId: null,
+      selectedVoucher: null,
+      selectedPercent: 0,
+      voucherlist: () => [],
+      vouchers: () => []
     }
   )
 
@@ -56,60 +42,81 @@
     (e: 'didDismiss'): void
     (e: 'cancel'): void
     (e: 'scan'): void
-    (e: 'select', voucher: VoucherModalItem): void
-    (e: 'apply', payload: { voucher: VoucherModalItem | null; percent: number; code: string }): void
+    (e: 'select', voucher: VoucherDate): void
+    (e: 'apply', payload: { voucher: VoucherDate | null; percent: number; code: string }): void
   }>()
 
-  // List of available vouchers (fallback to ev_charger_data if empty)
-  const voucherList = computed<VoucherModalItem[]>(() => {
-    if (props.vouchers && props.vouchers.length > 0) {
-      return props.vouchers
+  // List of available vouchers from props
+  const voucherList = computed<VoucherDate[]>(() => {
+    if (Array.isArray(props.voucherlist) && props.voucherlist.length > 0) {
+      return props.voucherlist
     }
-    if (evData?.vouchers && evData.vouchers.length > 0) {
-      return evData.vouchers as VoucherModalItem[]
+    if (Array.isArray(props.vouchers) && props.vouchers.length > 0) {
+      return props.vouchers
     }
     return []
   })
 
   // Input field code state
   const voucherInputCode = ref('')
-  const selectedVoucherId = ref<number | string | null>(props.selectedId ?? 1)
+  const selectedVoucherId = ref<number | string | null>(null)
+
+  // Filtered vouchers based on search/code input
+  const displayedVouchers = computed<VoucherDate[]>(() => {
+    const q = voucherInputCode.value.trim().toLowerCase()
+    if (!q) return voucherList.value
+    return voucherList.value.filter((v) => {
+      const code = (v.voucherCode || '').toLowerCase()
+      const title = (v.batchTitle || '').toLowerCase()
+      return code.includes(q) || title.includes(q)
+    })
+  })
+
+  function isVoucherSelected(voucher: VoucherDate): boolean {
+    if (selectedVoucherId.value == null || selectedVoucherId.value === '') return false
+    const sel = String(selectedVoucherId.value).toLowerCase()
+    if (voucher.id != null && String(voucher.id).toLowerCase() === sel) return true
+    if (voucher.voucherCode && String(voucher.voucherCode).toLowerCase() === sel) return true
+    return false
+  }
 
   // Synchronize state when modal opens
   watch(
     () => props.isOpen,
     (open) => {
       if (open) {
-        selectedVoucherId.value = props.selectedId ?? 1
-        const initial = voucherList.value.find((v) => v.id === selectedVoucherId.value)
-        voucherInputCode.value = initial?.voucherLabel || ''
+        selectedVoucherId.value =
+          props.selectedVoucher?.id ??
+          props.selectedVoucher?.voucherCode ??
+          props.selectedId ??
+          null
+
+        if (props.selectedVoucher) {
+          voucherInputCode.value =
+            props.selectedVoucher.voucherCode ||
+            props.selectedVoucher.batchTitle ||
+            ''
+        } else if (selectedVoucherId.value != null) {
+          const sel = String(selectedVoucherId.value).toLowerCase()
+          const found = voucherList.value.find(
+            (v) =>
+              (v.id != null && String(v.id).toLowerCase() === sel) ||
+              (v.voucherCode && String(v.voucherCode).toLowerCase() === sel)
+          )
+          voucherInputCode.value = found?.voucherCode || found?.batchTitle || ''
+        } else {
+          voucherInputCode.value = ''
+        }
       }
     },
     { immediate: true }
   )
 
   // Select card handler
-  const handleSelectVoucher = (voucher: VoucherModalItem) => {
-    selectedVoucherId.value = voucher.id
-    voucherInputCode.value = voucher.voucherLabel || `${voucher.discountRate} OFF`
+  const handleSelectVoucher = (voucher: VoucherDate) => {
+    selectedVoucherId.value = voucher.id ?? voucher.voucherCode ?? null
+    voucherInputCode.value = voucher.voucherCode || voucher.batchTitle || ''
     emit('select', voucher)
-  }
-
-  // Format discount highlight text (e.g., '5.0%' -> '5% OFF')
-  const formatHighlightRate = (rate: string) => {
-    const cleaned = rate.replace('.0%', '%')
-    return cleaned.includes('OFF') ? cleaned : `${cleaned} OFF`
-  }
-
-  // Parse discount percentage number from voucher or input
-  const extractPercent = (voucher: VoucherModalItem | null, rawCode: string): number => {
-    if (voucher?.discountRate) {
-      const match = voucher.discountRate.match(/(\d+(\.\d+)?)/)
-      if (match) return parseFloat(match[1])
-    }
-    const codeMatch = rawCode.match(/(\d+(\.\d+)?)/)
-    if (codeMatch) return parseFloat(codeMatch[1])
-    return props.selectedPercent || 5
   }
 
   // Close and dismiss
@@ -138,8 +145,27 @@
 
   // Apply Voucher action
   const handleApply = () => {
-    const selected = voucherList.value.find((v) => v.id === selectedVoucherId.value) || null
-    const percent = extractPercent(selected, voucherInputCode.value)
+    const sel = selectedVoucherId.value != null ? String(selectedVoucherId.value).toLowerCase() : null
+    const inputCode = voucherInputCode.value.trim().toLowerCase()
+
+    const selected =
+      voucherList.value.find((v) => {
+        if (sel && v.id != null && String(v.id).toLowerCase() === sel) return true
+        if (sel && v.voucherCode && String(v.voucherCode).toLowerCase() === sel) return true
+        if (inputCode && v.voucherCode && String(v.voucherCode).toLowerCase() === inputCode) return true
+        return false
+      }) || null
+
+    let percent = 0
+    if (selected) {
+      if (selected.discountType === 1 || selected.discountValue != null) {
+        percent = Number(selected.discountValue ?? 0)
+      }
+    } else if (voucherInputCode.value.trim()) {
+      const match = voucherInputCode.value.match(/(\d+(\.\d+)?)/)
+      if (match) percent = parseFloat(match[1])
+    }
+
     emit('apply', {
       voucher: selected,
       percent,
@@ -147,9 +173,11 @@
     })
     handleClose()
   }
+
   const handlescanVouchercode = () => {
-    navigateTo('/ev_charger/voucher/camera')
+    emit('scan')
     handleClose()
+    navigateTo('/ev_charger/voucher/camera')
   }
 </script>
 
@@ -180,18 +208,24 @@
 
       <!-- Vouchers List -->
       <div class="vouchers-list">
-        <VoucherCard
-          v-for="voucher in voucherList"
-          :key="voucher.id"
-          :discount-rate="voucher.discountRate"
-          :conditions="voucher.conditions"
-          :voucher-label="voucher.voucherLabel"
-          :voucher-expiry="voucher.voucherExpiry"
-          :voucher-description="voucher.voucherDescription"
-          :is-active="voucher.isActive"
-          :class="{ 'is-selected': selectedVoucherId === voucher.id }"
+        <div v-if="displayedVouchers.length === 0" class="no-vouchers">
+          <p>{{ voucherInputCode?.trim() ? 'No vouchers match your code' : 'No vouchers available' }}</p>
+        </div>
+        <div
+          v-else
+          v-for="voucher in displayedVouchers"
+          :key="voucher.id || voucher.voucherCode"
+          class="voucher-card-item"
+          :class="{ 'is-selected': isVoucherSelected(voucher) }"
           @click="handleSelectVoucher(voucher)"
-        />
+        >
+          <VoucherCard
+            :voucher="voucher"
+            class="modal-voucher-item"
+            :class="{ 'is-selected': isVoucherSelected(voucher) }"
+            @click="handleSelectVoucher(voucher)"
+          />
+        </div>
       </div>
 
       <!-- Action Buttons: Cancel & Apply -->
@@ -340,6 +374,18 @@
   }
 
   /* 4. Voucher Card Overrides in Modal */
+  .voucher-card-item {
+    cursor: pointer;
+    border-radius: 14px;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+  }
+
+  .voucher-card-item.is-selected {
+    border-color: #df5204;
+    box-shadow: 0 0 0 2px rgba(223, 82, 4, 0.25);
+  }
+
   :deep(.modal-voucher-item) {
     margin: 0 !important;
     border-radius: 12px;
@@ -356,11 +402,17 @@
 
   :deep(.modal-voucher-item.is-selected) {
     border-color: #df5204 !important;
-    box-shadow: 0 0 0 1.5px #df5204 !important;
   }
 
   :deep(.modal-voucher-item:active) {
     transform: scale(0.99);
+  }
+
+  .no-vouchers {
+    text-align: center;
+    padding: 24px 0;
+    color: #94a3b8;
+    font-size: 14px;
   }
 
   /* 5. Bottom Action Buttons */
