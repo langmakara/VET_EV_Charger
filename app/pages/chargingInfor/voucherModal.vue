@@ -93,9 +93,7 @@
 
         if (props.selectedVoucher) {
           voucherInputCode.value =
-            props.selectedVoucher.voucherCode ||
-            props.selectedVoucher.batchTitle ||
-            ''
+            props.selectedVoucher.voucherCode || props.selectedVoucher.batchTitle || ''
         } else if (selectedVoucherId.value != null) {
           const sel = String(selectedVoucherId.value).toLowerCase()
           const found = voucherList.value.find(
@@ -145,14 +143,16 @@
 
   // Apply Voucher action
   const handleApply = () => {
-    const sel = selectedVoucherId.value != null ? String(selectedVoucherId.value).toLowerCase() : null
+    const sel =
+      selectedVoucherId.value != null ? String(selectedVoucherId.value).toLowerCase() : null
     const inputCode = voucherInputCode.value.trim().toLowerCase()
 
     const selected =
       voucherList.value.find((v) => {
         if (sel && v.id != null && String(v.id).toLowerCase() === sel) return true
         if (sel && v.voucherCode && String(v.voucherCode).toLowerCase() === sel) return true
-        if (inputCode && v.voucherCode && String(v.voucherCode).toLowerCase() === inputCode) return true
+        if (inputCode && v.voucherCode && String(v.voucherCode).toLowerCase() === inputCode)
+          return true
         return false
       }) || null
 
@@ -209,7 +209,9 @@
       <!-- Vouchers List -->
       <div class="vouchers-list">
         <div v-if="displayedVouchers.length === 0" class="no-vouchers">
-          <p>{{ voucherInputCode?.trim() ? 'No vouchers match your code' : 'No vouchers available' }}</p>
+          <p>
+            {{ voucherInputCode?.trim() ? 'No vouchers match your code' : 'No vouchers available' }}
+          </p>
         </div>
         <div
           v-else
@@ -377,19 +379,16 @@
   .voucher-card-item {
     cursor: pointer;
     border-radius: 14px;
-    border: 2px solid transparent;
     transition: all 0.2s ease;
   }
 
-  .voucher-card-item.is-selected {
-    border-color: #df5204;
-    box-shadow: 0 0 0 2px rgba(223, 82, 4, 0.25);
-  }
+  /* .voucher-card-item.is-selected {
+    border: 1px solid var(--ion-color-primary);
+  } */
 
   :deep(.modal-voucher-item) {
     margin: 0 !important;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
     transition:
       border-color 0.15s ease,
       box-shadow 0.15s ease,

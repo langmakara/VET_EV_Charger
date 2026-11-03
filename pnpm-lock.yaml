@@ -26,6 +26,9 @@ importers:
       '@sentry/vue':
         specifier: ^11.0.0
         version: 11.0.0(vue@3.5.43(typescript@5.9.3))
+      '@stomp/stompjs':
+        specifier: ^7.5.0
+        version: 7.5.0
       '@tanstack/vue-query':
         specifier: ^5.62.0
         version: 5.103.2(vue@3.5.43(typescript@5.9.3))
@@ -1558,6 +1561,9 @@ packages:
         optional: true
       vue-router:
         optional: true
+
+  '@stomp/stompjs@7.5.0':
+    resolution: {integrity: sha512-xh3sdzEYH8M+krQGBOgj+U0BLBHd7ccTj8YM3mVxaULMTW/wx2QBWf448pilRiWZKjglhDmNILxM3W+j/Ch9uw==}
 
   '@tanstack/match-sorter-utils@8.19.4':
     resolution: {integrity: sha512-Wo1iKt2b9OT7d+YGhvEPD3DXvPv2etTusIMhMUoG7fbhmxcXCtIjJDEygy91Y2JFlwGyjqiBPRozme7UD8hoqg==}
@@ -6678,6 +6684,8 @@ snapshots:
     optionalDependencies:
       '@stencil/core': 4.45.0
       vue-router: 5.3.1(@vue/compiler-sfc@3.5.43)(esbuild@0.28.2)(rolldown@1.2.9)(rollup@4.63.4)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.43(typescript@5.9.3))
+
+  '@stomp/stompjs@7.5.0': {}
 
   '@tanstack/match-sorter-utils@8.19.4':
     dependencies:

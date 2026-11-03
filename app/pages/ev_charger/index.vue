@@ -241,9 +241,10 @@
               <div class="icon-circle" :class="{ 'is-charging': isCharging }">
                 <Icon name="flash" class="flash-icon" />
               </div>
-              <span class="status-text">{{ chargingInfo.status }}</span>
+              <span v-if="isCharging" class="status-text">{{ chargingInfo.status }}</span>
             </div>
             <AppButton
+              v-if="isCharging"
               size="small"
               fill="solid"
               class="btn-view-detail"
@@ -260,7 +261,7 @@
                 class="charging-car-image"
               />
             </div>
-            <div class="charging-metrics">
+            <div v-if="isCharging" class="charging-metrics">
               <div class="metric-item">
                 <span class="metric-label">Est. Time</span>
                 <span class="metric-value time-val">{{ chargingInfo.estTime }}</span>

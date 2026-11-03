@@ -63,3 +63,19 @@ export const useGunTypeQuery = (
     staleTime: 5 * 60 * 1000
   })
 }
+
+// post /dropdown/privacy-policy/list
+export const usePrivacyPolicyDropdownQuery = (
+  params?: MaybeRef<DropdownParams>,
+  options?: { enabled?: MaybeRef<boolean> }
+) => {
+  const http = useApi()
+  const api = dropdownApi(http)
+
+  return useQuery({
+    queryKey: computed(() => queryKeys.dropdown.privacyPolicy(unref(params))),
+    queryFn: () => api.getPrivacyPolicyDropdown(unref(params)),
+    enabled: computed(() => (options?.enabled !== undefined ? unref(options.enabled) : true)),
+    staleTime: 5 * 60 * 1000
+  })
+}

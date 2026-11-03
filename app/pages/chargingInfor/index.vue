@@ -1,5 +1,4 @@
 <script setup lang="ts">
-  import { ref, computed, watch, onMounted } from 'vue'
   import {
     IonPage,
     IonContent,
@@ -11,330 +10,68 @@
     IonToast
   } from '@ionic/vue'
   import { chevronForward, chevronDown } from 'ionicons/icons'
-  import { sendTitleToFlutter, abaBridge } from '~/composables/useNativeBridge'
-  import AccountModal, { type AccountItem } from './accountModal.vue'
+  import AccountModal from './accountModal.vue'
   import VoucherModal from './voucherModal.vue'
   import PointModal from './pointModal.vue'
   import Icon from '~/components/Icon/icon.vue'
-  import { useVoucherInfinite } from '~/composables/queries/useVoucher'
-  import type { VoucherDate } from '~/api/types'
+  import { useChargingInforService } from '~/services/chargingInfor.service'
 
-  const { data: voucher } = useVoucherInfinite()
+  const {
+    // Mode & Presets
+    selectedMode,
+    setMode,
+    kwhPresets,
+    khrPresets,
+    selectedPreset,
+    selectPreset,
+    inputAmount,
+    handleInput,
+    formatNumber,
 
-  const voucherList = computed<VoucherDate[]>(() => {
-    return (
-      voucher.value?.pages.flatMap((page: any) => {
-        const res = page?.data ?? page?.body?.data
-        return Array.isArray(res) ? res : (res?.list ?? [])
-      }) ?? []
-    )
-  })
+    // Voucher
+    voucherList,
+    selectedVoucher,
+    voucherDiscountPercent,
+    isVoucherSheetOpen,
+    voucherBadgeText,
+    voucherLabelText,
+    handleApplyVoucher,
 
-  // Set mini-app title for ABA Mini App wrapper and load default account from native bridge
-  onMounted(() => {
-    sendTitleToFlutter('Charging Information')
-    loadDefaultAccount()
-  })
+    // Points
+    pointsApplied,
+    isPointSheetOpen,
+    handleApplyPoints,
 
-  // Mode: 'kwh' or 'khr'
-  const selectedMode = ref<'kwh' | 'khr'>('kwh')
+    // Accounts
+    accounts,
+    selectedAccountId,
+    currentAccount,
+    isLoadingAccount,
+    isAccountModalOpen,
+    selectAccount,
 
-  // Presets
-  const kwhPresets = ['20 kWh', '40 kWh', '60 kWh', '80 kWh', '100 kWh', 'Full Charge']
-  const khrPresets = [
-    '20,000 KHR',
-    '40,000 KHR',
-    '60,000 KHR',
-    '80,000 KHR',
-    '100,000 KHR',
-    'Full Charge'
-  ]
+    // Financial Calculations
+    subTotal,
+    discountAmount,
+    totalPrice,
 
-  const selectedPreset = ref('20 kWh')
-  const inputAmount = ref<string>('20')
+    // Promotion & Order APIs
+    calculatePromotion,
+    isCalculatingPromotion,
+    createTempOrder,
+    isSubmittingOrder,
+    handlePay,
 
-  // Switch mode (kWh vs KHR Amount)
-  const setMode = (mode: 'kwh' | 'khr') => {
-    selectedMode.value = mode
-    if (mode === 'kwh') {
-      selectedPreset.value = '20 kWh'
-      inputAmount.value = '20'
-    } else {
-      selectedPreset.value = '48,000 KHR'
-      inputAmount.value = '48000'
-    }
-  }
+    // WebSocket
+    socketData,
+    socketStatus,
+    sendSocketMessage,
+    sendHello,
 
-  // Select a preset button
-  const selectPreset = (preset: string) => {
-    selectedPreset.value = preset
-    if (selectedMode.value === 'kwh') {
-      if (preset === 'Full Charge') {
-        inputAmount.value = '100'
-      } else {
-        inputAmount.value = preset.replace(' kWh', '')
-      }
-    } else {
-      if (preset === 'Full Charge') {
-        inputAmount.value = '240000'
-      } else {
-        inputAmount.value = preset.replace(/[^0-9]/g, '')
-      }
-    }
-  }
-
-  // Handle manual numeric input
-  const handleInput = (event: Event) => {
-    const target = event.target as HTMLInputElement
-    const rawValue = target.value.replace(/[^0-9]/g, '')
-    inputAmount.value = rawValue
-
-    // Check if matching preset
-    if (selectedMode.value === 'kwh') {
-      const match = kwhPresets.find((p) => p === `${rawValue} kWh`)
-      selectedPreset.value = match || ''
-    } else {
-      const formatted = formatNumber(Number(rawValue))
-      const match = khrPresets.find((p) => p === `${formatted} KHR`)
-      selectedPreset.value = match || ''
-    }
-  }
-
-  // Number formatting utility
-  const formatNumber = (num: number) => {
-    return Math.round(num).toLocaleString('en-US')
-  }
-
-  // Voucher state
-  const selectedVoucher = ref<VoucherDate | null>(null)
-  const voucherDiscountPercent = ref<number>(0)
-  const isVoucherSheetOpen = ref(false)
-
-  const applyVoucher = (v: VoucherDate | null, showNotification = true) => {
-    selectedVoucher.value = v
-    if (v) {
-      const discountVal = Number(v.discountValue ?? 0)
-      voucherDiscountPercent.value = v.discountType === 1 || v.discountType == null ? discountVal : 0
-      if (showNotification) {
-        const discountLabel =
-          v.discountType === 2
-            ? `${formatNumber(discountVal)} KHR OFF`
-            : `${discountVal}% OFF`
-        toastMessage.value = `Applied ${discountLabel} voucher!`
-        showToast.value = true
-      }
-    } else {
-      voucherDiscountPercent.value = 0
-    }
-  }
-
-  // Auto select (apply) first voucher response from API
-  watch(
-    () => voucherList.value,
-    (newList) => {
-      if (newList && newList.length > 0) {
-        const currentStillExists = selectedVoucher.value
-          ? newList.some(
-              (v) =>
-                (v.id != null && String(v.id) === String(selectedVoucher.value?.id)) ||
-                (v.voucherCode && v.voucherCode === selectedVoucher.value?.voucherCode)
-            )
-          : false
-
-        if (!selectedVoucher.value || !currentStillExists) {
-          applyVoucher(newList[0], false)
-        }
-      }
-    },
-    { immediate: true }
-  )
-
-  const handleApplyVoucher = (payload: { voucher: VoucherDate | null; percent: number; code: string }) => {
-    if (payload.voucher) {
-      applyVoucher(payload.voucher, true)
-    } else if (payload.percent > 0) {
-      selectedVoucher.value = null
-      voucherDiscountPercent.value = payload.percent
-      toastMessage.value = `Applied ${payload.percent}% OFF voucher!`
-      showToast.value = true
-    } else {
-      applyVoucher(null, false)
-      toastMessage.value = 'Voucher removed'
-      showToast.value = true
-    }
-  }
-
-  // Point state
-  const pointsApplied = ref<number>(0)
-  const isPointSheetOpen = ref(false)
-
-  const handleApplyPoints = (payload: { points: number; kwh: number }) => {
-    pointsApplied.value = payload.points
-    toastMessage.value =
-      payload.points > 0 ? `Applied ${formatNumber(payload.points)} Points!` : 'Points removed'
-    showToast.value = true
-  }
-
-  // Helper to normalize account payload from ABA native bridge
-  function normalizeAbaAccount(item: any, index = 0): AccountItem {
-    const number =
-      item.accountNumber ??
-      item.account ??
-      item.acc ??
-      item.number ??
-      item.accNo ??
-      item.id ??
-      ''
-
-    const name =
-      item.accountName ??
-      item.accName ??
-      item.name ??
-      item.title ??
-      (index === 0 ? 'Main' : `Account ${index + 1}`)
-
-    const currency = item.currency ?? 'KHR'
-    const id = String(item.id ?? number ?? `acc-${index + 1}`)
-    const isDefault = item.useDefault ?? item.isDefault ?? index === 0
-    const color = item.color ?? (currency === 'USD' ? '#00C0DE' : '#9353D3')
-
-    return { id, name, number, currency, isDefault, color }
-  }
-
-  // Accounts state from ABA native bridge (getDefaultAcc)
-  const accounts = ref<AccountItem[]>([])
-  const selectedAccountId = ref<string>('')
-  const isLoadingAccount = ref(false)
-
-  const currentAccount = computed<AccountItem | null>(() => {
-    if (accounts.value.length === 0) return null
-    return (
-      accounts.value.find((acc) => acc.id === selectedAccountId.value) ||
-      accounts.value.find((acc) => acc.isDefault) ||
-      accounts.value[0]
-    )
-  })
-  const isAccountModalOpen = ref(false)
-
-  const loadDefaultAccount = async () => {
-    isLoadingAccount.value = true
-    try {
-      const payload = {
-        currency: 'KHR',
-        amount: String(totalPrice.value || 0)
-      }
-      const res: any = await abaBridge.getDefaultAcc(payload)
-
-      // Response might be { data: [...] } or a direct object / array
-      const raw = res?.data ?? res?.result ?? res?.body ?? res
-      if (Array.isArray(raw) && raw.length > 0) {
-        accounts.value = raw.map((item: any, idx: number) => normalizeAbaAccount(item, idx))
-      } else if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
-        // Accept any object that has at least one recognizable account field
-        const hasAccountField =
-          raw.account || raw.acc || raw.number || raw.accountNumber ||
-          raw.name || raw.accountName || raw.accName || raw.id
-        if (hasAccountField) {
-          accounts.value = [normalizeAbaAccount(raw, 0)]
-        }
-      }
-
-      if (accounts.value.length > 0) {
-        const def = accounts.value.find((a) => a.isDefault) || accounts.value[0]
-        selectedAccountId.value = def.id
-      }
-    } catch (err) {
-      console.warn('Failed to get default account from ABA bridge:', err)
-    } finally {
-      isLoadingAccount.value = false
-    }
-  }
-
-  const selectAccount = (account: AccountItem) => {
-    selectedAccountId.value = account.id
-    setTimeout(() => {
-      isAccountModalOpen.value = false
-    }, 180)
-  }
-
-  // Dynamic Financial Calculations
-  const KHR_PER_KWH = 2400 // Standard Cambodia EV charging rate (2,400 KHR / kWh)
-
-  const subTotal = computed(() => {
-    const val = Number(inputAmount.value) || 0
-    if (selectedMode.value === 'kwh') {
-      return val * KHR_PER_KWH
-    }
-    return val
-  })
-
-  const voucherDiscountAmount = computed(() => {
-    if (!selectedVoucher.value) {
-      if (voucherDiscountPercent.value > 0) {
-        return subTotal.value * (voucherDiscountPercent.value / 100)
-      }
-      return 0
-    }
-    const discountVal = Number(selectedVoucher.value.discountValue ?? 0)
-    // Fixed amount discount (discountType === 2)
-    if (selectedVoucher.value.discountType === 2) {
-      return discountVal
-    }
-    // Percentage discount
-    const percent = discountVal || voucherDiscountPercent.value || 0
-    if (
-      selectedMode.value === 'kwh' &&
-      Number(inputAmount.value) === 20 &&
-      percent === 5
-    ) {
-      return 4000
-    }
-    return subTotal.value * (percent / 100)
-  })
-
-  const discountAmount = computed(() => {
-    return voucherDiscountAmount.value + pointsApplied.value
-  })
-
-  const totalPrice = computed(() => {
-    return Math.max(0, subTotal.value - discountAmount.value)
-  })
-
-  const voucherBadgeText = computed(() => {
-    if (!selectedVoucher.value) {
-      return voucherDiscountPercent.value > 0 ? `${voucherDiscountPercent.value}% OFF` : 'None'
-    }
-    const val = Number(selectedVoucher.value.discountValue ?? voucherDiscountPercent.value)
-    if (selectedVoucher.value.discountType === 2) {
-      return `${formatNumber(val)} KHR OFF`
-    }
-    return val > 0 ? `${val}% OFF` : 'None'
-  })
-
-  const voucherLabelText = computed(() => {
-    if (!selectedVoucher.value) {
-      return voucherDiscountPercent.value > 0 ? `(${voucherDiscountPercent.value}%)` : ''
-    }
-    if (selectedVoucher.value.discountType === 2) {
-      return `(${formatNumber(Number(selectedVoucher.value.discountValue ?? 0))} KHR)`
-    }
-    const pct = Number(selectedVoucher.value.discountValue ?? voucherDiscountPercent.value)
-    return pct > 0 ? `(${pct}%)` : ''
-  })
-
-  // Toast Feedback
-  const showToast = ref(false)
-  const toastMessage = ref('')
-
-  // Payment Action
-  const handlePay = () => {
-    toastMessage.value = `Processing payment of ${formatNumber(totalPrice.value)} KHR...`
-    showToast.value = true
-
-    setTimeout(() => {
-      navigateTo('/charging')
-    }, 1200)
-  }
+    // Toast
+    showToast,
+    toastMessage
+  } = useChargingInforService()
 </script>
 
 <template>
@@ -451,9 +188,7 @@
           </div>
 
           <div class="summary-line">
-            <span class="summary-label">
-              Discount {{ voucherLabelText }}
-            </span>
+            <span class="summary-label"> Discount {{ voucherLabelText }} </span>
             <span class="summary-value discount-text">
               -KHR (៛) {{ formatNumber(discountAmount) }}
             </span>
@@ -508,17 +243,18 @@
             <template v-if="currentAccount">
               {{ currentAccount.number }} | {{ currentAccount.currency }}
             </template>
-            <template v-else-if="isLoadingAccount">
-              Loading account...
-            </template>
-            <template v-else>
-              Select account
-            </template>
+            <template v-else-if="isLoadingAccount"> Loading account... </template>
+            <template v-else> Select account </template>
           </div>
         </div>
 
         <!-- Orange Pay Button with ABA PAY Logo Badge -->
-        <button type="button" class="pay-main-button" @click="handlePay">
+        <button
+          type="button"
+          class="pay-main-button"
+          :disabled="isSubmittingOrder"
+          @click="handlePay"
+        >
           <!-- ABA PAY Badge -->
           <div class="aba-pay-badge">
             <div class="aba-top-row">
@@ -529,7 +265,9 @@
           </div>
 
           <!-- Button Text -->
-          <span class="pay-button-label"> Pay {{ formatNumber(totalPrice) }} KHR </span>
+          <span class="pay-button-label">
+            {{ isSubmittingOrder ? 'Processing...' : `Pay ${formatNumber(totalPrice)} KHR` }}
+          </span>
         </button>
       </div>
     </ion-footer>
@@ -569,7 +307,6 @@
       color="dark"
       @didDismiss="showToast = false"
     ></ion-toast>
-
   </ion-page>
 </template>
 

@@ -370,3 +370,60 @@ export interface GunTypeData {
   isAvailable: boolean;
   [key: string]: any;
 }
+
+// POST /dropdown/privacy-policy/list
+export interface PrivacyPolicyDropdownData {
+  id?: number | string;
+  descriptionKh?: string;
+  descriptionEn?: string;
+  descriptionCh?: string;
+  [key: string]: any;
+}
+
+// POST /sale-order/app-tmp
+export interface CreateSaleOrderAppTmpParams {
+  chargerUsername: string;
+  plugId: number;
+  paymentMethod: number;
+  discountPercentage?: number;
+  discount?: number;
+  voucherId?: number;
+  membershipRedeemId?: number;
+  totalKwh: number;
+  totalPrice: number;
+  grandTotalPrice: number;
+  [key: string]: any;
+}
+
+export interface SaleOrderAppTmpData {
+  transactionId?: string;
+  station?: string;
+  stationId?: number;
+  stationName?: string;
+  chargerId?: number;
+  orderDate?: string;
+  subTotal?: number;
+  discount?: number;
+  discountPercentage?: number;
+  totalAmount?: number;
+  totalKwh?: number;
+  [key: string]: any;
+}
+
+// POST /promotion/calculate
+export interface PromotionCalculateParams {
+  chargerUserName: string;
+  voucherId?: number;
+  redeemId?: number;
+  amountKh?: number;
+  plugId?: number;
+  [key: string]: any;
+}
+
+export interface PromotionCalculateData {
+  discountPercentage?: number;
+  discountAmountUsd?: number;
+  discountAmountKhr?: number;
+  [key: string]: any;
+}
+

@@ -1,5 +1,5 @@
 import type { AxiosInstance } from "axios";
-import type { ApiResponseWrapper, DropdownParams, GunTypeData, NewFeedData } from "../types";
+import type { ApiResponseWrapper, DropdownParams, GunTypeData, NewFeedData, PrivacyPolicyDropdownData } from "../types";
 
 export const dropdownApi = (http: AxiosInstance) => ({
   // post /dropdown/new-feed/list
@@ -12,6 +12,12 @@ export const dropdownApi = (http: AxiosInstance) => ({
   getGunTypeDropdown: (params?: DropdownParams) =>
     http
       .post<ApiResponseWrapper<GunTypeData[]>>("/dropdown/gun/list", params)
+      .then((r) => r.data),
+
+  // post /dropdown/privacy-policy/list
+  getPrivacyPolicyDropdown: (params?: DropdownParams) =>
+    http
+      .post<ApiResponseWrapper<PrivacyPolicyDropdownData[]>>("/dropdown/privacy-policy/list", params)
       .then((r) => r.data),
 });
 

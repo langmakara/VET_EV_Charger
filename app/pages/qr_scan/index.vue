@@ -110,12 +110,22 @@
   function handlePlugContinue(plug?: any) {
     showModalPlug.value = false
     const chosen = plug ?? selectedPlug.value
+    const chargerCode = result.value || ''
+    const plugId = chosen?.id ?? chosen?.gunId ?? 1
+    const plugName = chosen?.name ?? chosen?.gunName ?? ''
+
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('vet_ev_charger_username', chargerCode)
+      sessionStorage.setItem('vet_ev_plug_id', String(plugId))
+    }
+
     navigateTo({
       path: '/chargingInfor',
       query: {
-        chargerCode: result.value,
-        plugId: chosen?.id ?? chosen?.gunId,
-        plugName: chosen?.name ?? chosen?.gunName
+        chargerCode,
+        chargerUsername: chargerCode,
+        plugId,
+        plugName
       }
     })
   }

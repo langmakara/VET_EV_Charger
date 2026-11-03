@@ -1,9 +1,15 @@
 import { computed, unref, type MaybeRef } from 'vue'
-import { useInfiniteQuery, useQuery } from '@tanstack/vue-query'
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/vue-query'
 import { SaleOrderApi } from '~/api/modules/saleOrder.api'
 import { useApi } from '~/composables/useApi'
 import { queryKeys } from './keys'
-import type { ChargeHistoryParams, SaleOrderDetailData } from '~/api/types'
+import type {
+  ApiResponseWrapper,
+  ChargeHistoryParams,
+  CreateSaleOrderAppTmpParams,
+  SaleOrderAppTmpData,
+  SaleOrderDetailData
+} from '~/api/types'
 
 export const useTransactionsHistoryQuery = (
   params?: MaybeRef<ChargeHistoryParams>,
@@ -89,3 +95,14 @@ export const useSaleOrderDetailQuery = (
     staleTime: 5 * 60 * 1000
   })
 }
+
+export const useCreateSaleOrderAppTmpMutation = (options?: Record<string, any>) => {
+  const http = useApi()
+  const api = SaleOrderApi(http)
+
+  return useMutation({
+    mutationFn: (params: CreateSaleOrderAppTmpParams) => api.createSaleOrderAppTmp(params),
+    ...options
+  })
+}
+

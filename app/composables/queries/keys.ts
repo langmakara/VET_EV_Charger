@@ -66,7 +66,9 @@ export const queryKeys = {
     newsFeed: (params?: Record<string, any>) =>
       [...queryKeys.dropdown.all, 'news-feed', params ?? {}] as const,
     gunType: (params?: Record<string, any>) =>
-      [...queryKeys.dropdown.all, 'gun-type', params ?? {}] as const
+      [...queryKeys.dropdown.all, 'gun-type', params ?? {}] as const,
+    privacyPolicy: (params?: Record<string, any>) =>
+      [...queryKeys.dropdown.all, 'privacy-policy', params ?? {}] as const
   },
 
   saleOrder: {
@@ -75,5 +77,11 @@ export const queryKeys = {
       [...queryKeys.saleOrder.all, 'transactions-history', params ?? {}] as const,
     detail: (transactionId: string) =>
       [...queryKeys.saleOrder.all, 'detail', transactionId] as const
+  },
+
+  promotion: {
+    all: ['promotion'] as const,
+    calculate: (params?: Record<string, any>) =>
+      [...queryKeys.promotion.all, 'calculate', params ?? {}] as const
   }
 } as const
