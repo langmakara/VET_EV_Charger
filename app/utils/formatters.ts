@@ -274,8 +274,6 @@ export function formatLocationName(address?: string | null): string {
   return parts[0] || "";
 }
 
-
-
 /**
  * Parses a multiline bullet text description into structured perks with sub-bullets.
  * E.g.
@@ -314,4 +312,21 @@ export function parsePerks(description?: string): PerkItem[] {
   }
 
   return perks;
+}
+
+/**
+ * Format minutes into readable time string:
+ * - <= 0: "0 mins"
+ * - >= 60: "Xh Y mins" or "Xh"
+ * - < 60: "X mins"
+ */
+export function formatMins(mins: number | string | null | undefined): string {
+  const num = Number(mins || 0);
+  if (!num || num <= 0 || isNaN(num)) return "0 mins";
+  if (num >= 60) {
+    const h = Math.floor(num / 60);
+    const m = Math.round(num % 60);
+    return m > 0 ? `${h}h ${m} mins` : `${h}h`;
+  }
+  return `${Math.round(num)} mins`;
 }

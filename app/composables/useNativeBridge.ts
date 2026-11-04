@@ -24,6 +24,12 @@ export interface CalendarPayload {
   description: string
 }
 
+export interface NativeLocationResponse {
+  latitude: string | number
+  longitude: string | number
+  [key: string]: any
+}
+
 // ─── ERROR HANDLING ────────────────────────────────────────────────────────
 
 /**
@@ -104,9 +110,15 @@ export const abaBridge = {
     callHandler('backToHomePage', {}).catch((e) => handleBridgeError('backToHomePage', e)),
   addCalendar: (payload: CalendarPayload) =>
     callHandler('addCalendar', payload).catch((e) => handleBridgeError('addCalendar', e)),
+  // Request location permission on mobile app
   requestCurrentLocation: () =>
     callHandler('requestCurrentLocation', {}).catch((e) =>
       handleBridgeError('requestCurrentLocation', e)
+    ),
+  // API #5: Get current GPS coordinates from mobile app
+  getCurrentLocation: () =>
+    callHandler<NativeLocationResponse>('getCurrentLocation', {}).catch((e) =>
+      handleBridgeError('getCurrentLocation', e)
     ),
   download: (url: string) =>
     callHandler('download', { url }).catch((e) => handleBridgeError('download', e)),
@@ -135,27 +147,60 @@ export const sendTitleToFlutter = (titleName: string, attempt = 0): boolean => {
   return true
 }
 
-
-export const getCurrentNativeLocation = async (): Promise<{
+export const getCurrentNativeLocation = async (timeoutMs: number = 5000): Promise<{
   lat: number
   lng: number
+  latitude: number
+  longitude: number
   accuracy?: number
 } | null> => {
   if (!import.meta.client) return null
 
   try {
-    // 1. Try ABA Native Bridge First
-    const loc: any = await abaBridge.requestCurrentLocation()
-    if (loc && typeof loc.lat !== 'undefined') {
-      return {
-        lat: Number(loc.lat),
-        lng: Number(loc.lng),
-        accuracy: 10 // Default to 10 if not provided by ABA
+    // 1. Request location permission on mobile app first
+    try {
+      await abaBridge.requestCurrentLocation()
+    } catch (permErr) {
+      console.warn('requestCurrentLocation permission warning:', permErr)
+    }
+
+    // 2. Fetch coordinates via Native Bridge (getCurrentLocation) only
+    const bridgePromise = abaBridge.getCurrentLocation()
+    const timeoutPromise = new Promise<null>((resolve) =>
+      setTimeout(() => resolve(null), timeoutMs)
+    )
+
+    let loc: any = await Promise.race([bridgePromise, timeoutPromise])
+
+    if (typeof loc === 'string') {
+      try {
+        loc = JSON.parse(loc)
+      } catch {}
+    }
+
+    // According to ABA API #5 specification: returns { latitude: "0.000000", longitude: "0.000000" }
+    const rawLat = loc?.latitude ?? loc?.lat
+    const rawLng = loc?.longitude ?? loc?.lng
+
+    if (rawLat !== undefined && rawLat !== null && rawLng !== undefined && rawLng !== null) {
+      const lat = Number(rawLat)
+      const lng = Number(rawLng)
+
+      // Coordinates must be valid and not 0,0 (uninitialized / no-fix GPS)
+      if (!isNaN(lat) && !isNaN(lng) && !(lat === 0 && lng === 0)) {
+        return {
+          lat,
+          lng,
+          latitude: lat,
+          longitude: lng,
+          accuracy: 10 // Default to 10 if not provided by ABA
+        }
       }
     }
   } catch (e) {
-    console.warn('ABA Location failed, falling back to Capacitor', e)
+    console.warn('ABA Location bridge call failed:', e)
   }
+
   return null
 }
 
@@ -183,6 +228,7 @@ export const useNativeBridge = () => {
   return {
     sendTitleToFlutter,
     getCurrentNativeLocation,
+    getCurrentLocation: getCurrentNativeLocation,
     openDeeplink,
     showToast,
     closeApp,
@@ -225,7 +271,12 @@ if (import.meta.client) {
 
   registerHandler('getCurrentLocation', (data, responseCallback) => {
     getCurrentNativeLocation().then((loc) => {
-      responseCallback({ success: true, location: loc })
+      responseCallback({
+        latitude: loc?.latitude ? String(loc.latitude) : '0.000000',
+        longitude: loc?.longitude ? String(loc.longitude) : '0.000000',
+        success: !!loc,
+        location: loc
+      })
     })
   })
 }

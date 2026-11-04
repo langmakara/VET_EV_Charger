@@ -98,12 +98,12 @@
 
       <!-- Error state -->
       <div v-else-if="isError" class="ion-text-center ion-padding" style="margin-top: 40px">
-        <ion-text color="danger">{{ error?.message || 'Failed to load favorite stations.' }}</ion-text>
+        <ion-text color="danger">{{ error?.message || $t('evCharger.failedLoadFavorites') }}</ion-text>
       </div>
 
       <!-- Empty state -->
       <div v-else-if="favoriteStations.length === 0" class="ion-text-center ion-padding" style="margin-top: 60px">
-        <ion-text color="medium">No favorite stations found.</ion-text>
+        <ion-text color="medium">{{ $t('evCharger.noFavoritesFound') }}</ion-text>
       </div>
 
       <!-- Station List -->
@@ -122,7 +122,7 @@
         <ion-infinite-scroll :disabled="!hasNextPage" @ionInfinite="loadMore">
           <ion-infinite-scroll-content
             loading-spinner="crescent"
-            loading-text="Loading more stations..."
+            :loading-text="$t('evCharger.loadingMoreStations')"
           />
         </ion-infinite-scroll>
       </div>
@@ -142,4 +142,3 @@
     width: 100%;
   }
 </style>
-

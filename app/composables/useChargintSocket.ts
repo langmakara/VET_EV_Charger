@@ -38,25 +38,31 @@ export interface OcpiMeterValuesPayload {
 }
 
 export function useWebSocket(
-  url: string = 'wss://qacltom.udaya-tech.com/OCPI/ws',
+  url?: string,
   options?: {
     topic?: string
     evseUid?: string
   }
 ) {
+  const config = useRuntimeConfig()
+  const rawWs = url || (config.public as any)?.webSocketUrl || 'qacltom.udaya-tech.com'
+  const brokerURL = rawWs.startsWith('ws://') || rawWs.startsWith('wss://')
+    ? rawWs
+    : `wss://${rawWs}/OCPI/ws?username=`
+
   const data = ref<any>(null)
   const status = ref<'connecting' | 'open' | 'closed'>('closed')
 
   let client: Client | null = null
   const outboxQueue: Array<{ destination: string; payload: any }> = []
 
-  const defaultTopic = options?.topic || `/topic/ocpi/commands/${options?.evseUid || 'ev01'}`
+  const defaultTopic = options?.topic || `/topic/ocpi/commands/${options?.evseUid}`
 
   function connect() {
     status.value = 'connecting'
 
     client = new Client({
-      brokerURL: url,
+      brokerURL,
       reconnectDelay: 3000,
       heartbeatIncoming: 10000,
       heartbeatOutgoing: 10000,

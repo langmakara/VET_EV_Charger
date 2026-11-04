@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { ref, onBeforeUnmount } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import { IonPage, IonContent, IonSpinner, IonText } from '@ionic/vue'
   import CameraComponent from '~/components/Camera/CameraComponent.vue'
   import AlertComponent from '~/components/Modal/AlertComponent.vue'
@@ -9,6 +10,7 @@
   import { useSearchVoucherMutation } from '~/composables/queries/useVoucher'
 
   const router = useRouter()
+  const { t } = useI18n()
   const cameraRef = ref<InstanceType<typeof CameraComponent> | null>(null)
   const cameraStream = ref<MediaStream | null>(null)
   const {
@@ -27,7 +29,7 @@
   const isSuccess = ref(false)
   const alertTitle = ref('')
   const alertMessage = ref('')
-  const alertConfirmLabel = ref('OK')
+  const alertConfirmLabel = ref(t('common.ok'))
   const alertType = ref<'success' | 'delete'>('success')
 
   // Use mutation composable from useVoucher.ts
@@ -110,8 +112,8 @@
         scannedVoucherCode.value = parsed
         isSuccess.value = true
         alertType.value = 'success'
-        alertTitle.value = 'Success'
-        alertMessage.value = voucher?.batchTitle || 'Voucher found successfully.'
+        alertTitle.value = t('common.success')
+        alertMessage.value = voucher?.batchTitle || t('evCharger.voucherFoundSuccess')
         showAlert.value = true
 
         // Show success alert for 4s, then automatically close and back route
@@ -123,23 +125,23 @@
         // Not found: response has no data
         isSuccess.value = false
         alertType.value = 'delete'
-        alertTitle.value = 'Voucher Not Found'
-        alertMessage.value = res?.body?.message || 'No voucher found. Please try scanning again.'
-        alertConfirmLabel.value = 'Scan Again'
+        alertTitle.value = t('evCharger.voucherNotFound')
+        alertMessage.value = res?.body?.message || t('evCharger.noVoucherFoundRetry')
+        alertConfirmLabel.value = t('evCharger.scanAgain')
         showAlert.value = true
       }
     } catch (err: any) {
       console.error('Failed to search voucher:', err)
       isSuccess.value = false
       alertType.value = 'delete'
-      alertTitle.value = 'Voucher Not Found'
+      alertTitle.value = t('evCharger.voucherNotFound')
       const errRes = err?.response?.data
       alertMessage.value =
         errRes?.body?.message ||
         errRes?.message ||
         err?.message ||
-        'Voucher was not found. Please try scanning again.'
-      alertConfirmLabel.value = 'Scan Again'
+        t('evCharger.noVoucherFoundRetry')
+      alertConfirmLabel.value = t('evCharger.scanAgain')
       showAlert.value = true
     }
   }
@@ -217,7 +219,7 @@
             </div>
             <div class="scan-info">
               <Icon name="QRcode" size="32px" />
-              <ion-text class="scan-info-text">Please scan the voucher QR Code to search</ion-text>
+              <ion-text class="scan-info-text">{{ $t('evCharger.scanVoucherInstruction') }}</ion-text>
             </div>
             <div class="flashlight">
               <IconButton
@@ -231,7 +233,7 @@
                 @click="toggleFlashlight"
               />
               <br />
-              <ion-text class="flashlight-label">Flashlight</ion-text>
+              <ion-text class="flashlight-label">{{ $t('evCharger.flashlight') }}</ion-text>
             </div>
           </div>
         </CameraComponent>
@@ -239,7 +241,7 @@
         <!-- Verifying Spinner Overlay -->
         <div v-if="isSearching" class="searching-overlay">
           <ion-spinner name="crescent" color="light" />
-          <ion-text color="light" class="searching-text">Checking voucher...</ion-text>
+          <ion-text color="light" class="searching-text">{{ $t('evCharger.checkingVoucher') }}</ion-text>
         </div>
 
         <!-- Alert Modal: Success or Not Found -->
@@ -251,7 +253,7 @@
           :hide-cancel="isSuccess"
           :hide-confirm="isSuccess"
           :label-confirm="alertConfirmLabel"
-          label-cancel="Cancel"
+          :label-cancel="$t('common.cancel')"
           @confirm="handleAlertConfirm"
           @cancel="handleAlertCancel"
           @didDismiss="handleDidDismiss"

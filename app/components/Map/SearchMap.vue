@@ -1,7 +1,7 @@
 <template>
   <div class="top-search-wrapper">
     <div class="top-search-input-wrapper">
-      <input v-model="searchQuery" placeholder="Search Google Maps" class="top-search-input" @keyup.enter="selectTopSuggestionOrSearch" @focus="onSearchFocus" @blur="onSearchBlur" />
+      <input v-model="searchQuery" :placeholder="$t('evCharger.searchGoogleMaps')" class="top-search-input" @keyup.enter="selectTopSuggestionOrSearch" @focus="onSearchFocus" @blur="onSearchBlur" />
       <ion-spinner v-if="isSearchingSuggestions" name="dots" color="medium" class="search-inline-spinner"></ion-spinner>
       <button v-else-if="searchQuery" class="clear-input-btn" @click="clearSearch" aria-label="Clear search">
         <ion-icon :icon="closeCircleOutline"></ion-icon>
@@ -21,7 +21,7 @@
     </div>
 
     <div v-else-if="showSuggestions && searchQuery.trim().length > 2 && !isSearchingSuggestions" class="top-suggestions-dropdown">
-      <p class="no-suggestions-text">No matching addresses found</p>
+      <p class="no-suggestions-text">{{ $t('evCharger.noMatchingAddresses') }}</p>
     </div>
   </div>
 </template>

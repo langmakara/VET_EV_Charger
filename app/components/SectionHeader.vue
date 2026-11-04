@@ -19,7 +19,7 @@ defineEmits(['view-all']);
   <div class="section-header">
     <h2 class="title">{{ title }}</h2>
     <div v-if="showViewAll" class="view-all" @click="$emit('view-all')" role="button" tabindex="0">
-      <span>View All</span>
+      <span>{{ $t('common.viewAll') }}</span>
       <Icon name="chevron-right" class="chevron-icon" size="16px" />
     </div>
   </div>

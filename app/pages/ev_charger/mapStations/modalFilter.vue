@@ -1,5 +1,6 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { ref, computed } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import {
     IonModal,
     IonContent,
@@ -9,9 +10,10 @@
     IonButtons,
     IonButton
   } from '@ionic/vue'
-  import AppSelect from '~/components/Controls/AppSelect.vue'
   import SelectFloatControl from '~/components/Controls/FloatControl/SelectFloatControl.vue'
   import IconButton from '~/components/Button/IconButton.vue'
+
+  const { t } = useI18n()
 
   const props = withDefaults(
     defineProps<{
@@ -31,29 +33,29 @@
   const selectedTags = ref([])
   const selectedPovince = ref([])
 
-  const ChargerOptions = [
-    { label: 'All Type', value: 'All' },
+  const ChargerOptions = computed(() => [
+    { label: t('evCharger.allType'), value: 'All' },
     { label: 'CCS2 (DC)', value: 'CCS2' },
     { label: 'GB/T (AC)', value: 'GBT' }
-  ]
+  ])
 
-  const availabilityOptions = [
-    { label: 'Available Now', value: 'available' },
-    { label: 'Occupied', value: 'occupied' },
-    { label: 'Out of Order', value: 'out' }
-  ]
+  const availabilityOptions = computed(() => [
+    { label: t('evCharger.availableNow'), value: 'available' },
+    { label: t('evCharger.occupied'), value: 'occupied' },
+    { label: t('evCharger.outOfOrder'), value: 'out' }
+  ])
 
-  const distanceOptions = [
-    { label: 'Within 5km', value: '5' },
-    { label: 'Within 10km', value: '10' },
-    { label: 'Within 15km', value: '15' },
-    { label: 'Within 20km', value: '20' },
-    { label: 'Within 25km', value: '25' },
-    { label: 'Any distance', value: 'Closed' }
-  ]
+  const distanceOptions = computed(() => [
+    { label: t('evCharger.within5km'), value: '5' },
+    { label: t('evCharger.within10km'), value: '10' },
+    { label: t('evCharger.within15km'), value: '15' },
+    { label: t('evCharger.within20km'), value: '20' },
+    { label: t('evCharger.within25km'), value: '25' },
+    { label: t('evCharger.anyDistance'), value: 'Closed' }
+  ])
 
-  const povinceOptions = [
-    { label: 'All Provinces', value: 'All' },
+  const povinceOptions = computed(() => [
+    { label: t('evCharger.allProvinces'), value: 'All' },
     { label: 'Phnom Penh', value: 'Phnom Penh' },
     { label: 'Banteay Meanchey', value: 'Banteay Meanchey' },
     { label: 'Battambang', value: 'Battambang' },
@@ -79,7 +81,7 @@
     { label: 'Svay Rieng', value: 'Svay Rieng' },
     { label: 'Takeo', value: 'Takeo' },
     { label: 'Tboung Khmum', value: 'Tboung Khmum' }
-  ]
+  ])
 </script>
 
 <template>
@@ -93,9 +95,9 @@
     <ion-header>
       <ion-toolbar class="header-filter">
         <ion-buttons slot="start">
-          <ion-button  class="but-reset">Reset</ion-button>
+          <ion-button class="but-reset">{{ $t('label.reset') }}</ion-button>
         </ion-buttons>
-        <ion-title>Filter</ion-title>
+        <ion-title>{{ $t('filter.title') }}</ion-title>
         <ion-buttons slot="end">
           <IconButton name="close" size="lg" @click="emit('close')" />
         </ion-buttons>
@@ -104,39 +106,37 @@
     <ion-content class="ion-padding">
       <SelectFloatControl
         v-model="selectedStatus"
-        label="Charger Type"
+        :label="$t('evCharger.chargerType')"
         :options="ChargerOptions"
       />
 
       <SelectFloatControl
         v-model="selectedConnector"
-        label="Availability"
+        :label="$t('evCharger.availability')"
         :options="availabilityOptions"
       />
 
       <SelectFloatControl
         v-model="selectedTags"
-        label="Distance"
+        :label="$t('evCharger.distance')"
         :options="distanceOptions"
       />
 
       <SelectFloatControl
         v-model="selectedPovince"
-        label="Province"
+        :label="$t('evCharger.province')"
         :options="povinceOptions"
       />
     </ion-content>
   </ion-modal>
 </template>
 
-
 <style scoped>
 .but-reset {
-  --color: red; /* or hex like #ff4d4f or var(--ion-color-danger) */
+  --color: red;
   font-size: var(--app-font-size-title);
 }
 .header-filter {
-    padding-top: var(--ion-padding);
-    
+  padding-top: var(--ion-padding);
 }
 </style>

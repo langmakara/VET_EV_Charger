@@ -79,7 +79,7 @@ export default defineNuxtConfig({
     },
   },
   app: {
-    baseURL: process.env.NUXT_APP_BASE_URL || "/vet-ev-charger/",
+    baseURL: "/",
     head: {
       title: "EV Charger",
       script: [
@@ -109,6 +109,8 @@ export default defineNuxtConfig({
       apiUrlLocal: process.env.VITE_API_URL_LOCAL || "http://192.168.10.10:8080",
       apiUrlDev: process.env.VITE_API_URL_DEV || "http://phea.local:11137",
       googleMapApiKey: process.env.VITE_GOOGLE_MAP_API_KEY || "",
+      webSocketUrl:
+        process.env.WEB_SOCKET_URL,
     },
   },
   future: {

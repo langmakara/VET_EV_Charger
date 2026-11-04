@@ -91,8 +91,8 @@
       <div class="drag-handle" />
 
       <div class="modal-list-header">
-        <span class="modal-list-title">Nearby Stations</span>
-        <span class="station-count">{{ Stations.length }} stations</span>
+        <span class="modal-list-title">{{ $t('evCharger.nearbyStations') }}</span>
+        <span class="station-count">{{ $t('evCharger.stationsCount', { count: Stations.length }) }}</span>
       </div>
 
       <div class="station-scroll-container">

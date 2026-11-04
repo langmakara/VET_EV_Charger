@@ -1,6 +1,6 @@
 import { computed, unref, type MaybeRef } from "vue";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import type { StationListParams } from "~/api/types";
+import type { StationListParams, StationPricePerKwhParams } from "~/api/types";
 import { useApi } from "~/composables/useApi";
 import { stationApi } from "~/api/modules/station.api";
 import { queryKeys } from "./keys";
@@ -65,4 +65,36 @@ export const useAddFavoritesMutation = () => {
   });
 };
 
+export const useStationPricePerKwhQuery = (
+  params: MaybeRef<StationPricePerKwhParams | undefined | null>,
+  options?: { enabled?: MaybeRef<boolean> },
+) => {
+  const http = useApi();
+  const api = stationApi(http);
 
+  return useQuery({
+    queryKey: computed(() => queryKeys.station.pricePerKwh(unref(params) || {})),
+    queryFn: () => {
+      const p = unref(params);
+      if (!p) throw new Error("Params required");
+      return api.getPricePerKwh(p);
+    },
+    enabled: computed(() => {
+      const p = unref(params);
+      const isCustomEnabled =
+        options?.enabled !== undefined ? unref(options.enabled) : true;
+      return !!p?.chargerUserName && isCustomEnabled;
+    }),
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useStationPricePerKwhMutation = (options?: Record<string, any>) => {
+  const http = useApi();
+  const api = stationApi(http);
+
+  return useMutation({
+    mutationFn: (params: StationPricePerKwhParams) => api.getPricePerKwh(params),
+    ...options,
+  });
+};

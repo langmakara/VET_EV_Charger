@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { ref, computed, watch } from 'vue'
   import { useRoute } from 'vue-router'
+  import { useI18n } from 'vue-i18n'
   import {
     IonPage,
     IonContent,
@@ -22,6 +23,7 @@
   import type { VoucherDate } from '~/api/types'
 
   const route = useRoute()
+  const { t } = useI18n()
   const voucherInputCode = ref('')
   const scannedVoucherCode = useState<string>('scannedVoucherCode', () => '')
 
@@ -100,9 +102,9 @@
 
   const currentErrorMessage = computed(() => {
     if (voucherInputCode.value?.trim()) {
-      return voucherError.value?.message || 'Failed to search voucher'
+      return voucherError.value?.message || t('evCharger.failedSearchVoucher')
     }
-    return error.value?.message || 'Failed to load vouchers'
+    return error.value?.message || t('evCharger.failedLoadVouchers')
   })
 
   // Infinite scroll handler
@@ -147,10 +149,10 @@
       const responseMessage =
         res?.body?.message ??
         (res as any)?.message ??
-        (isSuccess ? 'Voucher applied successfully' : 'Failed to apply voucher')
+        (isSuccess ? t('evCharger.voucherAppliedSuccess') : t('evCharger.failedApplyVoucher'))
 
       toastType.value = isSuccess ? 'success' : 'error'
-      toastTitle.value = isSuccess ? 'Success' : 'Failed'
+      toastTitle.value = isSuccess ? t('common.success') : t('common.failed')
       toastMessage.value = responseMessage
       toastHighlightText.value = isSuccess
         ? (selectedVoucher.value?.batchTitle || selectedVoucher.value?.voucherCode || '')
@@ -160,13 +162,13 @@
       console.error('Failed to apply voucher:', err)
       isAlertOpen.value = false
       toastType.value = 'error'
-      toastTitle.value = 'Failed'
+      toastTitle.value = t('common.failed')
       const errRes = err?.response?.data
       toastMessage.value =
         errRes?.body?.message ||
         errRes?.message ||
         err?.message ||
-        'Failed to apply voucher'
+        t('evCharger.failedApplyVoucher')
       toastHighlightText.value = ''
       isToastOpen.value = true
     }
@@ -185,8 +187,8 @@
           <ion-col>
             <AppInputField
               v-model="voucherInputCode"
-              label="Enter or scan voucher code"
-              placeholder="Code"
+              :label="$t('evCharger.enterOrScanVoucherCode')"
+              :placeholder="$t('evCharger.code')"
             />
           </ion-col>
           <ion-col size="auto" class="btn-container">
@@ -212,7 +214,7 @@
         style="margin-top: 40px"
       >
         <ion-text color="medium">
-          {{ voucherInputCode?.trim() ? 'No vouchers match your code' : 'No vouchers available' }}
+          {{ voucherInputCode?.trim() ? $t('evCharger.noVouchersMatch') : $t('evCharger.noVouchersAvailable') }}
         </ion-text>
       </div>
 
@@ -232,7 +234,7 @@
         >
           <ion-infinite-scroll-content
             loading-spinner="crescent"
-            loading-text="Loading more vouchers..."
+            :loading-text="$t('evCharger.loadingMoreVouchers')"
           />
         </ion-infinite-scroll>
       </div>

@@ -3,16 +3,19 @@
     {
       "icon": "Vector",
       "label": "Map Station",
+      "labelKey": "evCharger.mapStation",
       "path": "/ev_charger/mapStations"
     },
     {
       "icon": "heart",
       "label": "Favorites",
+      "labelKey": "evCharger.favorites",
       "path": "/ev_charger/favorites"
     },
     {
       "icon": "ticket",
       "label": "Voucher",
+      "labelKey": "evCharger.voucher",
       "path": "/ev_charger/voucher"
     }
   ]

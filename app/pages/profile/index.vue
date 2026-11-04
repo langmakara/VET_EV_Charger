@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
   IonPage,
   IonContent,
@@ -14,14 +15,23 @@ import { chevronForward } from 'ionicons/icons';
 import Icon from '~/components/Icon/icon.vue';
 import ContactModal from './contactModal.vue';
 import { sendTitleToFlutter } from '~/composables/useNativeBridge';
+import { getLangIdFromLocale, type SupportedLocale } from '~/helpers/languages';
+
+const { locale, setLocale, t } = useI18n();
+const langIdCookie = useCookie<string | number | null>('lang_id');
+const nuxtApp = useNuxtApp();
 
 onMounted(() => {
-  sendTitleToFlutter('Profile');
+  sendTitleToFlutter(t('profile.title') || 'Profile');
+});
+
+watch(locale, () => {
+  sendTitleToFlutter(t('profile.title') || 'Profile');
 });
 
 // User information from centralized data
 // Profile user data from useUserProfile with fallback to centralized JSON
-const { userProfile} = useUserProfile();
+const { userProfile } = useUserProfile();
 
 const user = computed(() => ({
   fullName: userProfile.value?.fullName,
@@ -33,31 +43,30 @@ const user = computed(() => ({
 
 // Language definitions
 interface LanguageOption {
-  code: string;
+  code: SupportedLocale;
   label: string;
   toastText: string;
 }
 
+const defaultLanguage: LanguageOption = {
+  code: 'en',
+  label: 'English',
+  toastText: 'Language changed to English'
+};
+
 const languages: LanguageOption[] = [
   { code: 'km', label: 'ភាសាខ្មែរ', toastText: 'បានប្តូរទៅភាសាខ្មែរ' },
-  { code: 'en', label: 'English', toastText: 'Language changed to English' },
-  { code: 'zh', label: '中国人', toastText: '语言已切换为中国人' }
+  defaultLanguage,
+  { code: 'zh', label: '中文', toastText: '语言已切换为中文' }
 ];
 
-const selectedLanguageCode = ref('en');
+const selectedLanguageCode = computed(() => (locale.value as SupportedLocale) || 'en');
 const isLanguageModalOpen = ref(false);
 const isContactModalOpen = ref(false);
 
-const currentLanguage = computed(() => {
-  return languages.find((l) => l.code === selectedLanguageCode.value) || languages[1];
+const currentLanguage = computed<LanguageOption>(() => {
+  return languages.find((l) => l.code === selectedLanguageCode.value) ?? defaultLanguage;
 });
-
-const selectLanguage = (lang: LanguageOption) => {
-  selectedLanguageCode.value = lang.code;
-  setTimeout(() => {
-    isLanguageModalOpen.value = false;
-  }, 160);
-};
 
 // Feedback toast
 const showToast = ref(false);
@@ -66,6 +75,31 @@ const toastMessage = ref('');
 const triggerToast = (msg: string) => {
   toastMessage.value = msg;
   showToast.value = true;
+};
+
+const selectLanguage = async (lang: LanguageOption) => {
+  try {
+    const targetCode = lang.code;
+    const numericLangId = getLangIdFromLocale(targetCode);
+    langIdCookie.value = numericLangId;
+
+    const i18n = (nuxtApp as any)?.$i18n;
+    if (typeof setLocale === 'function') {
+      await setLocale(targetCode);
+    } else if (i18n?.setLocale) {
+      await i18n.setLocale(targetCode);
+    } else {
+      locale.value = targetCode;
+    }
+
+    triggerToast(lang.toastText);
+  } catch (err) {
+    console.error('Failed to change language:', err);
+  } finally {
+    setTimeout(() => {
+      isLanguageModalOpen.value = false;
+    }, 160);
+  }
 };
 
 // Item click handler
@@ -109,25 +143,25 @@ const handleItemClick = (type: string) => {
             <div slot="start" class="menu-icon-box">
               <Icon name="profile" size="22px" color="#475569" />
             </div>
-            <ion-label class="menu-label">Profile</ion-label>
+            <ion-label class="menu-label">{{ $t('profile.title') }}</ion-label>
             <ion-icon slot="end" :icon="chevronForward" class="menu-chevron"></ion-icon>
           </ion-item>
         </div>
 
         <!-- 3. Setting Section -->
         <div class="section-group">
-          <div class="section-header-title">Setting</div>
+          <div class="section-header-title">{{ $t('profile.setting') }}</div>
           <div class="menu-card single-item-card">
             <ion-item lines="none" button :detail="false" class="menu-item" @click="handleItemClick('language')">
               <div slot="start" class="menu-icon-box">
                 <Icon name="translate" size="22px" color="#475569" />
               </div>
-              <ion-label class="menu-label">Language</ion-label>
+              <ion-label class="menu-label">{{ $t('profile.language') }}</ion-label>
               <div slot="end" class="menu-end-slot">
                 <div class="active-flag-wrapper">
-                  <Icon :name="'flag-' + currentLanguage.code" size="18px" class="flag-svg" />
+                  <Icon :name="'flag-' + (currentLanguage?.code || 'en')" size="18px" class="flag-svg" />
                 </div>
-                <span class="language-name">{{ currentLanguage.label }}</span>
+                <span class="language-name">{{ currentLanguage?.label || 'English' }}</span>
                 <ion-icon :icon="chevronForward" class="menu-chevron"></ion-icon>
               </div>
             </ion-item>
@@ -136,14 +170,14 @@ const handleItemClick = (type: string) => {
 
         <!-- 4. Help and Policies Section -->
         <div class="section-group">
-          <div class="section-header-title">Help and Policies</div>
+          <div class="section-header-title">{{ $t('profile.helpAndPolicies') }}</div>
           <div class="menu-card grouped-card">
             <!-- FQA -->
             <ion-item lines="none" button :detail="false" class="menu-item bordered-bottom" @click="handleItemClick('faq')">
               <div slot="start" class="menu-icon-box">
                 <Icon name="faq" size="22px" color="#475569" />
               </div>
-              <ion-label class="menu-label">FQA</ion-label>
+              <ion-label class="menu-label">{{ $t('profile.faq') }}</ion-label>
               <ion-icon slot="end" :icon="chevronForward" class="menu-chevron"></ion-icon>
             </ion-item>
 
@@ -152,7 +186,7 @@ const handleItemClick = (type: string) => {
               <div slot="start" class="menu-icon-box">
                 <Icon name="headset" size="22px" color="#475569" />
               </div>
-              <ion-label class="menu-label">Contact Us</ion-label>
+              <ion-label class="menu-label">{{ $t('profile.contactUs') }}</ion-label>
               <ion-icon slot="end" :icon="chevronForward" class="menu-chevron"></ion-icon>
             </ion-item>
 
@@ -161,7 +195,7 @@ const handleItemClick = (type: string) => {
               <div slot="start" class="menu-icon-box">
                 <Icon name="shield" size="22px" color="#475569" />
               </div>
-              <ion-label class="menu-label">Privacy Policy</ion-label>
+              <ion-label class="menu-label">{{ $t('profile.privacyPolicy') }}</ion-label>
               <ion-icon slot="end" :icon="chevronForward" class="menu-chevron"></ion-icon>
             </ion-item>
 
@@ -170,14 +204,14 @@ const handleItemClick = (type: string) => {
               <div slot="start" class="menu-icon-box">
                 <Icon name="document" size="22px" color="#475569" />
               </div>
-              <ion-label class="menu-label">Terms Condition</ion-label>
+              <ion-label class="menu-label">{{ $t('profile.termsCondition') }}</ion-label>
               <ion-icon slot="end" :icon="chevronForward" class="menu-chevron"></ion-icon>
             </ion-item>
           </div>
         </div>
 
         <!-- 5. App Version Footer -->
-        <div class="app-version-text">App Version 1.0.0</div>
+        <div class="app-version-text">{{ $t('profile.appVersion') }}</div>
       </div>
     </ion-content>
 
@@ -192,7 +226,7 @@ const handleItemClick = (type: string) => {
     >
       <ion-content class="language-modal-content" :scroll-y="false">
         <div class="language-sheet-container">
-          <div class="language-sheet-title">Choose Language</div>
+          <div class="language-sheet-title">{{ $t('profile.chooseLanguage') }}</div>
 
           <div class="language-options-list">
             <div

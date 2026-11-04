@@ -4,30 +4,20 @@ import { sendTitleToFlutter, abaBridge } from '~/composables/useNativeBridge'
 import { useVoucherInfinite } from '~/composables/queries/useVoucher'
 import { useCalculatePromotionMutation } from '~/composables/queries/usePromotion'
 import { useCreateSaleOrderAppTmpMutation } from '~/composables/queries/useSaleOrder'
+import { useStationPricePerKwhMutation } from '~/composables/queries/useStation'
+import { useKwhLabelsMutation, usePriceLabelsMutation } from '~/composables/queries/useLabel'
 import { useWebSocket } from '~/composables/useChargintSocket'
 import type {
   VoucherDate,
   CreateSaleOrderAppTmpParams,
   SaleOrderAppTmpData,
   PromotionCalculateParams,
-  PromotionCalculateData
+  PromotionCalculateData,
+  LabelData
 } from '~/api/types'
 import type { AccountItem } from '~/pages/chargingInfor/accountModal.vue'
 
 export { type AccountItem }
-
-// Constants
-export const KHR_PER_KWH = 2400 // Standard Cambodia EV charging rate (2,400 KHR / kWh)
-
-export const KWH_PRESETS = ['20 kWh', '40 kWh', '60 kWh', '80 kWh', '100 kWh', 'Full Charge']
-export const KHR_PRESETS = [
-  '20,000 KHR',
-  '40,000 KHR',
-  '60,000 KHR',
-  '80,000 KHR',
-  '100,000 KHR',
-  'Full Charge'
-]
 
 // Utilities
 export const formatNumber = (num: number): string => {
@@ -105,6 +95,141 @@ export function useChargingInforService() {
     return 0
   }
 
+  // Station Price Per kWh from API (useStationPricePerKwhMutation)
+  const pricePerKwhMutation = useStationPricePerKwhMutation()
+  const pricePerKwh = ref<number>(0)
+  const isFetchingPricePerKwh = computed(() => pricePerKwhMutation.isPending.value)
+  let lastFetchedKey = ''
+
+  const fetchPricePerKwh = async (force = false) => {
+    const chargerUserName = getChargerUsername()
+    const plugId = getPlugId()
+
+    if (!chargerUserName) return
+
+    const cacheKey = `${chargerUserName}_${plugId}`
+    if (!force && (lastFetchedKey === cacheKey || pricePerKwhMutation.isPending.value)) {
+      return
+    }
+
+    lastFetchedKey = cacheKey
+
+    try {
+      const res = await pricePerKwhMutation.mutateAsync({
+        chargerUserName,
+        plugId
+      })
+
+      const isSuccess = res?.body?.status ?? (res as any)?.status ?? res?.success
+      const data = (res as any)?.data ?? res?.body?.data ?? (res as any)?.body
+      const rate = data?.pricePerKwh ?? data?.price_per_kwh
+
+      if (isSuccess !== false && rate != null && Number(rate) > 0) {
+        pricePerKwh.value = Number(rate)
+      }
+    } catch (err) {
+      console.warn('Failed to fetch price per kWh:', err)
+      lastFetchedKey = '' // Allow retry on failure
+    }
+  }
+
+  // kWh Labels from API (useKwhLabelsMutation)
+  const kwhLabelsMutation = useKwhLabelsMutation()
+  const kwhLabelList = ref<LabelData[]>([])
+  const kwhPresets = ref<string[]>([])
+  const isFetchingKwhLabels = computed(() => kwhLabelsMutation.isPending.value)
+  let hasFetchedKwhLabels = false
+
+  const fetchKwhPresets = async (force = false) => {
+    if (!force && (hasFetchedKwhLabels || kwhLabelsMutation.isPending.value)) {
+      return
+    }
+    hasFetchedKwhLabels = true
+
+    try {
+      const res = await kwhLabelsMutation.mutateAsync({})
+      const isSuccess = res?.body?.status ?? (res as any)?.status ?? res?.success
+      const data: LabelData[] | undefined =
+        (res as any)?.data ?? res?.body?.data ?? (res as any)?.body
+
+      if (isSuccess !== false && Array.isArray(data) && data.length > 0) {
+        kwhLabelList.value = data
+        kwhPresets.value = data.map((item) => {
+          if (item.isFullCharge === 1) {
+            return item.name || 'Full Charge'
+          }
+          return item.name || `${item.value} kWh`
+        })
+
+        if (selectedMode.value === 'kwh') {
+          const matched = kwhPresets.value.find((p) => p === selectedPreset.value)
+          if (!matched && kwhPresets.value[0]) {
+            selectPreset(kwhPresets.value[0])
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch kWh labels:', err)
+      hasFetchedKwhLabels = false
+    }
+  }
+
+  // Price (KHR) Labels from API (usePriceLabelsMutation)
+  const priceLabelsMutation = usePriceLabelsMutation()
+  const priceLabelList = ref<LabelData[]>([])
+  const khrPresets = ref<string[]>([])
+  const isFetchingPriceLabels = computed(() => priceLabelsMutation.isPending.value)
+  let hasFetchedPriceLabels = false
+
+  const fetchPricePresets = async (force = false) => {
+    if (!force && (hasFetchedPriceLabels || priceLabelsMutation.isPending.value)) {
+      return
+    }
+    hasFetchedPriceLabels = true
+
+    try {
+      const res = await priceLabelsMutation.mutateAsync({})
+      const isSuccess = res?.body?.status ?? (res as any)?.status ?? res?.success
+      const data: LabelData[] | undefined =
+        (res as any)?.data ?? res?.body?.data ?? (res as any)?.body
+
+      if (isSuccess !== false && Array.isArray(data) && data.length > 0) {
+        priceLabelList.value = data
+        khrPresets.value = data.map((item) => {
+          if (item.isFullCharge === 1) {
+            return item.name || 'Full Charge'
+          }
+          return item.name || `${formatNumber(item.value)} KHR`
+        })
+
+        if (selectedMode.value === 'khr') {
+          const matched = khrPresets.value.find((p) => p === selectedPreset.value)
+          if (!matched && khrPresets.value[0]) {
+            selectPreset(khrPresets.value[0])
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch price labels:', err)
+      hasFetchedPriceLabels = false
+    }
+  }
+
+  onMounted(() => {
+    fetchPricePerKwh()
+    fetchKwhPresets()
+    fetchPricePresets()
+  })
+
+  watch(
+    () => `${getChargerUsername()}_${getPlugId()}`,
+    (newKey, oldKey) => {
+      if (newKey && newKey !== oldKey) {
+        fetchPricePerKwh()
+      }
+    }
+  )
+
   // 1. Mode & Presets
   const selectedMode = ref<'kwh' | 'khr'>('kwh')
   const selectedPreset = ref('20 kWh')
@@ -113,25 +238,40 @@ export function useChargingInforService() {
   const setMode = (mode: 'kwh' | 'khr') => {
     selectedMode.value = mode
     if (mode === 'kwh') {
-      selectedPreset.value = '20 kWh'
-      inputAmount.value = '20'
+      const defaultKwh = kwhPresets.value[0] || '20 kWh'
+      selectPreset(defaultKwh)
     } else {
-      selectedPreset.value = '48,000 KHR'
-      inputAmount.value = '48000'
+      const defaultKhr = khrPresets.value[0] || '20,000 KHR'
+      selectPreset(defaultKhr)
     }
   }
 
   const selectPreset = (preset: string) => {
     selectedPreset.value = preset
     if (selectedMode.value === 'kwh') {
-      if (preset === 'Full Charge') {
-        inputAmount.value = '100'
+      const matched = kwhLabelList.value.find(
+        (l) => l.name === preset || `${l.value} kWh` === preset
+      )
+      if (matched?.isFullCharge === 1 || preset === 'Full Charge') {
+        inputAmount.value = matched?.value ? String(matched.value) : '100'
+      } else if (matched?.value != null) {
+        inputAmount.value = String(matched.value)
       } else {
-        inputAmount.value = preset.replace(' kWh', '')
+        inputAmount.value = preset.replace(/[^0-9]/g, '')
       }
     } else {
-      if (preset === 'Full Charge') {
-        inputAmount.value = '240000'
+      const matchedPrice = priceLabelList.value.find(
+        (p) => p.name === preset || `${formatNumber(p.value)} KHR` === preset
+      )
+      if (matchedPrice?.isFullCharge === 1 || preset === 'Full Charge') {
+        inputAmount.value =
+          matchedPrice?.value != null && matchedPrice.value > 0
+            ? String(matchedPrice.value)
+            : pricePerKwh.value > 0
+              ? String(100 * pricePerKwh.value)
+              : '100000'
+      } else if (matchedPrice?.value != null) {
+        inputAmount.value = String(matchedPrice.value)
       } else {
         inputAmount.value = preset.replace(/[^0-9]/g, '')
       }
@@ -144,11 +284,17 @@ export function useChargingInforService() {
     inputAmount.value = rawValue
 
     if (selectedMode.value === 'kwh') {
-      const match = KWH_PRESETS.find((p) => p === `${rawValue} kWh`)
+      const match = kwhPresets.value.find((p) => {
+        const num = p.replace(/[^0-9]/g, '')
+        return num === rawValue || p === `${rawValue} kWh`
+      })
       selectedPreset.value = match || ''
     } else {
       const formatted = formatNumber(Number(rawValue))
-      const match = KHR_PRESETS.find((p) => p === `${formatted} KHR`)
+      const match = khrPresets.value.find((p) => {
+        const num = p.replace(/[^0-9]/g, '')
+        return num === rawValue || p === `${formatted} KHR`
+      })
       selectedPreset.value = match || ''
     }
   }
@@ -203,6 +349,7 @@ export function useChargingInforService() {
         const currentStillExists = selectedVoucher.value
           ? newList.some(
               (v) =>
+                (v.voucherId != null && String(v.voucherId) === String(selectedVoucher.value?.voucherId)) ||
                 (v.id != null && String(v.id) === String(selectedVoucher.value?.id)) ||
                 (v.voucherCode && v.voucherCode === selectedVoucher.value?.voucherCode)
             )
@@ -257,41 +404,24 @@ export function useChargingInforService() {
   })
 
   // 6. Promotion API & Financial Calculations
-  const calculatedDiscountAmount = ref<number | null>(null)
-  const calculatedDiscountPercent = ref<number | null>(null)
+  const calculatedDiscountAmount = ref<number>(0)
+  const calculatedDiscountPercent = ref<number>(0)
   const isCalculatingPromotion = ref(false)
 
   const subTotal = computed(() => {
     const val = Number(inputAmount.value) || 0
     if (selectedMode.value === 'kwh') {
-      return val * KHR_PER_KWH
+      return val * pricePerKwh.value
     }
     return val
   })
 
-  const voucherDiscountAmount = computed(() => {
-    if (!selectedVoucher.value) {
-      if (voucherDiscountPercent.value > 0) {
-        return subTotal.value * (voucherDiscountPercent.value / 100)
-      }
-      return 0
-    }
-    const discountVal = Number(selectedVoucher.value.discountValue ?? 0)
-    // Fixed amount discount (discountType === 2)
-    if (selectedVoucher.value.discountType === 2) {
-      return discountVal
-    }
-    // Percentage discount
-    const percent = discountVal || voucherDiscountPercent.value || 0
-    return subTotal.value * (percent / 100)
+  // Discount is retrieved directly from API response (/promotion/calculate)
+  const discountAmount = computed(() => {
+    return Number(calculatedDiscountAmount.value ?? 0)
   })
 
-  const discountAmount = computed(() => {
-    if (calculatedDiscountAmount.value !== null && calculatedDiscountAmount.value > 0) {
-      return calculatedDiscountAmount.value
-    }
-    return voucherDiscountAmount.value + pointsApplied.value
-  })
+  const voucherDiscountAmount = discountAmount
 
   const totalPrice = computed(() => {
     return Math.max(0, subTotal.value - discountAmount.value)
@@ -301,29 +431,40 @@ export function useChargingInforService() {
     if (selectedMode.value === 'kwh') {
       return Number(inputAmount.value) || 0
     }
-    return KHR_PER_KWH > 0 ? (Number(inputAmount.value) || 0) / KHR_PER_KWH : 0
+    return pricePerKwh.value > 0 ? (Number(inputAmount.value) || 0) / pricePerKwh.value : 0
   })
 
   const voucherBadgeText = computed(() => {
     if (!selectedVoucher.value) {
-      return voucherDiscountPercent.value > 0 ? `${voucherDiscountPercent.value}% OFF` : 'None'
+      return 'None'
     }
-    const val = Number(selectedVoucher.value.discountValue ?? voucherDiscountPercent.value)
-    if (selectedVoucher.value.discountType === 2) {
-      return `${formatNumber(val)} KHR OFF`
+    const pct = Number(calculatedDiscountPercent.value ?? 0)
+    if (pct > 0) {
+      return `${pct}% OFF`
     }
-    return val > 0 ? `${val}% OFF` : 'None'
+    const amt = Number(calculatedDiscountAmount.value ?? 0)
+    if (amt > 0) {
+      return `${formatNumber(amt)} KHR OFF`
+    }
+    const val = Number(selectedVoucher.value.discountValue ?? 0)
+    if (val > 0) {
+      return selectedVoucher.value.discountType === 2
+        ? `${formatNumber(val)} KHR OFF`
+        : `${val}% OFF`
+    }
+    return selectedVoucher.value.batchTitle || 'Applied'
   })
 
   const voucherLabelText = computed(() => {
-    if (!selectedVoucher.value) {
-      return voucherDiscountPercent.value > 0 ? `(${voucherDiscountPercent.value}%)` : ''
+    const pct = Number(calculatedDiscountPercent.value ?? 0)
+    if (pct > 0) {
+      return `(${pct}%)`
     }
-    if (selectedVoucher.value.discountType === 2) {
-      return `(${formatNumber(Number(selectedVoucher.value.discountValue ?? 0))} KHR)`
+    const amt = Number(calculatedDiscountAmount.value ?? 0)
+    if (amt > 0 && selectedVoucher.value?.discountType === 2) {
+      return `(${formatNumber(amt)} KHR)`
     }
-    const pct = Number(selectedVoucher.value.discountValue ?? voucherDiscountPercent.value)
-    return pct > 0 ? `(${pct}%)` : ''
+    return ''
   })
 
   // Calculate promotion discount via POST /promotion/calculate
@@ -333,16 +474,17 @@ export function useChargingInforService() {
     const amountKh = subTotal.value
 
     if (!chargerUserName || amountKh <= 0) {
-      calculatedDiscountAmount.value = null
-      calculatedDiscountPercent.value = null
+      calculatedDiscountAmount.value = 0
+      calculatedDiscountPercent.value = 0
       return
     }
 
     isCalculatingPromotion.value = true
     try {
+      const voucherId = Number(selectedVoucher.value?.voucherId ?? 0)
       const res = await calculatePromotionMutation.mutateAsync({
         chargerUserName,
-        voucherId: Number(selectedVoucher.value?.id ?? 0),
+        voucherId,
         redeemId: Number(pointsApplied.value ?? 0),
         amountKh,
         plugId
@@ -353,33 +495,16 @@ export function useChargingInforService() {
         (res as any)?.data ?? res?.body?.data ?? (res as any)?.body
 
       if (isSuccess !== false && data) {
-        if (
-          data.discountAmountKhr !== undefined &&
-          data.discountAmountKhr !== null &&
-          Number(data.discountAmountKhr) > 0
-        ) {
-          calculatedDiscountAmount.value = Number(data.discountAmountKhr)
-        } else {
-          calculatedDiscountAmount.value = null
-        }
-        if (
-          data.discountPercentage !== undefined &&
-          data.discountPercentage !== null &&
-          Number(data.discountPercentage) > 0
-        ) {
-          calculatedDiscountPercent.value = Number(data.discountPercentage)
-          voucherDiscountPercent.value = Number(data.discountPercentage)
-        } else {
-          calculatedDiscountPercent.value = null
-        }
+        calculatedDiscountAmount.value = Number(data.discountAmountKhr ?? 0)
+        calculatedDiscountPercent.value = Number(data.discountPercentage ?? 0)
       } else {
-        calculatedDiscountAmount.value = null
-        calculatedDiscountPercent.value = null
+        calculatedDiscountAmount.value = 0
+        calculatedDiscountPercent.value = 0
       }
     } catch (err) {
-      console.warn('Promotion calculate error (fallback to local calculation):', err)
-      calculatedDiscountAmount.value = null
-      calculatedDiscountPercent.value = null
+      console.warn('Promotion calculate error:', err)
+      calculatedDiscountAmount.value = 0
+      calculatedDiscountPercent.value = 0
     } finally {
       isCalculatingPromotion.value = false
     }
@@ -452,13 +577,13 @@ export function useChargingInforService() {
 
   function sendHello(customTxId?: string) {
     const chargerUsername = getChargerUsername()
-    const plug = getPlugId() || 1
+    const plug = getPlugId()
     const isFullCharge = selectedPreset.value === 'Full Charge' ? 1 : 0
 
     sendSocketMessage({
       command_type: 'START_SESSION',
-      evse_uid: chargerUsername || 'ev01',
-      transactionId: customTxId || '001793695824332',
+      evse_uid: chargerUsername,
+      transactionId: customTxId,
       isFullCharge,
       paymentMethod: 5,
       plug,
@@ -489,10 +614,8 @@ export function useChargingInforService() {
     triggerToast(`Processing payment of ${formatNumber(totalPrice.value)} KHR...`)
 
     try {
-      const discountPct =
-        (calculatedDiscountPercent.value && calculatedDiscountPercent.value > 0)
-          ? calculatedDiscountPercent.value
-          : (voucherDiscountPercent.value || 0)
+      const discountPct = Number(calculatedDiscountPercent.value ?? 0)
+      const voucherId = Number(selectedVoucher.value?.voucherId ?? 0)
 
       const orderParams: CreateSaleOrderAppTmpParams = {
         chargerUsername,
@@ -500,12 +623,14 @@ export function useChargingInforService() {
         paymentMethod: 1, // ABA PAY default
         discountPercentage: discountPct,
         discount: discountAmount.value,
-        voucherId: Number(selectedVoucher.value?.id ?? 0),
+        voucherId,
         membershipRedeemId: Number(pointsApplied.value ?? 0),
         totalKwh: totalKwh.value,
         totalPrice: subTotal.value,
         grandTotalPrice: totalPrice.value
       }
+
+
 
       const res = await createTempOrder.mutateAsync(orderParams)
 
@@ -520,7 +645,7 @@ export function useChargingInforService() {
       const data: SaleOrderAppTmpData | undefined =
         (res as any)?.data ?? res?.body?.data ?? (res as any)?.body
 
-      const txId = data?.transactionId || '001793695824332'
+      const txId = data?.transactionId
       const isFullCharge = selectedPreset.value === 'Full Charge' ? 1 : 0
 
       // Send START_SESSION command via WebSocket upon order creation
@@ -529,7 +654,7 @@ export function useChargingInforService() {
         evse_uid: chargerUsername,
         transactionId: txId,
         isFullCharge,
-        paymentMethod: 5,
+        paymentMethod: 1,
         plug: plugId,
         durations: 0,
         totalKwh: totalKwh.value,
@@ -571,13 +696,23 @@ export function useChargingInforService() {
     // Presets & Mode
     selectedMode,
     setMode,
-    kwhPresets: KWH_PRESETS,
-    khrPresets: KHR_PRESETS,
+    kwhPresets,
+    khrPresets,
     selectedPreset,
     selectPreset,
     inputAmount,
     handleInput,
     formatNumber,
+
+    // Labels API
+    kwhLabelList,
+    fetchKwhPresets,
+    isFetchingKwhLabels,
+    kwhLabelsMutation,
+    priceLabelList,
+    fetchPricePresets,
+    isFetchingPriceLabels,
+    priceLabelsMutation,
 
     // Voucher
     voucherList,
@@ -609,6 +744,12 @@ export function useChargingInforService() {
     discountAmount,
     totalPrice,
     totalKwh,
+
+    // Station Price Per kWh
+    pricePerKwh,
+    fetchPricePerKwh,
+    isFetchingPricePerKwh,
+    pricePerKwhMutation,
 
     // Promotion & Order APIs
     calculatePromotion,

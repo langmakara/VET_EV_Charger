@@ -75,6 +75,7 @@
   function isVoucherSelected(voucher: VoucherDate): boolean {
     if (selectedVoucherId.value == null || selectedVoucherId.value === '') return false
     const sel = String(selectedVoucherId.value).toLowerCase()
+    if (voucher.voucherId != null && String(voucher.voucherId).toLowerCase() === sel) return true
     if (voucher.id != null && String(voucher.id).toLowerCase() === sel) return true
     if (voucher.voucherCode && String(voucher.voucherCode).toLowerCase() === sel) return true
     return false
@@ -86,6 +87,7 @@
     (open) => {
       if (open) {
         selectedVoucherId.value =
+          props.selectedVoucher?.voucherId ??
           props.selectedVoucher?.id ??
           props.selectedVoucher?.voucherCode ??
           props.selectedId ??
@@ -98,6 +100,7 @@
           const sel = String(selectedVoucherId.value).toLowerCase()
           const found = voucherList.value.find(
             (v) =>
+              (v.voucherId != null && String(v.voucherId).toLowerCase() === sel) ||
               (v.id != null && String(v.id).toLowerCase() === sel) ||
               (v.voucherCode && String(v.voucherCode).toLowerCase() === sel)
           )

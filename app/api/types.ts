@@ -83,6 +83,19 @@ export interface StationListParams {
   [key: string]: any;
 }
 
+// POST /station/price-per-kwh
+export interface StationPricePerKwhParams {
+  chargerUserName: string;
+  plugId?: number;
+  [key: string]: any;
+}
+
+export interface StationPricePerKwhData {
+  stationId: number;
+  pricePerKwh: number;
+  [key: string]: any;
+}
+
 // Type of station detail
 export interface ChargerGunDetail {
   chargerGunId: number;
@@ -170,6 +183,7 @@ export interface StationDetailData {
 // Type of voucher list
 export interface VoucherDate {
   id?: number | string;
+  voucherId?: number;
   voucherCode?: string;
   voucherBatchId?: number;
   batchTitle?: string;
@@ -426,4 +440,26 @@ export interface PromotionCalculateData {
   discountAmountKhr?: number;
   [key: string]: any;
 }
+
+// POST /label/kwh/list & /label/price/list
+export interface LabelData {
+  id: number;
+  name: string;
+  description?: string;
+  value: number;
+  isFullCharge: number;
+  [key: string]: any;
+}
+
+// POST /label/point/list
+export interface LabelPointData {
+  id: number;
+  name: string;
+  description?: string;
+  point: number;
+  [key: string]: any;
+}
+
+
+
 

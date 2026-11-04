@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, computed, watch } from 'vue'
+  import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
   import {
     IonPage,
     IonContent,
@@ -9,12 +9,16 @@
     IonText,
     IonCard,
     IonCardContent,
-    IonButton
+    IonButton,
+    useBackButton
   } from '@ionic/vue'
   import Icon from '~/components/Icon/icon.vue'
   import AlertComponent from '~/components/Modal/AlertComponent.vue'
   import { useWebSocket, type OcpiMeterValuesPayload } from '~/composables/useChargintSocket'
   import { useRoute, navigateTo } from '#app'
+  import { onBeforeRouteLeave } from 'vue-router'
+  import { abaBridge, sendTitleToFlutter } from '~/composables/useNativeBridge'
+  import { formatMins } from '~/utils/formatters'
 
   const route = useRoute()
 
@@ -49,8 +53,14 @@
   })
 
   // 2. WebSocket Connection for live OCPI telemetry
+  const config = useRuntimeConfig()
+  const webSocketUrl = config.public.webSocketUrl || 'qacltom.udaya-tech.com'
+  const wsUrl = webSocketUrl.startsWith('ws://') || webSocketUrl.startsWith('wss://')
+    ? webSocketUrl
+    : `wss://${webSocketUrl}/OCPI/ws`
+
   const { data: socketData, status: socketStatus, send } = useWebSocket(
-    'wss://qacltom.udaya-tech.com/OCPI/ws',
+    wsUrl,
     {
       evseUid: chargerCode.value
     }
@@ -91,16 +101,6 @@
     { immediate: true }
   )
 
-  // 4. Formatted Display Values
-  const formatMins = (mins: number) => {
-    if (!mins || mins <= 0) return '0 mins'
-    if (mins >= 60) {
-      const h = Math.floor(mins / 60)
-      const m = mins % 60
-      return m > 0 ? `${h}h ${m} mins` : `${h}h`
-    }
-    return `${mins} mins`
-  }
 
   // Estimated Time Remaining
   const estimatedTimeText = computed(() => {
@@ -201,6 +201,46 @@
       return '#00A651' // Solid green for full
     }
     return '#A4C214' // Lime green for normal charging
+  })
+
+  // 6. Native App Bar Title & Back Button Handling (Mobile App & Phone Back)
+  const onPopState = () => {
+    abaBridge.backToHomePage()
+  }
+
+  onMounted(() => {
+    sendTitleToFlutter('Charging')
+    if (typeof window !== 'undefined') {
+      window.addEventListener('popstate', onPopState)
+    }
+  })
+
+  onBeforeUnmount(() => {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('popstate', onPopState)
+    }
+  })
+
+  // Intercept phone hardware / gesture back button
+  useBackButton(9999, () => {
+    if (isStopAlertOpen.value) {
+      isStopAlertOpen.value = false
+      return
+    }
+    if (isFullyChargedAlertOpen.value) {
+      isFullyChargedAlertOpen.value = false
+      return
+    }
+    abaBridge.backToHomePage()
+  })
+
+  // Prevent routing back to payment/order info; return to native mobile home
+  onBeforeRouteLeave((to, from) => {
+    if (to.path === '/session_summary' || to.path === '/ev_charger') {
+      return true
+    }
+    abaBridge.backToHomePage()
+    return false
   })
 </script>
 

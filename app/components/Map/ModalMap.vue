@@ -307,18 +307,15 @@
     }
   }
 
-  // getBestPosition() requests location permission from native mobile app (Android / Flutter / Capacitor)
-  // and retrieves location via native bridge / Capacitor or HTML5 geolocation fallback.
-  async function getBestPosition(options?: {
-    timeoutMs?: number
-    goodAccuracyMeters?: number
-  }): Promise<GeolocationPosition> {
-    const timeoutMs = options?.timeoutMs ?? 8000
-    const goodAccuracyMeters = options?.goodAccuracyMeters ?? 20
-
-    // Try native location lookup (Capacitor / Native bridge)
-    const nativeLoc = await getCurrentNativeLocation()
-    if (nativeLoc) {
+  // getBestPosition() retrieves current GPS position via native bridge only
+  async function getBestPosition(): Promise<GeolocationPosition> {
+    const nativeLoc = await getCurrentNativeLocation(5000)
+    if (
+      nativeLoc &&
+      !isNaN(nativeLoc.lat) &&
+      !isNaN(nativeLoc.lng) &&
+      !(nativeLoc.lat === 0 && nativeLoc.lng === 0)
+    ) {
       return {
         coords: {
           latitude: nativeLoc.lat,
@@ -333,46 +330,7 @@
       } as GeolocationPosition
     }
 
-    // 3. Fallback to HTML5 watchPosition stream
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error('Geolocation is not supported by this browser.'))
-        return
-      }
-
-      let best: GeolocationPosition | null = null
-      let settled = false
-
-      const finish = (pos: GeolocationPosition | null, err?: GeolocationPositionError) => {
-        if (settled) return
-        settled = true
-        navigator.geolocation.clearWatch(watchId)
-        clearTimeout(timer)
-        if (pos) {
-          resolve(pos)
-        } else {
-          reject(err ?? new Error('Unable to determine location.'))
-        }
-      }
-
-      const timer = setTimeout(() => finish(best), timeoutMs)
-
-      const watchId = navigator.geolocation.watchPosition(
-        (pos) => {
-          if (!best || pos.coords.accuracy < best.coords.accuracy) {
-            best = pos
-          }
-          if (pos.coords.accuracy <= goodAccuracyMeters) {
-            finish(pos)
-          }
-        },
-        (err) => {
-          // Only reject outright if we never got any fix at all.
-          if (!best) finish(null, err)
-        },
-        { enableHighAccuracy: true, maximumAge: 0, timeout: timeoutMs }
-      )
-    })
+    throw new Error('Unable to get current location from native bridge.')
   }
 
   async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
@@ -476,13 +434,30 @@
       const position = await getBestPosition()
       const lat = position.coords.latitude
       const lng = position.coords.longitude
+
+      if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) {
+        throw new Error('Unable to determine a valid location.')
+      }
+
       lastAccuracyMeters.value = position.coords.accuracy
 
       center.value = { lat, lng }
-      zoom.value = 15
+      zoom.value = 16
+
+      // Explicitly pan and zoom Google Map instance if available
+      const mapInstance = mapRef.value?.map
+      if (mapInstance) {
+        if (typeof mapInstance.panTo === 'function') {
+          mapInstance.panTo({ lat, lng })
+        }
+        if (typeof mapInstance.setZoom === 'function') {
+          mapInstance.setZoom(16)
+        }
+      }
 
       await updateMarker(lat, lng)
     } catch (err: any) {
+      console.error('selectCurrentLocation failed:', err)
       const { showToast } = useNativeBridge()
 
       let errorMsg =
@@ -498,6 +473,8 @@
       } else if (err?.code === 3) {
         // TIMEOUT
         errorMsg = 'Location request timed out. Please try again or search for your address.'
+      } else if (err?.message) {
+        errorMsg = err.message
       }
 
       showToast(errorMsg)
@@ -512,6 +489,16 @@
     selectedAddress.value = payload.address
     center.value = { lat: payload.lat, lng: payload.lng }
     zoom.value = 15
+
+    const mapInstance = mapRef.value?.map
+    if (mapInstance) {
+      if (typeof mapInstance.panTo === 'function') {
+        mapInstance.panTo({ lat: payload.lat, lng: payload.lng })
+      }
+      if (typeof mapInstance.setZoom === 'function') {
+        mapInstance.setZoom(15)
+      }
+    }
   }
 </script>
 

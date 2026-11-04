@@ -1,10 +1,12 @@
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
+  import { ref, computed, watch, onMounted } from 'vue'
   import { IonModal } from '@ionic/vue'
   import { useMembershipInfoQuery } from '~/composables/queries'
-  import type { MembershipInfoData } from '~/api/types'
+  import { usePointLabelsMutation } from '~/composables/queries/useLabel'
+  import type { MembershipInfoData, LabelPointData } from '~/api/types'
 
   export interface PointPreset {
+    id?: number
     kwh: number
     points: number
     labelKwh?: string
@@ -20,13 +22,9 @@
     }>(),
     {
       isOpen: false,
-      currentPoints: 120,
-      selectedPoints: 500,
-      presets: () => [
-        { kwh: 5, points: 500 },
-        { kwh: 10, points: 1000 },
-        { kwh: 50, points: 5000 }
-      ]
+      currentPoints: 0,
+      selectedPoints: 0,
+      presets: undefined
     }
   )
 
@@ -38,10 +36,60 @@
   })
 
   const currentMembershipPoints = computed(() => {
-    return membership.value?.currentPoint ?? 0
+    return membership.value?.currentPoint ?? props.currentPoints ?? 0
   })
 
-  console.log("membership data", membership)
+  // Dynamic point labels from usePointLabelsMutation
+  const pointLabelsMutation = usePointLabelsMutation()
+  const dynamicPresets = ref<PointPreset[]>([])
+  const isFetchingPointLabels = computed(() => pointLabelsMutation.isPending.value)
+  let hasFetchedPointLabels = false
+
+  const fetchPointPresets = async (force = false) => {
+    if (!force && (hasFetchedPointLabels || pointLabelsMutation.isPending.value)) {
+      return
+    }
+    hasFetchedPointLabels = true
+
+    try {
+      const res = await pointLabelsMutation.mutateAsync({})
+      const isSuccess = res?.body?.status ?? (res as any)?.status ?? res?.success
+      const data: LabelPointData[] | undefined =
+        (res as any)?.data ?? res?.body?.data ?? (res as any)?.body
+
+      if (isSuccess !== false && Array.isArray(data) && data.length > 0) {
+        dynamicPresets.value = data.map((item) => {
+          const parsedKwh = parseFloat(String(item.name || '').replace(/[^0-9.]/g, '')) || 0
+          return {
+            id: item.id,
+            kwh: parsedKwh,
+            points: Number(item.point ?? 0),
+            labelKwh: item.name || `${parsedKwh} kWh`,
+            labelPoints: `${formatNumber(Number(item.point ?? 0))} Points`
+          }
+        })
+
+        if (!props.selectedPoints && !activePoints.value && dynamicPresets.value[0]) {
+          activePoints.value = dynamicPresets.value[0].points
+          inputPoints.value = String(activePoints.value)
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch point labels:', err)
+      hasFetchedPointLabels = false
+    }
+  }
+
+  const activePresets = computed<PointPreset[]>(() => {
+    if (props.presets && props.presets.length > 0) {
+      return props.presets
+    }
+    return dynamicPresets.value
+  })
+
+  onMounted(() => {
+    fetchPointPresets()
+  })
 
   const emit = defineEmits<{
     (e: 'update:isOpen', value: boolean): void
@@ -53,16 +101,25 @@
   }>()
 
   // Active selected points and custom input
-  const activePoints = ref<number>(props.selectedPoints ?? 500)
-  const inputPoints = ref<string>('')
+  const activePoints = ref<number>(props.selectedPoints || 0)
+  const inputPoints = ref<string>(props.selectedPoints ? String(props.selectedPoints) : '')
 
   // Synchronize state when modal opens
   watch(
     () => props.isOpen,
     (open) => {
       if (open) {
-        activePoints.value = props.selectedPoints || 500
-        inputPoints.value = activePoints.value ? String(activePoints.value) : ''
+        fetchPointPresets()
+        if (props.selectedPoints && props.selectedPoints > 0) {
+          activePoints.value = props.selectedPoints
+          inputPoints.value = String(props.selectedPoints)
+        } else if (activePresets.value[0]) {
+          activePoints.value = activePresets.value[0].points
+          inputPoints.value = String(activePoints.value)
+        } else {
+          activePoints.value = 0
+          inputPoints.value = ''
+        }
       }
     },
     { immediate: true }
@@ -86,7 +143,7 @@
 
   // Format numbers with commas (e.g. 1000 -> 1,000)
   const formatNumber = (num: number) => {
-    return num.toLocaleString('en-US')
+    return Math.round(num).toLocaleString('en-US')
   }
 
   // Close and dismiss
@@ -109,7 +166,8 @@
   // Apply Points action
   const handleApply = () => {
     const pts = parseInt(inputPoints.value, 10) || activePoints.value || 0
-    const kwh = pts / 100
+    const matched = activePresets.value.find((p) => p.points === pts)
+    const kwh = matched ? Number(matched.kwh) : pts / 100
     emit('apply', {
       points: pts,
       kwh
@@ -152,14 +210,14 @@
         <div class="section-label">Choose amount</div>
         <div class="preset-grid">
           <button
-            v-for="preset in presets"
-            :key="preset.kwh"
+            v-for="preset in activePresets"
+            :key="preset.id ?? preset.kwh"
             type="button"
             class="preset-card"
             :class="{ 'is-active': activePoints === preset.points }"
             @click="handleSelectPreset(preset)"
           >
-            <span class="preset-kwh">{{ preset.kwh }} kWh</span>
+            <span class="preset-kwh">{{ preset.labelKwh || `${preset.kwh} kWh` }}</span>
             <span class="preset-points">{{ formatNumber(preset.points) }} Points</span>
           </button>
         </div>

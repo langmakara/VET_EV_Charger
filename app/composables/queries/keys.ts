@@ -46,7 +46,9 @@ export const queryKeys = {
       [...queryKeys.station.all, 'list', params ?? {}] as const,
     infinite: (params?: Record<string, any>) =>
       [...queryKeys.station.all, 'infinite', params ?? {}] as const,
-    detail: (id: number | string) => [...queryKeys.station.all, 'detail', id] as const
+    detail: (id: number | string) => [...queryKeys.station.all, 'detail', id] as const,
+    pricePerKwh: (params?: Record<string, any>) =>
+      [...queryKeys.station.all, 'price-per-kwh', params ?? {}] as const
   },
 
   voucher: {
@@ -83,5 +85,15 @@ export const queryKeys = {
     all: ['promotion'] as const,
     calculate: (params?: Record<string, any>) =>
       [...queryKeys.promotion.all, 'calculate', params ?? {}] as const
+  },
+
+  label: {
+    all: ['label'] as const,
+    kwhList: (params?: Record<string, any>) =>
+      [...queryKeys.label.all, 'kwh-list', params ?? {}] as const,
+    priceList: (params?: Record<string, any>) =>
+      [...queryKeys.label.all, 'price-list', params ?? {}] as const,
+    pointList: (params?: Record<string, any>) =>
+      [...queryKeys.label.all, 'point-list', params ?? {}] as const
   }
 } as const

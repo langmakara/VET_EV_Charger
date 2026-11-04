@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { computed } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import { IonModal, IonContent, IonIcon } from '@ionic/vue'
   import {
     heart,
@@ -23,6 +24,8 @@
     isOpen: boolean
     station: StationData | StationDetailData | any
   }>()
+
+  const { t } = useI18n()
 
   const stationId = computed(() => props.station?.id)
 
@@ -190,7 +193,7 @@
           gun.pricePerKwh != null ? `${Number(gun.pricePerKwh).toLocaleString()} KHR/kWh` : ''
         const available = gun.qtyAvailable ?? 0
         const total = gun.qty ?? 0
-        const status = total > 0 ? `${available}/${total}` : 'Available'
+        const status = total > 0 ? `${available}/${total}` : t('evCharger.available')
         const isAvailable = available > 0
 
         return {
@@ -382,19 +385,19 @@
         <div class="location-pill" @click="openDirection" style="cursor: pointer">
           <ion-icon :icon="arrowUpOutline" class="loc-icon" />
           <span>{{
-            station?.address || 'Address unavailable'
+            station?.address || $t('evCharger.addressUnavailable')
           }}</span>
         </div>
 
         <!-- Charge Point Info -->
-        <div class="section-heading">Charge Point Info</div>
+        <div class="section-heading">{{ $t('evCharger.chargePointInfo') }}</div>
 
         <!-- Open Status Card -->
         <div class="info-card flex-row status-card">
           <ion-icon :icon="timeOutline" class="clock-icon" />
           <span class="status-text">
             <span :class="isOpenStatus ? 'text-green' : 'text-danger'">{{
-              isOpenStatus ? 'Open' : 'Close'
+              isOpenStatus ? $t('evCharger.open') : $t('evCharger.close')
             }}</span>
             {{ openHoursDisplay }}
           </span>
@@ -445,7 +448,7 @@
                 </span>
               </div>
               <div class="operator-info">
-                <span class="op-label">Operated by</span>
+                <span class="op-label">{{ $t('evCharger.operatedBy') }}</span>
                 <span class="op-name">{{ operatorName }}</span>
               </div>
             </div>
@@ -473,7 +476,7 @@
         </div>
 
         <!-- Amenities -->
-        <div class="section-heading" v-if="stationAmenities.length > 0">Amenities</div>
+        <div class="section-heading" v-if="stationAmenities.length > 0">{{ $t('evCharger.amenities') }}</div>
         <div class="info-card amenities-card" v-if="stationAmenities.length > 0">
           <div class="amenities-grid">
             <div
@@ -487,7 +490,7 @@
         </div>
 
         <!-- Surroundings -->
-        <div class="section-heading" v-if="stationSurroundings.length > 0">Surroundings</div>
+        <div class="section-heading" v-if="stationSurroundings.length > 0">{{ $t('evCharger.surroundings') }}</div>
         <div
           class="info-card flex-between surroundings-card"
           v-for="(surrounding, index) in stationSurroundings"
@@ -516,7 +519,7 @@
           <template #start>
             <Icon name="scan-charge" size="22px" class="scan-btn-icon" />
           </template>
-          Scan to Charge
+          {{ $t('evCharger.scanToCharge') }}
         </AppButton>
       </div>
     </ion-content>

@@ -65,7 +65,7 @@ async function main() {
       await new Promise((resolve, reject) => {
         const child = spawn("pnpm", ["run", "generate"], {
           cwd: path.join(__dirname, "../"),
-          env: { ...process.env, VITE_NODE_ENV: "pro", NUXT_APP_BASE_URL: `/${name}/` },
+          env: { ...process.env, VITE_NODE_ENV: "pro", NUXT_APP_BASE_URL: `/` },
           shell: true
         });
 

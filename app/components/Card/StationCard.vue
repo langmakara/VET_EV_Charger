@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { computed } from 'vue'
+  import { useI18n } from 'vue-i18n'
 import {
   IonCard,
   IonItem,
@@ -102,6 +103,8 @@ const stationImage = computed(() => {
   return `${evChargerBaseUrl}${img.startsWith('/') ? '' : '/'}${img}`
 })
 
+const { t } = useI18n()
+
 const isOpen = computed(() => {
   if (props.station?.isOpen !== undefined) {
     return Boolean(props.station.isOpen)
@@ -110,7 +113,7 @@ const isOpen = computed(() => {
 })
 
 const statusLabel = computed(() => {
-  return isOpen.value ? 'Open' : 'Close'
+  return isOpen.value ? t('evCharger.open') : t('evCharger.close')
 })
 
 const formattedPrice = computed(() => {

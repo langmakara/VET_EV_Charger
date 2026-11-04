@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { ref, watch, computed, onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
+  import { useI18n } from 'vue-i18n'
   import {
     IonPage,
     IonContent,
@@ -28,16 +29,21 @@
   import evChargerData from '~/data/ev_charger_data.json'
   import IconButton from '~/components/Button/IconButton.vue'
   import { useStationInfinite } from '~/composables/queries/useStation'
-  import type { StationData, StationListParams, NewFeedData, ChargingStatusData } from '~/api/types'
+  import type { StationData, StationListParams, NewFeedData, ChargingStatusData, MembershipInfoData } from '~/api/types'
   import { useNewFeedQuery } from '~/composables/queries/dropdonwQueries.ts'
   import { useChargingStatusQuery } from '~/composables/queries/useProfile'
+  import { useMembershipInfoQuery } from '~/composables/queries/useMembership.ts'
+  import { useWebSocket, type OcpiMeterValuesPayload } from '~/composables/useChargintSocket'
+  import { formatMins } from '~/utils/formatters'
 
   const { actions } = evChargerData
+  const { t, locale } = useI18n()
 
-  const chargingInfo = ref({
-    status: 'Your vehicle is charging',
-    estTime: '24 mins',
-    battery: '70%'
+  const { data: membershipInfo, error } = useMembershipInfoQuery()
+
+  const membership = computed<MembershipInfoData | null>(() => {
+    const res: any = membershipInfo.value
+    return res?.data ?? res?.body?.data ?? null
   })
 
   const { data: charging } = useChargingStatusQuery()
@@ -92,17 +98,42 @@
   const NewFeed = computed(() => {
     const raw: any = newsFeedRes.value?.data ?? newsFeedRes.value?.body?.data
     const list: NewFeedData[] = Array.isArray(raw) ? raw : (raw?.list ?? [])
-    return list.map((item) => ({
-      ...item,
-      title: item.titleEn || item.titleKh || item.titleZh || (item as any).title || '',
-      description:
-        item.descriptionEn ||
-        item.descriptionKh ||
-        item.descriptionZh ||
-        (item as any).description ||
-        '',
-      image: resolveNewsImage(item.feedUrl || item.profileUrl || (item as any).image)
-    }))
+    const currentLocale = locale.value
+    return list.map((item) => {
+      let title = ''
+      let description = ''
+      if (currentLocale === 'km') {
+        title = item.titleKh || item.titleEn || item.titleZh || (item as any).title || ''
+        description =
+          item.descriptionKh ||
+          item.descriptionEn ||
+          item.descriptionZh ||
+          (item as any).description ||
+          ''
+      } else if (currentLocale === 'zh') {
+        title = item.titleZh || item.titleEn || item.titleKh || (item as any).title || ''
+        description =
+          item.descriptionZh ||
+          item.descriptionEn ||
+          item.descriptionKh ||
+          (item as any).description ||
+          ''
+      } else {
+        title = item.titleEn || item.titleKh || item.titleZh || (item as any).title || ''
+        description =
+          item.descriptionEn ||
+          item.descriptionKh ||
+          item.descriptionZh ||
+          (item as any).description ||
+          ''
+      }
+      return {
+        ...item,
+        title,
+        description,
+        image: resolveNewsImage(item.feedUrl || item.profileUrl || (item as any).image)
+      }
+    })
   })
 
   onMounted(async () => {
@@ -138,16 +169,114 @@
     return []
   })
 
+  // 1. Session & Charger identifiers for WebSocket telemetry
+  const chargerCode = computed(() => {
+    return String(
+      (chargingStatus.value as any)?.chargerUsername ||
+      (chargingStatus.value as any)?.chargerCode ||
+      (typeof window !== 'undefined' ? sessionStorage.getItem('vet_ev_charger_username') : '') ||
+      'ev01'
+    )
+  })
+
+  // 2. WebSocket Connection for live OCPI telemetry
+  const config = useRuntimeConfig()
+  const webSocketUrl = config.public.webSocketUrl || 'qacltom.udaya-tech.com'
+  const wsUrl = webSocketUrl.startsWith('ws://') || webSocketUrl.startsWith('wss://')
+    ? webSocketUrl
+    : `wss://${webSocketUrl}/OCPI/ws`
+
+  const { data: socketData } = useWebSocket(
+    wsUrl,
+    {
+      evseUid: chargerCode.value
+    }
+  )
+
+  // 3. Telemetry State from WebSocket
+  const meterValues = ref<OcpiMeterValuesPayload | null>(null)
+  const isChargingSocket = ref<boolean | null>(null)
+  const batteryProgress = ref<number | null>(null) // State of Charge (soc) 0 - 100%
+
+  // Listen to WebSocket messages (START_SESSION, MeterValues, STOP_SESSION)
+  watch(
+    socketData,
+    (msg) => {
+      if (!msg || typeof msg !== 'object') return
+
+      console.log('[EV Charger Home] OCPI command received:', msg)
+
+      switch (msg.command_type) {
+        case 'START_SESSION':
+          isChargingSocket.value = true
+          break
+
+        case 'MeterValues':
+          isChargingSocket.value = true
+          meterValues.value = msg
+          if (msg.soc !== undefined && msg.soc !== null) {
+            batteryProgress.value = Math.min(100, Math.max(0, Number(msg.soc)))
+          }
+          break
+
+        case 'STOP_SESSION':
+          isChargingSocket.value = false
+          break
+      }
+    },
+    { immediate: true }
+  )
+
+
+  // Estimated Time Remaining (WebSocket -> API chargingStatus -> fallback)
+  const estimatedTimeText = computed(() => {
+    const rem = meterValues.value?.remaining
+    if (rem !== undefined && rem !== null) {
+      return formatMins(Number(rem))
+    }
+    if (chargingStatus.value?.estTime) {
+      return String(chargingStatus.value.estTime)
+    }
+    return '0 mins'
+  })
+
+  // Battery percentage (WebSocket -> API chargingStatus -> fallback)
+  const batteryText = computed(() => {
+    if (batteryProgress.value !== null) {
+      return `${batteryProgress.value}%`
+    }
+    if (chargingStatus.value?.battery) {
+      const b = chargingStatus.value.battery
+      return String(b).includes('%') ? String(b) : `${b}%`
+    }
+    return '0%'
+  })
+
+  // Whether the vehicle is charging
   const isCharging = computed(() => {
+    if (isChargingSocket.value !== null) {
+      return isChargingSocket.value
+    }
     if (chargingStatus.value?.isCharging !== undefined) {
       return chargingStatus.value.isCharging === 1
     }
-    const status = chargingInfo.value.status?.toLowerCase() || ''
-    return status === 'charging' || status.includes('charging')
+    return false
   })
 
+  // Charging Card Info Object
+  const chargingInfo = computed(() => ({
+    status: isCharging.value ? t('evCharger.vehicleCharging') : t('evCharger.notCharging'),
+    estTime: estimatedTimeText.value,
+    battery: batteryText.value
+  }))
+
   const handleViewDetail = () => {
-    navigateTo('/charging')
+    navigateTo({
+      path: '/charging',
+      query: {
+        chargerCode: chargerCode.value
+      }
+    })
   }
 
   const handleAction = (action: any) => {
@@ -226,7 +355,7 @@
             </ion-avatar>
             <ion-label class="profile-info-label">
               <h2 class="profile-user-name">{{ user.fullName }}</h2>
-              <p class="profile-user-greeting">Wellcome</p>
+              <p class="profile-user-greeting">{{ $t('evCharger.welcome') }}</p>
             </ion-label>
             <ion-icon slot="end" :icon="chevronForward" class="profile-chevron"></ion-icon>
           </ion-item>
@@ -250,7 +379,7 @@
               class="btn-view-detail"
               @click="handleViewDetail()"
             >
-              View Detail
+              {{ $t('evCharger.viewDetail') }}
             </AppButton>
           </div>
           <div class="charging-body">
@@ -263,11 +392,11 @@
             </div>
             <div v-if="isCharging" class="charging-metrics">
               <div class="metric-item">
-                <span class="metric-label">Est. Time</span>
+                <span class="metric-label">{{ $t('evCharger.estTime') }}</span>
                 <span class="metric-value time-val">{{ chargingInfo.estTime }}</span>
               </div>
               <div class="metric-item">
-                <span class="metric-label">Battery</span>
+                <span class="metric-label">{{ $t('evCharger.battery') }}</span>
                 <span class="metric-value battery-val">{{ chargingInfo.battery }}</span>
               </div>
             </div>
@@ -286,8 +415,8 @@
         <img src="/images/Crown.svg" alt="Crown" class="bg-crown" />
         <ion-card-content class="points-card-content">
           <div class="points-header">
-            <div class="points-label">Total Points</div>
-            <div class="points-value">190 pts</div>
+            <div class="points-label">{{ $t('evCharger.totalPoints') }}</div>
+            <div class="points-value">{{ membership?.currentPoint ?? 0 }} {{ $t('evCharger.pts') }}</div>
           </div>
           <div class="button-container-right">
             <ion-grid>
@@ -301,7 +430,7 @@
                     class="btn-action"
                   >
                     <Icon name="point" class="btn-icon" />
-                    Point History
+                    {{ $t('evCharger.pointHistory') }}
                   </AppButton>
                 </ion-col>
                 <ion-col>
@@ -312,7 +441,7 @@
                     @click="handlePurchaseHistory"
                   >
                     <Icon name="purchase" class="btn-icon" />
-                    Purchase History
+                    {{ $t('evCharger.purchaseHistory') }}
                   </AppButton>
                 </ion-col>
               </ion-row>
@@ -330,7 +459,7 @@
                 <div class="action-icon-wrapper">
                   <Icon :name="action.icon" class="action-icon" size="18px" />
                 </div>
-                <div class="action-label">{{ action.label }}</div>
+                <div class="action-label">{{ action.labelKey ? $t(action.labelKey) : action.label }}</div>
               </ion-card-content>
             </AppCard>
           </ion-col>
@@ -338,7 +467,7 @@
       </ion-grid>
 
       <!-- Nearby Station Section -->
-      <SectionHeader title="Nearby Station" @view-all="() => navigateTo('/nearBy_Station')" />
+      <SectionHeader :title="$t('evCharger.nearbyStation')" @view-all="() => navigateTo('/nearBy_Station')" />
       <div class="station-scroll-container">
         <StationCard
           v-for="station in displayedStations"
@@ -349,7 +478,7 @@
       </div>
 
       <!-- News feed Section -->
-      <SectionHeader title="News feed" @view-all="() => navigateTo('/newsFeed')" />
+      <SectionHeader :title="$t('evCharger.newsFeed')" @view-all="() => navigateTo('/newsFeed')" />
 
       <ion-card class="news-card" v-for="news in NewFeed" :key="news.id">
         <ion-item lines="none" class="news-item">
