@@ -29,12 +29,19 @@
   import evChargerData from '~/data/ev_charger_data.json'
   import IconButton from '~/components/Button/IconButton.vue'
   import { useStationInfinite } from '~/composables/queries/useStation'
-  import type { StationData, StationListParams, NewFeedData, ChargingStatusData, MembershipInfoData } from '~/api/types'
+  import type {
+    StationData,
+    StationListParams,
+    NewFeedData,
+    ChargingStatusData,
+    MembershipInfoData
+  } from '~/api/types'
   import { useNewFeedQuery } from '~/composables/queries/dropdonwQueries.ts'
   import { useChargingStatusQuery } from '~/composables/queries/useProfile'
   import { useMembershipInfoQuery } from '~/composables/queries/useMembership.ts'
   import { useWebSocket, type OcpiMeterValuesPayload } from '~/composables/useChargintSocket'
-  import { formatMins } from '~/utils/formatters'
+  import { formatMins, formatSeconds } from '~/utils/formatters'
+  import { NO_IMAGE_AVAILABLE } from '~/composables/useApiUrl'
 
   const { actions } = evChargerData
   const { t, locale } = useI18n()
@@ -173,25 +180,23 @@
   const chargerCode = computed(() => {
     return String(
       (chargingStatus.value as any)?.chargerUsername ||
-      (chargingStatus.value as any)?.chargerCode ||
-      (typeof window !== 'undefined' ? sessionStorage.getItem('vet_ev_charger_username') : '') ||
-      'ev01'
+        (chargingStatus.value as any)?.chargerCode ||
+        (typeof window !== 'undefined' ? sessionStorage.getItem('vet_ev_charger_username') : '') ||
+        'ev01'
     )
   })
 
   // 2. WebSocket Connection for live OCPI telemetry
   const config = useRuntimeConfig()
   const webSocketUrl = config.public.webSocketUrl || 'qacltom.udaya-tech.com'
-  const wsUrl = webSocketUrl.startsWith('ws://') || webSocketUrl.startsWith('wss://')
-    ? webSocketUrl
-    : `wss://${webSocketUrl}/OCPI/ws`
+  const wsUrl =
+    webSocketUrl.startsWith('ws://') || webSocketUrl.startsWith('wss://')
+      ? webSocketUrl
+      : `wss://${webSocketUrl}/OCPI/ws`
 
-  const { data: socketData } = useWebSocket(
-    wsUrl,
-    {
-      evseUid: chargerCode.value
-    }
-  )
+  const { data: socketData } = useWebSocket(wsUrl, {
+    evseUid: chargerCode
+  })
 
   // 3. Telemetry State from WebSocket
   const meterValues = ref<OcpiMeterValuesPayload | null>(null)
@@ -227,12 +232,11 @@
     { immediate: true }
   )
 
-
   // Estimated Time Remaining (WebSocket -> API chargingStatus -> fallback)
   const estimatedTimeText = computed(() => {
     const rem = meterValues.value?.remaining
     if (rem !== undefined && rem !== null) {
-      return formatMins(Number(rem))
+      return formatSeconds(Number(rem))
     }
     if (chargingStatus.value?.estTime) {
       return String(chargingStatus.value.estTime)
@@ -336,6 +340,13 @@
   onIonViewWillLeave(() => {
     closeStationModal()
   })
+
+  const handleImageError = (event: Event) => {
+    const target = event.target as HTMLImageElement
+    if (target && target.src !== NO_IMAGE_AVAILABLE) {
+      target.src = NO_IMAGE_AVAILABLE
+    }
+  }
 </script>
 
 <template>
@@ -351,7 +362,11 @@
         <ion-card-content class="profile-card-content">
           <ion-item class="profile-item" lines="none" :detail="false">
             <ion-avatar slot="start" class="profile-avatar">
-              <img :src="user.avatar" :alt="user.fullName" />
+              <img
+                :src="user.avatar || NO_IMAGE_AVAILABLE"
+                :alt="user.fullName"
+                @error="handleImageError"
+              />
             </ion-avatar>
             <ion-label class="profile-info-label">
               <h2 class="profile-user-name">{{ user.fullName }}</h2>
@@ -373,7 +388,6 @@
               <span v-if="isCharging" class="status-text">{{ chargingInfo.status }}</span>
             </div>
             <AppButton
-              v-if="isCharging"
               size="small"
               fill="solid"
               class="btn-view-detail"
@@ -416,7 +430,9 @@
         <ion-card-content class="points-card-content">
           <div class="points-header">
             <div class="points-label">{{ $t('evCharger.totalPoints') }}</div>
-            <div class="points-value">{{ membership?.currentPoint ?? 0 }} {{ $t('evCharger.pts') }}</div>
+            <div class="points-value">
+              {{ membership?.currentPoint ?? 0 }} {{ $t('evCharger.pts') }}
+            </div>
           </div>
           <div class="button-container-right">
             <ion-grid>
@@ -459,7 +475,9 @@
                 <div class="action-icon-wrapper">
                   <Icon :name="action.icon" class="action-icon" size="18px" />
                 </div>
-                <div class="action-label">{{ action.labelKey ? $t(action.labelKey) : action.label }}</div>
+                <div class="action-label">
+                  {{ action.labelKey ? $t(action.labelKey) : action.label }}
+                </div>
               </ion-card-content>
             </AppCard>
           </ion-col>
@@ -467,7 +485,10 @@
       </ion-grid>
 
       <!-- Nearby Station Section -->
-      <SectionHeader :title="$t('evCharger.nearbyStation')" @view-all="() => navigateTo('/nearBy_Station')" />
+      <SectionHeader
+        :title="$t('evCharger.nearbyStation')"
+        @view-all="() => navigateTo('/nearBy_Station')"
+      />
       <div class="station-scroll-container">
         <StationCard
           v-for="station in displayedStations"

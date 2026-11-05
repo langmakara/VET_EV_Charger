@@ -1,5 +1,5 @@
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { Client } from '@stomp/stompjs'
+import { ref, computed, unref, watch, onMounted, onBeforeUnmount, type MaybeRef } from 'vue'
+import { Client, type StompSubscription } from '@stomp/stompjs'
 
 export interface OcpiCommandPayload {
   command_type: 'START_SESSION' | 'STOP_SESSION' | 'MeterValues' | string
@@ -40,8 +40,8 @@ export interface OcpiMeterValuesPayload {
 export function useWebSocket(
   url?: string,
   options?: {
-    topic?: string
-    evseUid?: string
+    topic?: string | MaybeRef<string | undefined>
+    evseUid?: string | MaybeRef<string | undefined>
   }
 ) {
   const config = useRuntimeConfig()
@@ -54,9 +54,54 @@ export function useWebSocket(
   const status = ref<'connecting' | 'open' | 'closed'>('closed')
 
   let client: Client | null = null
+  let currentSubscription: StompSubscription | null = null
   const outboxQueue: Array<{ destination: string; payload: any }> = []
 
-  const defaultTopic = options?.topic || `/topic/ocpi/commands/${options?.evseUid}`
+  const currentTopic = computed(() => {
+    const customTopic = unref(options?.topic)
+    if (customTopic && typeof customTopic === 'string' && customTopic.trim()) {
+      return customTopic.trim()
+    }
+    const uid = unref(options?.evseUid)
+    if (uid && typeof uid === 'string' && uid.trim() && uid.trim() !== 'undefined') {
+      return `/topic/ocpi/commands/${uid.trim()}`
+    }
+    return ''
+  })
+
+  function subscribeToTopic(topic: string) {
+    if (!client || !client.connected || !topic) return
+
+    if (currentSubscription) {
+      try {
+        currentSubscription.unsubscribe()
+      } catch (err) {
+        console.warn('[WebSocket] Error unsubscribing:', err)
+      }
+      currentSubscription = null
+    }
+
+    try {
+      currentSubscription = client.subscribe(topic, (frame) => {
+        try {
+          const parsed = JSON.parse(frame.body)
+          data.value = parsed
+          console.log('OCPI command received:', parsed)
+        } catch {
+          data.value = frame.body
+          console.log('OCPI command received:', frame.body)
+        }
+      })
+
+      console.log(
+        '%c[WebSocket] 🟢 Subscribed to %c' + topic,
+        'background: #38a169; color: white; font-weight: bold; padding: 2px 6px; border-radius: 4px;',
+        'color: #805ad5; font-weight: bold;'
+      )
+    } catch (err) {
+      console.error('[WebSocket] Failed to subscribe to ' + topic, err)
+    }
+  }
 
   function connect() {
     status.value = 'connecting'
@@ -75,24 +120,15 @@ export function useWebSocket(
       onConnect: (receipt) => {
         status.value = 'open'
         console.log(
-          '%c[WebSocket] 🟢 CONNECTED %cSuccessfully subscribed to %c' + defaultTopic,
+          '%c[WebSocket] 🟢 CONNECTED',
           'background: #38a169; color: white; font-weight: bold; padding: 2px 6px; border-radius: 4px;',
-          'color: inherit;',
-          'color: #805ad5; font-weight: bold;',
           receipt
         )
 
-        // Subscribe to topic
-        client?.subscribe(defaultTopic, (frame) => {
-          try {
-            const parsed = JSON.parse(frame.body)
-            data.value = parsed
-            console.log('OCPI command received:', parsed)
-          } catch {
-            data.value = frame.body
-            console.log('OCPI command received:', frame.body)
-          }
-        })
+        // Only subscribe if a valid topic is present
+        if (currentTopic.value) {
+          subscribeToTopic(currentTopic.value)
+        }
 
         // Flush any queued messages
         while (outboxQueue.length > 0) {
@@ -104,17 +140,32 @@ export function useWebSocket(
       },
       onDisconnect: () => {
         status.value = 'closed'
+        currentSubscription = null
       },
       onStompError: (frame) => {
         console.error('STOMP broker error:', frame.headers['message'], frame.body)
       },
       onWebSocketClose: () => {
         status.value = 'closed'
+        currentSubscription = null
       }
     })
 
     client.activate()
   }
+
+  // React to dynamic topic changes
+  watch(currentTopic, (newTopic, oldTopic) => {
+    if (newTopic !== oldTopic && client?.connected) {
+      if (currentSubscription) {
+        currentSubscription.unsubscribe()
+        currentSubscription = null
+      }
+      if (newTopic) {
+        subscribeToTopic(newTopic)
+      }
+    }
+  })
 
   function publish(destination: string, payload: any) {
     if (client && client.connected) {
@@ -128,7 +179,7 @@ export function useWebSocket(
   }
 
   function send(payloadOrDestination: any, maybePayload?: any) {
-    let destination = defaultTopic
+    let destination = currentTopic.value
     let payload = payloadOrDestination
 
     if (typeof payloadOrDestination === 'string' && maybePayload !== undefined) {
@@ -142,6 +193,11 @@ export function useWebSocket(
       }
     }
 
+    if (!destination) {
+      console.warn('[WebSocket] ⚠️ Cannot send message: destination is undefined or empty', payload)
+      return
+    }
+
     if (!client?.connected) {
       console.warn('[WebSocket] ⏳ Client not connected, buffering outbound message:', { destination, payload })
       outboxQueue.push({ destination, payload })
@@ -152,6 +208,12 @@ export function useWebSocket(
   }
 
   function close() {
+    if (currentSubscription) {
+      try {
+        currentSubscription.unsubscribe()
+      } catch {}
+      currentSubscription = null
+    }
     if (client) {
       client.deactivate()
       client = null

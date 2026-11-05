@@ -14,11 +14,16 @@
   } from '@ionic/vue'
   import Icon from '~/components/Icon/icon.vue'
   import AlertComponent from '~/components/Modal/AlertComponent.vue'
-  import { useWebSocket, type OcpiMeterValuesPayload } from '~/composables/useChargintSocket'
+  import {
+    useWebSocket,
+    type OcpiCommandPayload,
+    type OcpiMeterValuesPayload
+  } from '~/composables/useChargintSocket'
   import { useRoute, navigateTo } from '#app'
   import { onBeforeRouteLeave } from 'vue-router'
   import { abaBridge, sendTitleToFlutter } from '~/composables/useNativeBridge'
-  import { formatMins } from '~/utils/formatters'
+  import { formatMins, formatSeconds } from '~/utils/formatters'
+  import { useStationPricePerKwhQuery } from '~/composables/queries'
 
   const route = useRoute()
 
@@ -26,45 +31,88 @@
   const chargerCode = computed(() => {
     return String(
       route.query.chargerCode ||
-      route.query.chargerUsername ||
-      (typeof window !== 'undefined' ? sessionStorage.getItem('vet_ev_charger_username') : '') ||
-      'ev01'
+        route.query.chargerUsername ||
+        (typeof window !== 'undefined' ? sessionStorage.getItem('vet_ev_charger_username') : '')
     )
   })
 
   const transactionId = computed(() => {
     return String(
       route.query.transactionId ||
-      (typeof window !== 'undefined' ? sessionStorage.getItem('vet_ev_transaction_id') : '') ||
-      ''
+        (typeof window !== 'undefined' ? sessionStorage.getItem('vet_ev_transaction_id') : '') ||
+        ''
     )
   })
 
   const plugId = computed(() => {
     return Number(
       route.query.plugId ||
-      (typeof window !== 'undefined' ? sessionStorage.getItem('vet_ev_plug_id') : '') ||
-      1
+        (typeof window !== 'undefined' ? sessionStorage.getItem('vet_ev_plug_id') : '')
     )
   })
 
+  // Station Price Per kWh from API
+  const priceParams = computed(() => ({
+    chargerUserName: chargerCode.value,
+    plugId: plugId.value
+  }))
+
+  const { data: pricePerKwhData } = useStationPricePerKwhQuery(priceParams)
+
+  const pricePerKwh = computed(() => {
+    const res: any = pricePerKwhData.value?.data ?? pricePerKwhData.value?.body?.data
+    const rate = res?.pricePerKwh ?? res?.price_per_kwh
+    if (rate != null && Number(rate) > 0) {
+      return Number(rate)
+    }
+    const fromQuery = Number(route.query.pricePerKwh)
+    if (!isNaN(fromQuery) && fromQuery > 0) {
+      return fromQuery
+    }
+    if (typeof window !== 'undefined') {
+      const stored = Number(sessionStorage.getItem('vet_ev_price_per_kwh'))
+      if (!isNaN(stored) && stored > 0) {
+        return stored
+      }
+    }
+    return 0
+  })
+
+  const startSessionData = ref<OcpiCommandPayload | null>(null)
+
   const targetKwh = computed(() => {
-    return Number(route.query.totalKwh || 20)
+    const fromSocket = Number(startSessionData.value?.totalKwh)
+    if (!isNaN(fromSocket) && fromSocket > 0) {
+      return fromSocket
+    }
+    const fromQuery = Number(route.query.totalKwh)
+    if (!isNaN(fromQuery) && fromQuery > 0) {
+      return fromQuery
+    }
+    if (typeof window !== 'undefined') {
+      const stored = Number(sessionStorage.getItem('vet_ev_total_kwh'))
+      if (!isNaN(stored) && stored > 0) {
+        return stored
+      }
+    }
+    return 0
   })
 
   // 2. WebSocket Connection for live OCPI telemetry
   const config = useRuntimeConfig()
   const webSocketUrl = config.public.webSocketUrl || 'qacltom.udaya-tech.com'
-  const wsUrl = webSocketUrl.startsWith('ws://') || webSocketUrl.startsWith('wss://')
-    ? webSocketUrl
-    : `wss://${webSocketUrl}/OCPI/ws`
+  const wsUrl =
+    webSocketUrl.startsWith('ws://') || webSocketUrl.startsWith('wss://')
+      ? webSocketUrl
+      : `wss://${webSocketUrl}/OCPI/ws`
 
-  const { data: socketData, status: socketStatus, send } = useWebSocket(
-    wsUrl,
-    {
-      evseUid: chargerCode.value
-    }
-  )
+  const {
+    data: socketData,
+    status: socketStatus,
+    send
+  } = useWebSocket(wsUrl, {
+    evseUid: chargerCode
+  })
 
   // 3. Telemetry State from WebSocket
   const meterValues = ref<OcpiMeterValuesPayload | null>(null)
@@ -82,6 +130,17 @@
       switch (msg.command_type) {
         case 'START_SESSION':
           isCharging.value = true
+          startSessionData.value = msg
+          if (msg.totalKwh !== undefined && msg.totalKwh !== null) {
+            if (typeof window !== 'undefined') {
+              sessionStorage.setItem('vet_ev_total_kwh', String(msg.totalKwh))
+            }
+          }
+          if (msg.transactionId) {
+            if (typeof window !== 'undefined') {
+              sessionStorage.setItem('vet_ev_transaction_id', String(msg.transactionId))
+            }
+          }
           break
 
         case 'MeterValues':
@@ -101,28 +160,27 @@
     { immediate: true }
   )
 
-
   // Estimated Time Remaining
   const estimatedTimeText = computed(() => {
     const rem = meterValues.value?.remaining
     if (rem !== undefined && rem !== null) {
-      return formatMins(Number(rem))
+      return formatSeconds(Number(rem), '0 mins')
     }
-    return '30 mins'
+    return '0 mins'
   })
 
   // Time Elapsed
   const timeElapsedText = computed(() => {
     const dur = meterValues.value?.duration
     if (dur !== undefined && dur !== null) {
-      return formatMins(Number(dur))
+      return formatSeconds(Number(dur), '0s')
     }
-    return '0 mins'
+    return '0s'
   })
 
   // Voltage (V)
   const voltageValue = computed(() => {
-    return Number(meterValues.value?.voltage ?? meterValues.value?.v ?? 500)
+    return Number(meterValues.value?.voltage ?? meterValues.value?.v ?? 0)
   })
 
   const voltageText = computed(() => {
@@ -132,13 +190,13 @@
   // Current (A) - calculated as W / V if not supplied directly
   const currentText = computed(() => {
     if (meterValues.value?.current != null) {
-      return `${Math.round(Number(meterValues.value.current))} A`
+      return `${Math.round(Number(meterValues.value.current))} kw`
     }
     const watts = Number(meterValues.value?.w ?? 0)
     if (watts > 0 && voltageValue.value > 0) {
-      return `${Math.round(watts / voltageValue.value)} A`
+      return `${Math.round(watts / voltageValue.value)} kw`
     }
-    return '0 A'
+    return '0 kw'
   })
 
   // Energy: charged / target kWh
@@ -152,7 +210,7 @@
   // Estimated Cost (KHR)
   const estimatedCostText = computed(() => {
     const charged = Number(meterValues.value?.kwh ?? 0)
-    const cost = Math.round(charged * 2400)
+    const cost = Math.round(charged * pricePerKwh.value)
     return `៛${cost.toLocaleString('en-US')}.00`
   })
 
@@ -300,7 +358,9 @@
                   <span class="stat-icon icon-orange">
                     <Icon name="time-elapsed" size="22px" color="white" />
                   </span>
-                  <ion-text class="stat-value"><span>{{ timeElapsedText }}</span></ion-text>
+                  <ion-text class="stat-value"
+                    ><span>{{ timeElapsedText }}</span></ion-text
+                  >
                 </ion-row>
               </ion-card-content>
             </ion-card>
@@ -315,7 +375,9 @@
                   <span class="stat-icon icon-green">
                     <Icon name="current" size="22px" />
                   </span>
-                  <ion-text class="stat-value"><span>{{ currentText }}</span></ion-text>
+                  <ion-text class="stat-value"
+                    ><span>{{ currentText }}</span></ion-text
+                  >
                 </ion-row>
               </ion-card-content>
             </ion-card>
@@ -330,7 +392,9 @@
                   <span class="stat-icon icon-blue">
                     <Icon name="voltage" size="22px" color="white" />
                   </span>
-                  <ion-text class="stat-value"><span>{{ voltageText }}</span></ion-text>
+                  <ion-text class="stat-value"
+                    ><span>{{ voltageText }}</span></ion-text
+                  >
                 </ion-row>
               </ion-card-content>
             </ion-card>
@@ -345,7 +409,9 @@
                   <span class="stat-icon icon-red">
                     <Icon name="energy" size="22px" color="white" />
                   </span>
-                  <ion-text class="stat-value"><span>{{ energyText }}</span></ion-text>
+                  <ion-text class="stat-value"
+                    ><span>{{ energyText }}</span></ion-text
+                  >
                 </ion-row>
               </ion-card-content>
             </ion-card>
@@ -362,7 +428,9 @@
                   <span class="stat-icon icon-yellow">
                     <Icon name="cost" size="22px" />
                   </span>
-                  <ion-text class="stat-value"><span>{{ estimatedCostText }}</span></ion-text>
+                  <ion-text class="stat-value"
+                    ><span>{{ estimatedCostText }}</span></ion-text
+                  >
                 </ion-row>
               </ion-card-content>
             </ion-card>
@@ -507,7 +575,7 @@
   }
 
   .estimated-time {
-    font-size: 16px;
+    font-size: var(--app-font-size-normal);
     font-weight: 600;
     color: #1e293b;
   }
@@ -541,7 +609,7 @@
   }
 
   .stat-row-inner {
-    margin-top: 12px;
+    margin-top: 10px;
     flex-wrap: nowrap;
     gap: 12px;
   }
@@ -583,7 +651,7 @@
   }
 
   .stat-value span {
-    font-size: 16px;
+    font-size: var(--app-font-size-normal);
     font-weight: 700;
     color: #1e293b;
   }

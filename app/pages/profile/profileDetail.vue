@@ -7,6 +7,7 @@ import {
 } from '@ionic/vue';
 import Icon from '~/components/Icon/icon.vue';
 import { sendTitleToFlutter } from '~/composables/useNativeBridge';
+import { NO_IMAGE_AVAILABLE } from '~/composables/useApiUrl';
 
 onMounted(() => {
   sendTitleToFlutter('Profile Details');
@@ -35,6 +36,13 @@ const triggerToast = (msg: string) => {
 const handleCameraClick = () => {
   triggerToast('Change profile photo');
 };
+
+const handleImageError = (event: Event) => {
+  const target = event.target as HTMLImageElement;
+  if (target && target.src !== NO_IMAGE_AVAILABLE) {
+    target.src = NO_IMAGE_AVAILABLE;
+  }
+};
 </script>
 
 <template>
@@ -45,7 +53,12 @@ const handleCameraClick = () => {
         <div class="avatar-section">
           <div class="avatar-wrapper">
             <div class="avatar-image-box">
-              <img :src="user.avatar" :alt="user.fullName" class="avatar-img" />
+              <img
+                :src="user.avatar || NO_IMAGE_AVAILABLE"
+                :alt="user.fullName"
+                class="avatar-img"
+                @error="handleImageError"
+              />
             </div>
             <button
               type="button"

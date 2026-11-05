@@ -1,92 +1,115 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { IonPage, IonContent } from '@ionic/vue';
+import { ref, computed, watch, onMounted } from 'vue';
+import {
+  IonPage,
+  IonContent,
+  IonSpinner,
+  IonText,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent
+} from '@ionic/vue';
+import { useI18n } from 'vue-i18n';
 import { sendTitleToFlutter } from '~/composables/useNativeBridge';
+import { useFaqsInfinite } from '~/composables/queries';
+import type { FaqsDropdownData, DropdownParams } from '~/api/types';
+
+const { locale } = useI18n();
 
 onMounted(() => {
   sendTitleToFlutter('FAQ');
 });
 
-interface FaqItem {
-  id: number;
-  question: string;
-  steps?: string[];
-  answer?: string;
-}
+const filter = ref<DropdownParams>({
+  rowsPerPage: 25
+});
 
-const faqs = ref<FaqItem[]>([
-  {
-    id: 1,
-    question: 'How do I use the EV charging station?',
-    steps: [
-      '1. Locate a Charging Station',
-      '2. Check Charging Compatibility',
-      '3. Plug In Your EV',
-      '4. Start the Charging Session'
-    ]
-  },
-  {
-    id: 2,
-    question: 'How do I view my charging report?',
-    steps: [
-      '1. Open the VET EV Charger app',
-      '2. Go to the "Charging History" tab or Profile',
-      '3. Tap on any completed session to view energy consumed (kWh), duration, and total cost receipt'
-    ]
-  },
-  {
-    id: 3,
-    question: 'How do I top up?',
-    steps: [
-      '1. Open the "Wallet" or "Membership" section',
-      '2. Tap the "Top Up" button',
-      '3. Enter your top-up amount and select payment method (ABA PAY or KHQR)',
-      '4. Confirm payment to instantly credit your account'
-    ]
-  },
-  {
-    id: 4,
-    question: 'How do I stop a charging session?',
-    steps: [
-      '1. Open the active charging screen in your app',
-      '2. Tap "Stop Charging" and confirm',
-      '3. Wait for the session to finish and the connector to unlock',
-      '4. Unplug the cable and safely return it to the station holster'
-    ]
-  },
-  {
-    id: 5,
-    question: 'What payment methods are supported?',
-    steps: [
-      '1. ABA PAY / ABA Mobile Mini App integration',
-      '2. KHQR universal payment',
-      '3. VET Member Points and Pre-funded Balance'
-    ]
-  },
-  {
-    id: 6,
-    question: 'What should I do if a charger fails to start?',
-    steps: [
-      '1. Ensure the charging connector is firmly clicked into your car port',
-      '2. Verify that your wallet has sufficient balance',
-      '3. Check the charger screen for any fault or emergency stop notices',
-      '4. Contact VET 24/7 customer support via the Contact section'
-    ]
-  }
-]);
+const { data, isLoading, isError, error, fetchNextPage, hasNextPage } = useFaqsInfinite(filter);
 
-// Currently open FAQ index (default to the first item matching the design screenshot)
-const openId = ref<number | null>(1);
+// Flatten all paginated pages into FaqsDropdownData[]
+const faqs = computed<FaqsDropdownData[]>(() => {
+  return (
+    data.value?.pages.flatMap((page) => {
+      const res = (page as any)?.data ?? page?.body?.data;
+      return Array.isArray(res) ? res : res?.list ?? [];
+    }) ?? []
+  );
+});
 
-const toggleFaq = (id: number) => {
+// Currently open FAQ index (default to the first item once loaded)
+const openId = ref<number | string | null>(null);
+
+watch(
+  faqs,
+  (list) => {
+    if (openId.value === null && list.length > 0 && list[0]?.id != null) {
+      openId.value = list[0].id;
+    }
+  },
+  { immediate: true }
+);
+
+const toggleFaq = (id: number | string) => {
   openId.value = openId.value === id ? null : id;
+};
+
+const getQuestion = (item: FaqsDropdownData): string => {
+  const loc = locale.value;
+  if (loc === 'km') return item.questionKh || item.questionEn || '';
+  if (loc === 'zh') return item.questionCh || item.questionZh || item.questionEn || '';
+  return item.questionEn || item.questionKh || item.questionCh || '';
+};
+
+const getAnswer = (item: FaqsDropdownData): string => {
+  const loc = locale.value;
+  if (loc === 'km') return item.answerKh || item.answerEn || '';
+  if (loc === 'zh') return item.answerCh || item.answerZh || item.answerEn || '';
+  return item.answerEn || item.answerKh || item.answerCh || '';
+};
+
+const getAnswerSteps = (item: FaqsDropdownData): string[] => {
+  const answer = getAnswer(item);
+  if (!answer) return [];
+  if (answer.includes('\n')) {
+    return answer
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
+const loadMore = async (event: CustomEvent) => {
+  if (hasNextPage?.value) {
+    await fetchNextPage();
+  }
+  (event.target as HTMLIonInfiniteScrollElement).complete();
 };
 </script>
 
 <template>
   <ion-page>
     <ion-content class="faq-page-content" :fullscreen="true">
-      <div class="faq-container">
+      <!-- Loading indicator -->
+      <div v-if="isLoading" class="ion-text-center ion-padding" style="margin-top: 40px">
+        <ion-spinner name="crescent" />
+      </div>
+
+      <!-- Error state -->
+      <div v-else-if="isError" class="ion-text-center ion-padding">
+        <ion-text color="danger">{{ error?.message || 'Failed to load FAQs' }}</ion-text>
+      </div>
+
+      <!-- Empty state -->
+      <div
+        v-else-if="faqs.length === 0"
+        class="ion-text-center ion-padding"
+        style="margin-top: 40px"
+      >
+        <ion-text color="medium">No FAQs available</ion-text>
+      </div>
+
+      <!-- FAQ Container -->
+      <div v-else class="faq-container">
         <!-- FAQ Accordion List -->
         <div class="faq-list">
           <div
@@ -99,15 +122,15 @@ const toggleFaq = (id: number) => {
             <button
               type="button"
               class="faq-question-btn"
-              @click="toggleFaq(item.id)"
+              @click="item.id != null && toggleFaq(item.id)"
               :aria-expanded="openId === item.id"
             >
-              <span class="faq-question-text">{{ item.question }}</span>
+              <span class="faq-question-text">{{ getQuestion(item) }}</span>
               <span
                 class="faq-chevron"
                 :class="{ 'is-expanded': openId === item.id }"
               >
-                <!-- Clean chevron icon identical to screenshot -->
+                <!-- Clean chevron icon -->
                 <svg
                   width="20"
                   height="20"
@@ -129,9 +152,9 @@ const toggleFaq = (id: number) => {
               class="faq-answer-wrapper"
             >
               <div class="faq-answer-card">
-                <template v-if="item.steps && item.steps.length">
+                <template v-if="getAnswerSteps(item).length > 1">
                   <div
-                    v-for="(step, sIdx) in item.steps"
+                    v-for="(step, sIdx) in getAnswerSteps(item)"
                     :key="sIdx"
                     class="faq-step-line"
                   >
@@ -139,7 +162,7 @@ const toggleFaq = (id: number) => {
                   </div>
                 </template>
                 <p v-else class="faq-answer-text">
-                  {{ item.answer }}
+                  {{ getAnswer(item) }}
                 </p>
               </div>
             </div>
@@ -148,6 +171,17 @@ const toggleFaq = (id: number) => {
             <div class="faq-divider"></div>
           </div>
         </div>
+
+        <!-- Infinite Scroll -->
+        <ion-infinite-scroll
+          :disabled="!hasNextPage"
+          @ionInfinite="loadMore"
+        >
+          <ion-infinite-scroll-content
+            loading-spinner="crescent"
+            loading-text="Loading more FAQs..."
+          />
+        </ion-infinite-scroll>
       </div>
     </ion-content>
   </ion-page>

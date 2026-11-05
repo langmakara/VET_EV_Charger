@@ -124,6 +124,7 @@
   const selectedVoucher = ref<VoucherDate | null>(null)
 
   const handleCardClick = (voucher: VoucherDate) => {
+    if (voucher.isApplied === 1) return
     const code = voucher.voucherCode
     console.log('code', code)
     selectedVoucher.value = voucher
@@ -224,7 +225,8 @@
           v-for="item in displayedVouchers"
           :key="item.id || item.voucherCode"
           :voucher="item"
-          @click="handleCardClick(item)"
+          :class="{ 'voucher-card-disabled': item.isApplied === 1 }"
+          @click="item.isApplied === 1 ? undefined : handleCardClick(item)"
         />
 
         <!-- Infinite Scroll (disabled while actively searching) -->
@@ -272,6 +274,11 @@
   .vouchers-container {
     display: flex;
     flex-direction: column;
+  }
+  .voucher-card-disabled,
+  :deep(.voucher-card-disabled) {
+    pointer-events: none;
+    cursor: not-allowed;
   }
   .voucher-grid {
     padding: 10px 0;

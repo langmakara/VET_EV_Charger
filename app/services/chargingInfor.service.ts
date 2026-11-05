@@ -529,7 +529,7 @@ export function useChargingInforService() {
     try {
       const payload = {
         currency: 'KHR',
-        amount: String(totalPrice.value || 0)
+        amount: String(totalPrice.value)
       }
       const res: any = await abaBridge.getDefaultAcc(payload)
 
@@ -568,7 +568,10 @@ export function useChargingInforService() {
 
   // 8. WebSocket for OCPI commands
   const { data: socketData, status: socketStatus, send: sendSocketMessage } = useWebSocket(
-    'wss://qacltom.udaya-tech.com/OCPI/ws'
+    'wss://qacltom.udaya-tech.com/OCPI/ws',
+    {
+      evseUid: computed(() => getChargerUsername())
+    }
   )
 
   watch(socketData, (msg) => {
@@ -620,7 +623,7 @@ export function useChargingInforService() {
       const orderParams: CreateSaleOrderAppTmpParams = {
         chargerUsername,
         plugId,
-        paymentMethod: 1, // ABA PAY default
+        paymentMethod: 5, // ABA PAY default
         discountPercentage: discountPct,
         discount: discountAmount.value,
         voucherId,
@@ -654,7 +657,7 @@ export function useChargingInforService() {
         evse_uid: chargerUsername,
         transactionId: txId,
         isFullCharge,
-        paymentMethod: 1,
+        paymentMethod: 5,
         plug: plugId,
         durations: 0,
         totalKwh: totalKwh.value,
@@ -669,13 +672,24 @@ export function useChargingInforService() {
 
       triggerToast(message)
 
+      if (typeof window !== 'undefined') {
+        if (totalKwh.value) {
+          sessionStorage.setItem('vet_ev_total_kwh', String(totalKwh.value))
+        }
+        if (pricePerKwh.value) {
+          sessionStorage.setItem('vet_ev_price_per_kwh', String(pricePerKwh.value))
+        }
+      }
+
       setTimeout(() => {
         navigateTo({
           path: '/charging',
           query: {
             transactionId: txId,
             chargerCode: chargerUsername,
-            plugId: String(plugId)
+            plugId: String(plugId),
+            totalKwh: String(totalKwh.value || ''),
+            pricePerKwh: String(pricePerKwh.value || '')
           }
         })
       }, 1000)

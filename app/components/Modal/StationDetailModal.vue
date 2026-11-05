@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { computed } from 'vue'
   import { useI18n } from 'vue-i18n'
-  import { IonModal, IonContent, IonIcon } from '@ionic/vue'
+  import { IonModal, IonContent, IonIcon, modalController } from '@ionic/vue'
   import {
     heart,
     heartOutline,
@@ -12,7 +12,6 @@
     timeOutline,
     checkmarkOutline
   } from 'ionicons/icons'
-  import { useRouter } from 'vue-router'
   import Icon from '~/components/Icon/icon.vue'
   import IconButton from '~/components/Button/IconButton.vue'
   import AppButton from '~/components/Button/AppButton.vue'
@@ -90,10 +89,18 @@
     }
   }
 
-  const router = useRouter()
-  const handleScanToCharge = () => {
-    // emit('close')
-    router.push('/qr_scan')
+  const handleScanToCharge = async () => {
+    emit('close')
+    try {
+      let topModal = await modalController.getTop() 
+      while (topModal) {
+        await topModal.dismiss()
+        topModal = await modalController.getTop()
+      }
+    } catch (err) {
+      console.warn('Failed to dismiss modal:', err)
+    }
+    await navigateTo('/qr_scan')
   }
 
   const { baseUrl: evChargerBaseUrl } = useApiUrl('/vetEvChargerCustomerAPi', 5697)

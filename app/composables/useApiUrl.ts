@@ -38,3 +38,6 @@ export const useApiUrl = (contextPath: string = "", devPort?: number) => {
 
   return { activeEnv, baseUrl };
 };
+
+export const NO_IMAGE_AVAILABLE = "https://placehold.co/600x400?text=Image\\nUpcoming";
+

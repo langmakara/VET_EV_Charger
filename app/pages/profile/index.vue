@@ -16,6 +16,7 @@ import Icon from '~/components/Icon/icon.vue';
 import ContactModal from './contactModal.vue';
 import { sendTitleToFlutter } from '~/composables/useNativeBridge';
 import { getLangIdFromLocale, type SupportedLocale } from '~/helpers/languages';
+import { NO_IMAGE_AVAILABLE } from '~/composables/useApiUrl';
 
 const { locale, setLocale, t } = useI18n();
 const langIdCookie = useCookie<string | number | null>('lang_id');
@@ -123,6 +124,13 @@ const handleItemClick = (type: string) => {
       break;
   }
 };
+
+const handleImageError = (event: Event) => {
+  const target = event.target as HTMLImageElement;
+  if (target && target.src !== NO_IMAGE_AVAILABLE) {
+    target.src = NO_IMAGE_AVAILABLE;
+  }
+};
 </script>
 
 <template>
@@ -132,7 +140,11 @@ const handleItemClick = (type: string) => {
         <!-- 1. Centered Avatar & User Name -->
         <div class="avatar-section">
           <ion-avatar class="main-avatar">
-            <img :src="user.avatar" :alt="user.fullName" />
+            <img
+              :src="user.avatar || NO_IMAGE_AVAILABLE"
+              :alt="user.fullName"
+              @error="handleImageError"
+            />
           </ion-avatar>
           <h1 class="user-display-name">{{ user.fullName }}</h1>
         </div>

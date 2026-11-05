@@ -394,6 +394,32 @@ export interface PrivacyPolicyDropdownData {
   [key: string]: any;
 }
 
+// POST /dropdown/faqs/list
+export interface FaqsDropdownData {
+  id?: number | string;
+  questionEn?: string;
+  questionKh?: string;
+  questionCh?: string;
+  answerEn?: string;
+  answerKh?: string;
+  answerCh?: string;
+  [key: string]: any;
+}
+
+// POST /dropdown/contact-us/list
+// TypeContacUs: 1: Text, 2: Telephone, 3: Email, 4: Website
+export interface ContactUsDropdownData {
+  id?: number | string;
+  nameKh?: string;
+  nameEn?: string;
+  nameCn?: string;
+  typeOfContactId?: number;
+  link?: string;
+  iconUrl?: string;
+  ordering?: number;
+  [key: string]: any;
+}
+
 // POST /sale-order/app-tmp
 export interface CreateSaleOrderAppTmpParams {
   chargerUsername: string;

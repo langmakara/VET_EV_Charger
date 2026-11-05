@@ -330,3 +330,38 @@ export function formatMins(mins: number | string | null | undefined): string {
   }
   return `${Math.round(num)} mins`;
 }
+
+/**
+ * Format seconds into readable time string:
+ * 60s = 1 min, 60 min = 1 h
+ * - >= 3600s: "Xh Y mins" or "Xh"
+ * - >= 60s: "Xm Ys" or "X mins"
+ * - < 60s: "Xs"
+ */
+export function formatSeconds(
+  seconds: number | string | null | undefined,
+  fallback: string = "0 mins"
+): string {
+  const total = Number(seconds || 0);
+  if (!total || total <= 0 || isNaN(total)) return fallback;
+
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = Math.floor(total % 60);
+
+  if (h > 0) {
+    if (m > 0) {
+      return `${h}h ${m} min${m > 1 ? "s" : ""}`;
+    }
+    return `${h}h`;
+  }
+
+  if (m > 0) {
+    if (s > 0) {
+      return `${m}m ${s}s`;
+    }
+    return `${m} min${m > 1 ? "s" : ""}`;
+  }
+
+  return `${s}s`;
+}

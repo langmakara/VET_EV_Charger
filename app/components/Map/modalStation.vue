@@ -56,15 +56,19 @@
   const closeStationModal = () => {
     isStationModalOpen.value = false
     selectedStation.value = null
-    if (route.hash === '#station-modal') {
+    if (route.hash === '#station-modal' && !route.path.includes('/qr_scan')) {
       router.back()
     }
   }
 
   watch(
-    () => route.hash,
-    (newHash) => {
-      if (newHash !== '#station-modal' && isStationModalOpen.value) {
+    () => [route.path, route.hash],
+    ([newPath, newHash]) => {
+      if (newPath !== '/ev_charger/mapStations') {
+        emit('close')
+        isStationModalOpen.value = false
+        selectedStation.value = null
+      } else if (newHash !== '#station-modal' && isStationModalOpen.value) {
         isStationModalOpen.value = false
         selectedStation.value = null
       }

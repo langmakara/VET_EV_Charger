@@ -70,7 +70,11 @@ export const queryKeys = {
     gunType: (params?: Record<string, any>) =>
       [...queryKeys.dropdown.all, 'gun-type', params ?? {}] as const,
     privacyPolicy: (params?: Record<string, any>) =>
-      [...queryKeys.dropdown.all, 'privacy-policy', params ?? {}] as const
+      [...queryKeys.dropdown.all, 'privacy-policy', params ?? {}] as const,
+    faqs: (params?: Record<string, any>) =>
+      [...queryKeys.dropdown.all, 'faqs', params ?? {}] as const,
+    contactUs: (params?: Record<string, any>) =>
+      [...queryKeys.dropdown.all, 'contact-us', params ?? {}] as const
   },
 
   saleOrder: {
