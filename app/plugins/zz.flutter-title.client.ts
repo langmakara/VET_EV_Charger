@@ -1,4 +1,4 @@
-import { sendTitleToFlutter } from "~/composables/useNativeBridge";
+// import { sendTitleToFlutter } from "~/composables/useNativeBridge";
 import type { RouteLocationNormalized } from "vue-router";
 
 const DEFAULT_TITLE_KEY = "titles.vehicleRental";
@@ -55,11 +55,11 @@ export default defineNuxtPlugin(() => {
     }
     // If the route has an explicit (already-translated) title via query, use it directly
     if (to.query?.title) {
-      sendTitleToFlutter(String(to.query.title));
+      // sendTitleToFlutter(String(to.query.title));
       return;
     }
     const key = resolveTitleKey(to);
-    sendTitleToFlutter(t(key));
+    // sendTitleToFlutter(t(key));
   };
 
   // 1. Send title immediately as early as possible without waiting for router.isReady()
@@ -67,7 +67,7 @@ export default defineNuxtPlugin(() => {
   if (initialRoute) {
     sendTranslatedTitle(initialRoute);
   } else {
-    sendTitleToFlutter(t(DEFAULT_TITLE_KEY));
+    // sendTitleToFlutter(t(DEFAULT_TITLE_KEY));
   }
 
   // 2. Once router is fully ready, ensure initial route title is accurately sent

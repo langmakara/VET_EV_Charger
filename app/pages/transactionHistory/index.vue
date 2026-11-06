@@ -13,13 +13,7 @@
   import History from '~/components/Membership/History.vue'
   import TransactionModal from '~/components/Modal/TransactionModal.vue'
   import { useTransactionsHistoryQuery } from '~/composables/queries/useSaleOrder'
-  import { sendTitleToFlutter } from '~/composables/useNativeBridge'
   import type { ChargeHistoryParams, TransactionHistoryData } from '~/api/types'
-
-  onMounted(() => {
-    sendTitleToFlutter('Transaction History')
-    setupObserver()
-  })
 
   type TabType = 'all' | 'earned' | 'spend'
   const activeTab = ref<TabType>('all')

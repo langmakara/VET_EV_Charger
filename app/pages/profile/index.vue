@@ -1,136 +1,122 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import {
-  IonPage,
-  IonContent,
-  IonAvatar,
-  IonItem,
-  IonLabel,
-  IonIcon,
-  IonModal,
-  IonToast
-} from '@ionic/vue';
-import { chevronForward } from 'ionicons/icons';
-import Icon from '~/components/Icon/icon.vue';
-import ContactModal from './contactModal.vue';
-import { sendTitleToFlutter } from '~/composables/useNativeBridge';
-import { getLangIdFromLocale, type SupportedLocale } from '~/helpers/languages';
-import { NO_IMAGE_AVAILABLE } from '~/composables/useApiUrl';
+  import { ref, computed, onMounted, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import {
+    IonPage,
+    IonContent,
+    IonAvatar,
+    IonItem,
+    IonLabel,
+    IonIcon,
+    IonModal,
+    IonToast
+  } from '@ionic/vue'
+  import { chevronForward } from 'ionicons/icons'
+  import Icon from '~/components/Icon/icon.vue'
+  import ContactModal from './contactModal.vue'
+  import { getLangIdFromLocale, type SupportedLocale } from '~/helpers/languages'
+  import { NO_IMAGE_AVAILABLE } from '~/composables/useApiUrl'
+  import { useABAMiniApp } from '@/composables/useNativeBridge'
+  
+  const { userProfile } = useABAMiniApp()
+  
 
-const { locale, setLocale, t } = useI18n();
-const langIdCookie = useCookie<string | number | null>('lang_id');
-const nuxtApp = useNuxtApp();
+  const { locale, setLocale, t } = useI18n()
+  const langIdCookie = useCookie<string | number | null>('lang_id')
+  const nuxtApp = useNuxtApp()
 
-onMounted(() => {
-  sendTitleToFlutter(t('profile.title') || 'Profile');
-});
+  // User information from centralized data
+  // Profile user data from useUserProfile with fallback to centralized JSON
 
-watch(locale, () => {
-  sendTitleToFlutter(t('profile.title') || 'Profile');
-});
+  // Language definitions
+  interface LanguageOption {
+    code: SupportedLocale
+    label: string
+    toastText: string
+  }
 
-// User information from centralized data
-// Profile user data from useUserProfile with fallback to centralized JSON
-const { userProfile } = useUserProfile();
+  const defaultLanguage: LanguageOption = {
+    code: 'en',
+    label: 'English',
+    toastText: 'Language changed to English'
+  }
 
-const user = computed(() => ({
-  fullName: userProfile.value?.fullName,
-  email: userProfile.value?.email,
-  address: userProfile.value?.address,
-  phoneNumber: userProfile.value?.phoneNumber,
-  avatar: userProfile.value?.avatar
-}));
+  const languages: LanguageOption[] = [
+    { code: 'km', label: 'ភាសាខ្មែរ', toastText: 'បានប្តូរទៅភាសាខ្មែរ' },
+    defaultLanguage,
+    { code: 'zh', label: '中文', toastText: '语言已切换为中文' }
+  ]
 
-// Language definitions
-interface LanguageOption {
-  code: SupportedLocale;
-  label: string;
-  toastText: string;
-}
+  const selectedLanguageCode = computed(() => (locale.value as SupportedLocale) || 'en')
+  const isLanguageModalOpen = ref(false)
+  const isContactModalOpen = ref(false)
 
-const defaultLanguage: LanguageOption = {
-  code: 'en',
-  label: 'English',
-  toastText: 'Language changed to English'
-};
+  const currentLanguage = computed<LanguageOption>(() => {
+    return languages.find((l) => l.code === selectedLanguageCode.value) ?? defaultLanguage
+  })
 
-const languages: LanguageOption[] = [
-  { code: 'km', label: 'ភាសាខ្មែរ', toastText: 'បានប្តូរទៅភាសាខ្មែរ' },
-  defaultLanguage,
-  { code: 'zh', label: '中文', toastText: '语言已切换为中文' }
-];
+  // Feedback toast
+  const showToast = ref(false)
+  const toastMessage = ref('')
 
-const selectedLanguageCode = computed(() => (locale.value as SupportedLocale) || 'en');
-const isLanguageModalOpen = ref(false);
-const isContactModalOpen = ref(false);
+  const triggerToast = (msg: string) => {
+    toastMessage.value = msg
+    showToast.value = true
+  }
 
-const currentLanguage = computed<LanguageOption>(() => {
-  return languages.find((l) => l.code === selectedLanguageCode.value) ?? defaultLanguage;
-});
+  const selectLanguage = async (lang: LanguageOption) => {
+    try {
+      const targetCode = lang.code
+      const numericLangId = getLangIdFromLocale(targetCode)
+      langIdCookie.value = numericLangId
 
-// Feedback toast
-const showToast = ref(false);
-const toastMessage = ref('');
+      const i18n = (nuxtApp as any)?.$i18n
+      if (typeof setLocale === 'function') {
+        await setLocale(targetCode)
+      } else if (i18n?.setLocale) {
+        await i18n.setLocale(targetCode)
+      } else {
+        locale.value = targetCode
+      }
 
-const triggerToast = (msg: string) => {
-  toastMessage.value = msg;
-  showToast.value = true;
-};
-
-const selectLanguage = async (lang: LanguageOption) => {
-  try {
-    const targetCode = lang.code;
-    const numericLangId = getLangIdFromLocale(targetCode);
-    langIdCookie.value = numericLangId;
-
-    const i18n = (nuxtApp as any)?.$i18n;
-    if (typeof setLocale === 'function') {
-      await setLocale(targetCode);
-    } else if (i18n?.setLocale) {
-      await i18n.setLocale(targetCode);
-    } else {
-      locale.value = targetCode;
+      triggerToast(lang.toastText)
+    } catch (err) {
+      console.error('Failed to change language:', err)
+    } finally {
+      setTimeout(() => {
+        isLanguageModalOpen.value = false
+      }, 160)
     }
-
-    triggerToast(lang.toastText);
-  } catch (err) {
-    console.error('Failed to change language:', err);
-  } finally {
-    setTimeout(() => {
-      isLanguageModalOpen.value = false;
-    }, 160);
   }
-};
 
-// Item click handler
-const handleItemClick = (type: string) => {
-  switch (type) {
-    case 'profile':
-      navigateTo('/profile/profileDetail');
-      break;
-    case 'language':
-      isLanguageModalOpen.value = true;
-      break;
-    case 'faq':
-      navigateTo('/faq');
-      break;
-    case 'contact':
-      isContactModalOpen.value = true;
-      break;
-    case 'privacy':
-    case 'terms':
-      navigateTo('/terms');
-      break;
+  // Item click handler
+  const handleItemClick = (type: string) => {
+    switch (type) {
+      case 'profile':
+        navigateTo('/profile/profileDetail')
+        break
+      case 'language':
+        isLanguageModalOpen.value = true
+        break
+      case 'faq':
+        navigateTo('/faq')
+        break
+      case 'contact':
+        isContactModalOpen.value = true
+        break
+      case 'privacy':
+      case 'terms':
+        navigateTo('/terms')
+        break
+    }
   }
-};
 
-const handleImageError = (event: Event) => {
-  const target = event.target as HTMLImageElement;
-  if (target && target.src !== NO_IMAGE_AVAILABLE) {
-    target.src = NO_IMAGE_AVAILABLE;
+  const handleImageError = (event: Event) => {
+    const target = event.target as HTMLImageElement
+    if (target && target.src !== NO_IMAGE_AVAILABLE) {
+      target.src = NO_IMAGE_AVAILABLE
+    }
   }
-};
 </script>
 
 <template>
@@ -141,17 +127,23 @@ const handleImageError = (event: Event) => {
         <div class="avatar-section">
           <ion-avatar class="main-avatar">
             <img
-              :src="user.avatar || NO_IMAGE_AVAILABLE"
-              :alt="user.fullName"
+              :src="userProfile?.sex || NO_IMAGE_AVAILABLE"
+              :alt="userProfile?.fullName"
               @error="handleImageError"
             />
           </ion-avatar>
-          <h1 class="user-display-name">{{ user.fullName }}</h1>
+          <h1 class="user-display-name">{{ userProfile?.fullName }}</h1>
         </div>
 
         <!-- 2. Profile Item -->
         <div class="menu-card single-item-card">
-          <ion-item lines="none" button :detail="false" class="menu-item" @click="handleItemClick('profile')">
+          <ion-item
+            lines="none"
+            button
+            :detail="false"
+            class="menu-item"
+            @click="handleItemClick('profile')"
+          >
             <div slot="start" class="menu-icon-box">
               <Icon name="profile" size="22px" color="#475569" />
             </div>
@@ -164,14 +156,24 @@ const handleImageError = (event: Event) => {
         <div class="section-group">
           <div class="section-header-title">{{ $t('profile.setting') }}</div>
           <div class="menu-card single-item-card">
-            <ion-item lines="none" button :detail="false" class="menu-item" @click="handleItemClick('language')">
+            <ion-item
+              lines="none"
+              button
+              :detail="false"
+              class="menu-item"
+              @click="handleItemClick('language')"
+            >
               <div slot="start" class="menu-icon-box">
                 <Icon name="translate" size="22px" color="#475569" />
               </div>
               <ion-label class="menu-label">{{ $t('profile.language') }}</ion-label>
               <div slot="end" class="menu-end-slot">
                 <div class="active-flag-wrapper">
-                  <Icon :name="'flag-' + (currentLanguage?.code || 'en')" size="18px" class="flag-svg" />
+                  <Icon
+                    :name="'flag-' + (currentLanguage?.code || 'en')"
+                    size="18px"
+                    class="flag-svg"
+                  />
                 </div>
                 <span class="language-name">{{ currentLanguage?.label || 'English' }}</span>
                 <ion-icon :icon="chevronForward" class="menu-chevron"></ion-icon>
@@ -185,7 +187,13 @@ const handleImageError = (event: Event) => {
           <div class="section-header-title">{{ $t('profile.helpAndPolicies') }}</div>
           <div class="menu-card grouped-card">
             <!-- FQA -->
-            <ion-item lines="none" button :detail="false" class="menu-item bordered-bottom" @click="handleItemClick('faq')">
+            <ion-item
+              lines="none"
+              button
+              :detail="false"
+              class="menu-item bordered-bottom"
+              @click="handleItemClick('faq')"
+            >
               <div slot="start" class="menu-icon-box">
                 <Icon name="faq" size="22px" color="#475569" />
               </div>
@@ -194,7 +202,13 @@ const handleImageError = (event: Event) => {
             </ion-item>
 
             <!-- Contact Us -->
-            <ion-item lines="none" button :detail="false" class="menu-item bordered-bottom" @click="handleItemClick('contact')">
+            <ion-item
+              lines="none"
+              button
+              :detail="false"
+              class="menu-item bordered-bottom"
+              @click="handleItemClick('contact')"
+            >
               <div slot="start" class="menu-icon-box">
                 <Icon name="headset" size="22px" color="#475569" />
               </div>
@@ -203,7 +217,13 @@ const handleImageError = (event: Event) => {
             </ion-item>
 
             <!-- Privacy Policy -->
-            <ion-item lines="none" button :detail="false" class="menu-item bordered-bottom" @click="handleItemClick('privacy')">
+            <ion-item
+              lines="none"
+              button
+              :detail="false"
+              class="menu-item bordered-bottom"
+              @click="handleItemClick('privacy')"
+            >
               <div slot="start" class="menu-icon-box">
                 <Icon name="shield" size="22px" color="#475569" />
               </div>
@@ -212,7 +232,13 @@ const handleImageError = (event: Event) => {
             </ion-item>
 
             <!-- Terms Condition -->
-            <ion-item lines="none" button :detail="false" class="menu-item" @click="handleItemClick('terms')">
+            <ion-item
+              lines="none"
+              button
+              :detail="false"
+              class="menu-item"
+              @click="handleItemClick('terms')"
+            >
               <div slot="start" class="menu-icon-box">
                 <Icon name="document" size="22px" color="#475569" />
               </div>
@@ -290,281 +316,281 @@ const handleImageError = (event: Event) => {
 </template>
 
 <style scoped>
-.profile-page-content {
-  --background: #ffffff;
-}
+  .profile-page-content {
+    --background: #ffffff;
+  }
 
-.profile-container {
-  padding: 24px 18px 40px 18px;
-  width: 100%;
-  box-sizing: border-box;
-}
+  .profile-container {
+    padding: 24px 18px 40px 18px;
+    width: 100%;
+    box-sizing: border-box;
+  }
 
-/* 1. Avatar Section */
-.avatar-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin-top: 10px;
-  margin-bottom: 28px;
-}
+  /* 1. Avatar Section */
+  .avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+    margin-bottom: 28px;
+  }
 
-.main-avatar {
-  width: 86px;
-  height: 86px;
-  border-radius: 50%;
-  overflow: hidden;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-}
+  .main-avatar {
+    width: 86px;
+    height: 86px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  }
 
-.main-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+  .main-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
-.user-display-name {
-  font-size: 19px;
-  font-weight: 800;
-  color: #1e293b;
-  margin-top: 14px;
-  margin-bottom: 0;
-  letter-spacing: -0.3px;
-  text-align: center;
-}
+  .user-display-name {
+    font-size: 19px;
+    font-weight: 800;
+    color: #1e293b;
+    margin-top: 14px;
+    margin-bottom: 0;
+    letter-spacing: -0.3px;
+    text-align: center;
+  }
 
-/* 2. Menu Cards & Groups */
-.section-group {
-  margin-top: 20px;
-}
+  /* 2. Menu Cards & Groups */
+  .section-group {
+    margin-top: 20px;
+  }
 
-.section-header-title {
-  font-size: 13.5px;
-  color: #94a3b8;
-  font-weight: 500;
-  margin-bottom: 8px;
-  padding-left: 2px;
-}
+  .section-header-title {
+    font-size: 13.5px;
+    color: #94a3b8;
+    font-weight: 500;
+    margin-bottom: 8px;
+    padding-left: 2px;
+  }
 
-.menu-card {
-  background: #ffffff;
-}
+  .menu-card {
+    background: #ffffff;
+  }
 
-.single-item-card {
-  margin-bottom: 4px;
-}
+  .single-item-card {
+    margin-bottom: 4px;
+  }
 
-.grouped-card {
-  border-radius: 0;
-}
+  .grouped-card {
+    border-radius: 0;
+  }
 
-.menu-item {
-  --background: transparent;
-  background: transparent;
-  --padding-start: 0;
-  --inner-padding-end: 0;
-  --padding-top: 12px;
-  --padding-bottom: 12px;
-  --min-height: 52px;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
+  .menu-item {
+    --background: transparent;
+    background: transparent;
+    --padding-start: 0;
+    --inner-padding-end: 0;
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    --min-height: 52px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
 
-.menu-item:active {
-  opacity: 0.75;
-}
+  .menu-item:active {
+    opacity: 0.75;
+  }
 
-.bordered-bottom {
-  border-bottom: 1px solid #f1f5f9;
-}
+  .bordered-bottom {
+    border-bottom: 1px solid #f1f5f9;
+  }
 
-.menu-icon-box {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 14px;
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-}
+  .menu-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 14px;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
 
-.menu-label {
-  font-size: 15.5px;
-  color: #1e293b;
-  font-weight: 500;
-  margin: 0;
-}
+  .menu-label {
+    font-size: 15.5px;
+    color: #1e293b;
+    font-weight: 500;
+    margin: 0;
+  }
 
-.menu-end-slot {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+  .menu-end-slot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
 
-.flag-svg {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: block;
-}
+  .flag-svg {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: block;
+  }
 
-.language-name {
-  font-size: 14.5px;
-  color: #94a3b8;
-  font-weight: 400;
-  margin-left: 2px;
-}
+  .language-name {
+    font-size: 14.5px;
+    color: #94a3b8;
+    font-weight: 400;
+    margin-left: 2px;
+  }
 
-.menu-chevron {
-  font-size: 19px;
-  color: #64748b;
-  margin-left: 4px;
-}
+  .menu-chevron {
+    font-size: 19px;
+    color: #64748b;
+    margin-left: 4px;
+  }
 
-/* 5. App Version Footer */
-.app-version-text {
-  text-align: center;
-  color: #94a3b8;
-  font-size: 13px;
-  font-weight: 400;
-  margin-top: 32px;
-  letter-spacing: 0.2px;
-}
+  /* 5. App Version Footer */
+  .app-version-text {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 400;
+    margin-top: 32px;
+    letter-spacing: 0.2px;
+  }
 
-.active-flag-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  overflow: hidden;
-}
+  .active-flag-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    overflow: hidden;
+  }
 
-/* Choose Language Modal Sheet Styling */
-.language-modal-content {
-  --background: #ffffff;
-  background: #ffffff;
-}
+  /* Choose Language Modal Sheet Styling */
+  .language-modal-content {
+    --background: #ffffff;
+    background: #ffffff;
+  }
 
-.language-sheet-container {
-  background-color: #ffffff;
-  padding: 22px 24px 34px 24px;
-  box-sizing: border-box;
-}
+  .language-sheet-container {
+    background-color: #ffffff;
+    padding: 22px 24px 34px 24px;
+    box-sizing: border-box;
+  }
 
-.language-sheet-title {
-  text-align: center;
-  font-size: 18.5px;
-  font-weight: 700;
-  color: #1e293b;
-  margin-top: 2px;
-  margin-bottom: 22px;
-  letter-spacing: -0.2px;
-}
+  .language-sheet-title {
+    text-align: center;
+    font-size: 18.5px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-top: 2px;
+    margin-bottom: 22px;
+    letter-spacing: -0.2px;
+  }
 
-.language-options-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+  .language-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
 
-.language-option-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 13px 4px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: opacity 0.15s ease;
-}
+  .language-option-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 4px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.15s ease;
+  }
 
-.language-option-row:active {
-  opacity: 0.7;
-}
+  .language-option-row:active {
+    opacity: 0.7;
+  }
 
-.lang-left {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
+  .lang-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
 
-.flag-circle {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-  flex-shrink: 0;
-}
+  .flag-circle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    flex-shrink: 0;
+  }
 
-.sheet-flag-svg {
-  width: 24px;
-  height: 24px;
-  display: block;
-}
+  .sheet-flag-svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+  }
 
-.lang-text {
-  font-size: 16px;
-  font-weight: 500;
-  color: #1e293b;
-  letter-spacing: -0.2px;
-}
+  .lang-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: #1e293b;
+    letter-spacing: -0.2px;
+  }
 
-.lang-radio-box {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-}
+  .lang-radio-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
 
-.radio-ring-active {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 2px solid #de5d0a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  box-sizing: border-box;
-}
+  .radio-ring-active {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #de5d0a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    box-sizing: border-box;
+  }
 
-.radio-dot-inner {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: #de5d0a;
-}
+  .radio-dot-inner {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #de5d0a;
+  }
 
-.radio-ring-inactive {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1.8px solid #1e293b;
-  background: transparent;
-  box-sizing: border-box;
-}
+  .radio-ring-inactive {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1.8px solid #1e293b;
+    background: transparent;
+    box-sizing: border-box;
+  }
 </style>
 
 <style>
-/* Global modal container overrides for the white language sheet */
-ion-modal.language-modal-sheet {
-  --background: #ffffff;
-  --border-radius: 24px 24px 0 0;
-  --backdrop-opacity: 0.55;
-}
+  /* Global modal container overrides for the white language sheet */
+  ion-modal.language-modal-sheet {
+    --background: #ffffff;
+    --border-radius: 24px 24px 0 0;
+    --backdrop-opacity: 0.55;
+  }
 
-ion-modal.language-modal-sheet::part(content) {
-  border-radius: 24px 24px 0 0;
-  background: #ffffff;
-  overflow: hidden;
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
-}
+  ion-modal.language-modal-sheet::part(content) {
+    border-radius: 24px 24px 0 0;
+    background: #ffffff;
+    overflow: hidden;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+  }
 </style>

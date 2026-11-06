@@ -76,12 +76,12 @@
         <!-- Floating Current Location FAB (Bottom Right above sheet) -->
         <button
           class="find-location-fab"
-          :disabled="isLocatingCurrent"
+          :disabled="isHardwareScanning"
           @click="selectCurrentLocation"
           aria-label="Find current location"
         >
           <ion-spinner
-            v-if="isLocatingCurrent"
+            v-if="isHardwareScanning"
             name="crescent"
             color="light"
             class="fab-spinner"
@@ -114,7 +114,7 @@
   import ModalStation from './modalStation.vue'
   import StationDetailModal from '~/components/Modal/StationDetailModal.vue'
   import AppButton from '~/components/Button/AppButton.vue'
-  import { getCurrentNativeLocation, useNativeBridge } from '~/composables/useNativeBridge'
+  import { useDeviceLocation } from '~/composables/useNativeBridge'
   import IconButton from '../Button/IconButton.vue'
 
   defineEmits<{
@@ -171,7 +171,7 @@
   const mapRef = ref<InstanceType<typeof GoogleMap> | null>(null)
   const selectedAddress = ref<string>(props.initialAddress || '')
   const isGeocoding = ref<boolean>(false)
-  const isLocatingCurrent = ref<boolean>(false)
+  const { currentCoordinates, isHardwareScanning, triggerHardwareSync } = useDeviceLocation()
   const selectedCoords = ref<{ lat: number; lng: number } | null>(props.initialCoords || null)
   // Tracks the accuracy (meters) reported by the browser for the last geolocation fix,
   // so the UI can warn the user when the pin might be off by more than a trivial amount.
@@ -311,32 +311,6 @@
     }
   }
 
-  // getBestPosition() retrieves current GPS position via native bridge only
-  async function getBestPosition(): Promise<GeolocationPosition> {
-    const nativeLoc = await getCurrentNativeLocation(5000)
-    if (
-      nativeLoc &&
-      !isNaN(nativeLoc.lat) &&
-      !isNaN(nativeLoc.lng) &&
-      !(nativeLoc.lat === 0 && nativeLoc.lng === 0)
-    ) {
-      return {
-        coords: {
-          latitude: nativeLoc.lat,
-          longitude: nativeLoc.lng,
-          accuracy: nativeLoc.accuracy ?? 10,
-          altitude: null,
-          altitudeAccuracy: null,
-          heading: null,
-          speed: null
-        },
-        timestamp: Date.now()
-      } as GeolocationPosition
-    }
-
-    throw new Error('Unable to get current location from native bridge.')
-  }
-
   async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
     const api = mapRef.value?.api
     if (!api) return null
@@ -432,58 +406,50 @@
     updateMarker(lat, lng)
   }
 
+  async function applyLocationToMap(lat: number, lng: number, accuracy?: number) {
+    if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) return
+
+    lastAccuracyMeters.value = accuracy ?? null
+    center.value = { lat, lng }
+    zoom.value = 16
+
+    const mapInstance = mapRef.value?.map
+    if (mapInstance) {
+      if (typeof mapInstance.panTo === 'function') {
+        mapInstance.panTo({ lat, lng })
+      }
+      if (typeof mapInstance.setZoom === 'function') {
+        mapInstance.setZoom(16)
+      }
+    }
+
+    await updateMarker(lat, lng)
+  }
+
+  // Watch for asynchronous coordinates returned by the native device hardware
+  watch(
+    () => currentCoordinates.value,
+    async (coords) => {
+      if (!coords) return
+      const lat = Number(coords.latitude)
+      const lng = Number(coords.longitude)
+      await applyLocationToMap(lat, lng, coords.accuracy)
+    }
+  )
+
   async function selectCurrentLocation() {
-    isLocatingCurrent.value = true
     try {
-      const position = await getBestPosition()
-      const lat = position.coords.latitude
-      const lng = position.coords.longitude
+      // Trigger hardware sync via useDeviceLocation (requestCurrentLocation)
+      await triggerHardwareSync()
 
-      if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) {
-        throw new Error('Unable to determine a valid location.')
+      // If current coordinates are already available, center immediately
+      if (currentCoordinates.value) {
+        const lat = Number(currentCoordinates.value.latitude)
+        const lng = Number(currentCoordinates.value.longitude)
+        await applyLocationToMap(lat, lng, currentCoordinates.value.accuracy)
       }
-
-      lastAccuracyMeters.value = position.coords.accuracy
-
-      center.value = { lat, lng }
-      zoom.value = 16
-
-      // Explicitly pan and zoom Google Map instance if available
-      const mapInstance = mapRef.value?.map
-      if (mapInstance) {
-        if (typeof mapInstance.panTo === 'function') {
-          mapInstance.panTo({ lat, lng })
-        }
-        if (typeof mapInstance.setZoom === 'function') {
-          mapInstance.setZoom(16)
-        }
-      }
-
-      await updateMarker(lat, lng)
     } catch (err: any) {
       console.error('selectCurrentLocation failed:', err)
-      const { showToast } = useNativeBridge()
-
-      let errorMsg =
-        'Unable to get current location. Please grant location permission in app settings.'
-      if (typeof window !== 'undefined' && !window.isSecureContext) {
-        errorMsg = 'Location requires HTTPS connection. Please load the app securely.'
-      } else if (err?.code === 1) {
-        // PERMISSION_DENIED
-        errorMsg = 'Location permission denied. Please allow location access in settings.'
-      } else if (err?.code === 2) {
-        // POSITION_UNAVAILABLE
-        errorMsg = 'Location unavailable. Please check if GPS/Location Services are turned ON.'
-      } else if (err?.code === 3) {
-        // TIMEOUT
-        errorMsg = 'Location request timed out. Please try again or search for your address.'
-      } else if (err?.message) {
-        errorMsg = err.message
-      }
-
-      showToast(errorMsg)
-    } finally {
-      isLocatingCurrent.value = false
     }
   }
 

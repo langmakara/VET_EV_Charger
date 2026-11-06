@@ -24,7 +24,7 @@
   import SectionHeader from '~/components/SectionHeader.vue'
   import StationDetailModal from '../../components/Modal/StationDetailModal.vue'
   import StationCard from '~/components/Card/StationCard.vue'
-  import { getCurrentNativeLocation } from '~/composables/useNativeBridge'
+  import { useDeviceLocation } from '~/composables/useNativeBridge'
 
   import evChargerData from '~/data/ev_charger_data.json'
   import IconButton from '~/components/Button/IconButton.vue'
@@ -42,10 +42,12 @@
   import { useWebSocket, type OcpiMeterValuesPayload } from '~/composables/useChargintSocket'
   import { formatMins, formatSeconds } from '~/utils/formatters'
   import { NO_IMAGE_AVAILABLE } from '~/composables/useApiUrl'
+  import { useABAMiniApp } from '@/composables/useNativeBridge'
+  
+  const { userProfile } = useABAMiniApp()
 
   const { actions } = evChargerData
   const { t, locale } = useI18n()
-
   const { data: membershipInfo, error } = useMembershipInfoQuery()
 
   const membership = computed<MembershipInfoData | null>(() => {
@@ -57,16 +59,6 @@
   const chargingStatus = computed<ChargingStatusData | null>(() => {
     return charging.value?.body?.data ?? null
   })
-
-  const { userProfile } = useUserProfile()
-
-  const user = computed(() => ({
-    fullName: userProfile.value?.fullName,
-    email: userProfile.value?.email,
-    address: userProfile.value?.address,
-    phoneNumber: userProfile.value?.phoneNumber,
-    avatar: userProfile.value?.avatar
-  }))
 
   // Reactive query parameters (filter payload for POST /station/list)
   const filter = ref<StationListParams>({
@@ -143,19 +135,32 @@
     })
   })
 
-  onMounted(async () => {
-    try {
-      const loc = await getCurrentNativeLocation()
-      if (loc?.lat && loc?.lng) {
-        // Updating filter automatically triggers useStationInfinite!
-        filter.value = {
-          ...filter.value,
-          lats: loc.lat,
-          longs: loc.lng
+  const { currentCoordinates, triggerHardwareSync } = useDeviceLocation()
+
+  watch(
+    () => currentCoordinates.value,
+    (coords) => {
+      if (coords?.latitude && coords?.longitude) {
+        const lat = Number(coords.latitude)
+        const lng = Number(coords.longitude)
+        if (!isNaN(lat) && !isNaN(lng) && !(lat === 0 && lng === 0)) {
+          // Updating filter automatically triggers useStationInfinite!
+          filter.value = {
+            ...filter.value,
+            lats: lat,
+            longs: lng
+          }
         }
       }
+    },
+    { immediate: true }
+  )
+
+  onMounted(async () => {
+    try {
+      await triggerHardwareSync()
     } catch (err) {
-      console.warn('Could not get GPS location, using fallback:', err)
+      console.warn('Could not trigger GPS location hardware sync:', err)
     }
   })
 
@@ -363,13 +368,13 @@
           <ion-item class="profile-item" lines="none" :detail="false">
             <ion-avatar slot="start" class="profile-avatar">
               <img
-                :src="user.avatar || NO_IMAGE_AVAILABLE"
-                :alt="user.fullName"
+                :src="userProfile?.sex || NO_IMAGE_AVAILABLE"
+                :alt="userProfile?.fullName"
                 @error="handleImageError"
               />
             </ion-avatar>
             <ion-label class="profile-info-label">
-              <h2 class="profile-user-name">{{ user.fullName }}</h2>
+              <h2 class="profile-user-name">{{ userProfile?.fullName }}</h2>
               <p class="profile-user-greeting">{{ $t('evCharger.welcome') }}</p>
             </ion-label>
             <ion-icon slot="end" :icon="chevronForward" class="profile-chevron"></ion-icon>
@@ -519,6 +524,7 @@
         :station="selectedStation"
         @close="closeStationModal"
       />
+      <AppButton label="Test" @click="navigateTo('/dashboard')" />
     </ion-content>
     <ion-footer class="scan-QR">
       <div class="scan-QR__container">

@@ -16,13 +16,8 @@
 import { computed, ref, watch, onMounted } from "vue";
 import { IonPage, IonContent, IonSpinner, IonText } from "@ionic/vue";
 import { usePrivacyPolicyDropdownQuery } from "~/composables/queries";
-import { sendTitleToFlutter } from "~/composables/useNativeBridge";
 
 const { t, locale } = useI18n();
-
-onMounted(() => {
-  sendTitleToFlutter("Privacy Policy");
-});
 
 const {
   data: dropdownResponse,

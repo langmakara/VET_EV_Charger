@@ -1,6 +1,7 @@
 import { ref, computed, watch, onMounted, type Ref, type ComputedRef } from 'vue'
 import { useRoute, navigateTo } from '#app'
-import { sendTitleToFlutter, abaBridge } from '~/composables/useNativeBridge'
+// import { sendTitleToFlutter, abaBridge } from '~/composables/useNativeBridge'
+import { ABABridgeService } from '@/services/abaBridge'
 import { useVoucherInfinite } from '~/composables/queries/useVoucher'
 import { useCalculatePromotionMutation } from '~/composables/queries/usePromotion'
 import { useCreateSaleOrderAppTmpMutation } from '~/composables/queries/useSaleOrder'
@@ -531,7 +532,14 @@ export function useChargingInforService() {
         currency: 'KHR',
         amount: String(totalPrice.value)
       }
-      const res: any = await abaBridge.getDefaultAcc(payload)
+      // Note: ABA bridge getDefaultAcc can be re-enabled once connected
+      let res: any = null
+      try {
+        res = await ABABridgeService.invokeNative('getDefaultAcc', payload)
+      } catch (e) {
+        // Fallback gracefully in web/development environment
+        console.warn('getDefaultAcc not supported or failed:', e)
+      }
 
       // Response might be { data: [...] } or a direct object / array
       const raw = res?.data ?? res?.result ?? res?.body ?? res
@@ -702,7 +710,12 @@ export function useChargingInforService() {
 
   // Lifecycle
   onMounted(() => {
-    sendTitleToFlutter('Charging Information')
+    ABABridgeService.setNavigationBar({
+      title: 'Charging Information',
+      color: '#ffffff',
+      safeAreaColor: '#000000',
+      bgColor: '#DD7310'
+    }).catch(() => {})
     loadDefaultAccount()
   })
 

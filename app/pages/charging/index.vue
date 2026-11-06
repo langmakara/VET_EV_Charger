@@ -21,7 +21,6 @@
   } from '~/composables/useChargintSocket'
   import { useRoute, navigateTo } from '#app'
   import { onBeforeRouteLeave } from 'vue-router'
-  import { abaBridge, sendTitleToFlutter } from '~/composables/useNativeBridge'
   import { formatMins, formatSeconds } from '~/utils/formatters'
   import { useStationPricePerKwhQuery } from '~/composables/queries'
 
@@ -261,45 +260,6 @@
     return '#A4C214' // Lime green for normal charging
   })
 
-  // 6. Native App Bar Title & Back Button Handling (Mobile App & Phone Back)
-  const onPopState = () => {
-    abaBridge.backToHomePage()
-  }
-
-  onMounted(() => {
-    sendTitleToFlutter('Charging')
-    if (typeof window !== 'undefined') {
-      window.addEventListener('popstate', onPopState)
-    }
-  })
-
-  onBeforeUnmount(() => {
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('popstate', onPopState)
-    }
-  })
-
-  // Intercept phone hardware / gesture back button
-  useBackButton(9999, () => {
-    if (isStopAlertOpen.value) {
-      isStopAlertOpen.value = false
-      return
-    }
-    if (isFullyChargedAlertOpen.value) {
-      isFullyChargedAlertOpen.value = false
-      return
-    }
-    abaBridge.backToHomePage()
-  })
-
-  // Prevent routing back to payment/order info; return to native mobile home
-  onBeforeRouteLeave((to, from) => {
-    if (to.path === '/session_summary' || to.path === '/ev_charger') {
-      return true
-    }
-    abaBridge.backToHomePage()
-    return false
-  })
 </script>
 
 <template>

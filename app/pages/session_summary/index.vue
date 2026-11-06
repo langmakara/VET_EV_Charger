@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import AppButton from '~/components/Button/AppButton.vue';
 import Icon from '~/components/Icon/icon.vue';
-import { abaBridge } from '~/composables/useNativeBridge';
+// import { abaBridge } from '~/composables/useNativeBridge';
 
  const handleBackToHome = () => {
-    abaBridge.backToHomePage()
+    // abaBridge.backToHomePage()
  }
 
 

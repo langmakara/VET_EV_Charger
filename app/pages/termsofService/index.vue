@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { IonPage, IonContent, IonToast } from '@ionic/vue';
 import AppButton from '~/components/Button/AppButton.vue';
-import { sendTitleToFlutter, useNativeBridge } from '~/composables/useNativeBridge';
+import {useABAMiniApp } from '~/composables/useNativeBridge';
 import LoadingPage from '~/components/loading/loadingPage.vue';
 
 interface Props {
@@ -14,24 +14,13 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const router = useRouter();
-const { closeApp } = useNativeBridge();
+const { closeMiniApp } = useABAMiniApp();
 
 // Startup loading state (loads for 5s by default)
 const showStartupLoading = ref(props.showLoading);
 
 // Future-proof: Set to true when your first page gets data from API successfully
 const isDataLoaded = ref(false);
-
-const handleLoadingComplete = () => {
-  showStartupLoading.value = false;
-  sendTitleToFlutter('Terms of Service');
-};
-
-onMounted(() => {
-  if (!showStartupLoading.value) {
-    sendTitleToFlutter('Terms of Service');
-  }
-});
 
 const showToast = ref(false);
 const toastMessage = ref('');
@@ -55,7 +44,7 @@ const handleCancel = () => {
   if (typeof window !== 'undefined' && window.history.length > 1 && window.history.state?.back) {
     router.back();
   } else {
-    closeApp();
+    closeMiniApp();
   }
 };
 
@@ -134,7 +123,6 @@ const openVetTerms = () => {
       v-if="showStartupLoading"
       :duration="5000"
       :is-loaded="isDataLoaded"
-      @complete="handleLoadingComplete"
     />
   </ion-page>
 </template>

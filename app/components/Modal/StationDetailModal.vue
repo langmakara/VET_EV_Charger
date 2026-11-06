@@ -15,7 +15,7 @@
   import Icon from '~/components/Icon/icon.vue'
   import IconButton from '~/components/Button/IconButton.vue'
   import AppButton from '~/components/Button/AppButton.vue'
-  import { abaBridge } from '~/composables/useNativeBridge'
+  import { useABAMiniApp } from '~/composables/useNativeBridge'
   import { useFindStationQuery, useAddFavoritesMutation } from '~/composables/queries'
   import type { StationData, StationDetailData } from '~/api/types'
 
@@ -80,13 +80,13 @@
   const openDirection = () => {
     const lat = Number(station.value?.lats)
     const lng = Number(station.value?.longs)
-    if (lat && lng) {
-      abaBridge.openMap({ lat, lng }).catch(() => {
-        // Fallback to web Google Maps if outside mobile app or bridge fails
-        const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
-        window.open(url, '_blank')
-      })
-    }
+    // if (lat && lng) {
+    //   abaBridge.openMap({ lat, lng }).catch(() => {
+    //     // Fallback to web Google Maps if outside mobile app or bridge fails
+    //     const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+    //     window.open(url, '_blank')
+    //   })
+    // }
   }
 
   const handleScanToCharge = async () => {

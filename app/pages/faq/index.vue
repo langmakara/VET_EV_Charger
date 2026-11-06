@@ -9,15 +9,11 @@ import {
   IonInfiniteScrollContent
 } from '@ionic/vue';
 import { useI18n } from 'vue-i18n';
-import { sendTitleToFlutter } from '~/composables/useNativeBridge';
 import { useFaqsInfinite } from '~/composables/queries';
 import type { FaqsDropdownData, DropdownParams } from '~/api/types';
 
 const { locale } = useI18n();
 
-onMounted(() => {
-  sendTitleToFlutter('FAQ');
-});
 
 const filter = ref<DropdownParams>({
   rowsPerPage: 25

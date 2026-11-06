@@ -10,7 +10,6 @@
     IonToast
   } from '@ionic/vue'
   import { chevronForward, chevronDown } from 'ionicons/icons'
-  import AccountModal from './accountModal.vue'
   import VoucherModal from './voucherModal.vue'
   import PointModal from './pointModal.vue'
   import Icon from '~/components/Icon/icon.vue'
@@ -271,14 +270,6 @@
         </button>
       </div>
     </ion-footer>
-
-    <!-- Dark Account Bottom Sheet Modal Component -->
-    <AccountModal
-      v-model:is-open="isAccountModalOpen"
-      :selected-id="selectedAccountId"
-      :accounts="accounts"
-      @select="selectAccount"
-    />
 
     <!-- Apply Voucher Centered Dialog Modal Component -->
     <VoucherModal

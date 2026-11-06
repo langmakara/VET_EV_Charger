@@ -43,6 +43,8 @@ export default defineNuxtConfig({
   nitro: {
     prerender: {
       routes: [],
+      crawlLinks: false,
+      failOnError: false,
     },
     output: {
       publicDir: "dist",
@@ -79,7 +81,7 @@ export default defineNuxtConfig({
     },
   },
   app: {
-    baseURL: "/",
+    baseURL: process.env.NUXT_APP_BASE_URL || "/",
     head: {
       title: "EV Charger",
       script: [

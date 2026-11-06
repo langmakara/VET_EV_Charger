@@ -11,12 +11,7 @@
   import type { MembershipData } from '~/api/types'
   import AppCard from '~/components/Card/AppCard.vue'
   import { useMembershipQuery } from '~/composables/queries/useMembership'
-  import { sendTitleToFlutter } from '~/composables/useNativeBridge'
   import { parsePerks } from '~/utils/formatters'
-
-  onMounted(() => {
-    sendTitleToFlutter('Membership Benefit')
-  })
 
   const { data: benefits, isLoading, isError, error } = useMembershipQuery()
 
