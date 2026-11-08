@@ -1,12 +1,18 @@
 import { ref, computed, watch, onMounted, type Ref, type ComputedRef } from 'vue'
 import { useRoute, navigateTo } from '#app'
 // import { sendTitleToFlutter, abaBridge } from '~/composables/useNativeBridge'
-import { ABABridgeService } from '@/services/abaBridge'
+import {
+  ABABridgeService,
+  type ABADefaultAccResponse,
+  type ABAGetDefaultAccPayload,
+  type ABAPaymentPayload
+} from '@/services/abaBridge'
 import { useVoucherInfinite } from '~/composables/queries/useVoucher'
 import { useCalculatePromotionMutation } from '~/composables/queries/usePromotion'
 import { useCreateSaleOrderAppTmpMutation } from '~/composables/queries/useSaleOrder'
 import { useStationPricePerKwhMutation } from '~/composables/queries/useStation'
 import { useKwhLabelsMutation, usePriceLabelsMutation } from '~/composables/queries/useLabel'
+import { useGeneratePaymentHashMutation } from '~/composables/queries/useAba'
 import { useWebSocket } from '~/composables/useChargintSocket'
 import type {
   VoucherDate,
@@ -16,9 +22,16 @@ import type {
   PromotionCalculateData,
   LabelData
 } from '~/api/types'
-import type { AccountItem } from '~/pages/chargingInfor/accountModal.vue'
+import { useABAMiniApp } from '@/composables/useNativeBridge'
 
-export { type AccountItem }
+export interface AccountItem {
+  id: string
+  name: string
+  number: string
+  currency: string
+  isDefault?: boolean
+  color: string
+}
 
 // Utilities
 export const formatNumber = (num: number): string => {
@@ -28,24 +41,18 @@ export const formatNumber = (num: number): string => {
 // Helper to normalize account payload from ABA native bridge
 export function normalizeAbaAccount(item: any, index = 0): AccountItem {
   const number =
-    item.accountNumber ??
-    item.account ??
-    item.acc ??
-    item.number ??
-    item.accNo ??
-    item.id ??
-    ''
+    item.accountNumber ?? item.account ?? item.acc ?? item.number ?? item.accNo ?? item.id ?? ''
 
   const name =
     item.accountName ??
     item.accName ??
     item.name ??
     item.title ??
-    (index === 0 ? 'Main' : `Account ${index + 1}`)
+    ''
 
   const currency = item.currency ?? 'KHR'
-  const id = String(item.id ?? number ?? `acc-${index + 1}`)
-  const isDefault = item.useDefault ?? item.isDefault ?? index === 0
+  const id = String(item.id ?? number ?? '')
+  const isDefault = item.useDefault ?? item.isDefault ?? false
   const color = item.color ?? (currency === 'USD' ? '#00C0DE' : '#9353D3')
 
   return { id, name, number, currency, isDefault, color }
@@ -77,11 +84,7 @@ export function useChargingInforService() {
   }
 
   const getPlugId = (): number => {
-    const raw =
-      route.query.plugId ||
-      route.query.plug_id ||
-      route.query.gunId ||
-      route.query.gun_id
+    const raw = route.query.plugId || route.query.plug_id || route.query.gunId || route.query.gun_id
     if (raw !== undefined && raw !== null && raw !== '') {
       const num = Number(raw)
       if (typeof window !== 'undefined') {
@@ -220,6 +223,7 @@ export function useChargingInforService() {
     fetchPricePerKwh()
     fetchKwhPresets()
     fetchPricePresets()
+    loadDefaultAccount()
   })
 
   watch(
@@ -233,28 +237,33 @@ export function useChargingInforService() {
 
   // 1. Mode & Presets
   const selectedMode = ref<'kwh' | 'khr'>('kwh')
-  const selectedPreset = ref('20 kWh')
-  const inputAmount = ref<string>('20')
+  const selectedPreset = ref<string>('')
+  const inputAmount = ref<string>('')
 
   const setMode = (mode: 'kwh' | 'khr') => {
     selectedMode.value = mode
     if (mode === 'kwh') {
-      const defaultKwh = kwhPresets.value[0] || '20 kWh'
+      const defaultKwh = kwhPresets.value[0] || ''
       selectPreset(defaultKwh)
     } else {
-      const defaultKhr = khrPresets.value[0] || '20,000 KHR'
+      const defaultKhr = khrPresets.value[0] || ''
       selectPreset(defaultKhr)
     }
   }
 
   const selectPreset = (preset: string) => {
     selectedPreset.value = preset
+    if (!preset) {
+      inputAmount.value = ''
+      return
+    }
+
     if (selectedMode.value === 'kwh') {
       const matched = kwhLabelList.value.find(
         (l) => l.name === preset || `${l.value} kWh` === preset
       )
       if (matched?.isFullCharge === 1 || preset === 'Full Charge') {
-        inputAmount.value = matched?.value ? String(matched.value) : '100'
+        inputAmount.value = matched?.value != null ? String(matched.value) : ''
       } else if (matched?.value != null) {
         inputAmount.value = String(matched.value)
       } else {
@@ -268,9 +277,7 @@ export function useChargingInforService() {
         inputAmount.value =
           matchedPrice?.value != null && matchedPrice.value > 0
             ? String(matchedPrice.value)
-            : pricePerKwh.value > 0
-              ? String(100 * pricePerKwh.value)
-              : '100000'
+            : ''
       } else if (matchedPrice?.value != null) {
         inputAmount.value = String(matchedPrice.value)
       } else {
@@ -329,12 +336,11 @@ export function useChargingInforService() {
     selectedVoucher.value = v ?? null
     if (v) {
       const discountVal = Number(v.discountValue ?? 0)
-      voucherDiscountPercent.value = v.discountType === 1 || v.discountType == null ? discountVal : 0
+      voucherDiscountPercent.value =
+        v.discountType === 1 || v.discountType == null ? discountVal : 0
       if (showNotification) {
         const discountLabel =
-          v.discountType === 2
-            ? `${formatNumber(discountVal)} KHR OFF`
-            : `${discountVal}% OFF`
+          v.discountType === 2 ? `${formatNumber(discountVal)} KHR OFF` : `${discountVal}% OFF`
         triggerToast(`Applied ${discountLabel} voucher!`)
       }
     } else {
@@ -350,7 +356,8 @@ export function useChargingInforService() {
         const currentStillExists = selectedVoucher.value
           ? newList.some(
               (v) =>
-                (v.voucherId != null && String(v.voucherId) === String(selectedVoucher.value?.voucherId)) ||
+                (v.voucherId != null &&
+                  String(v.voucherId) === String(selectedVoucher.value?.voucherId)) ||
                 (v.id != null && String(v.id) === String(selectedVoucher.value?.id)) ||
                 (v.voucherCode && v.voucherCode === selectedVoucher.value?.voucherCode)
             )
@@ -364,7 +371,11 @@ export function useChargingInforService() {
     { immediate: true }
   )
 
-  const handleApplyVoucher = (payload: { voucher: VoucherDate | null; percent: number; code: string }) => {
+  const handleApplyVoucher = (payload: {
+    voucher: VoucherDate | null
+    percent: number
+    code: string
+  }) => {
     if (payload.voucher) {
       applyVoucher(payload.voucher, true)
     } else if (payload.percent > 0) {
@@ -392,7 +403,6 @@ export function useChargingInforService() {
   const accounts = ref<AccountItem[]>([])
   const selectedAccountId = ref<string>('')
   const isLoadingAccount = ref(false)
-  const isAccountModalOpen = ref(false)
 
   const currentAccount = computed<AccountItem | null>(() => {
     if (accounts.value.length === 0) return null
@@ -524,63 +534,60 @@ export function useChargingInforService() {
     { immediate: true }
   )
 
-  // Load default account from ABA bridge
+  // Active default account fetched from ABA API #2
+  const activeAccount = ref<ABADefaultAccResponse | null>(null)
+  const accountChecked = ref(false)
+  const accountCurrency = ref<'USD' | 'KHR'>('KHR')
+
+  // Load default account from ABA bridge (API #2: getDefaultAcc)
   const loadDefaultAccount = async () => {
     isLoadingAccount.value = true
+    accountChecked.value = false
     try {
-      const payload = {
-        currency: 'KHR',
-        amount: String(totalPrice.value)
+      const payload: ABAGetDefaultAccPayload = {
+        currency: accountCurrency.value,
+        amount: totalPrice.value > 0 ? String(totalPrice.value) : '0'
       }
-      // Note: ABA bridge getDefaultAcc can be re-enabled once connected
-      let res: any = null
-      try {
-        res = await ABABridgeService.invokeNative('getDefaultAcc', payload)
-      } catch (e) {
-        // Fallback gracefully in web/development environment
-        console.warn('getDefaultAcc not supported or failed:', e)
-      }
+      const res = await ABABridgeService.getDefaultAcc(payload)
+      activeAccount.value = res
+      accountChecked.value = true
 
-      // Response might be { data: [...] } or a direct object / array
-      const raw = res?.data ?? res?.result ?? res?.body ?? res
-      if (Array.isArray(raw) && raw.length > 0) {
-        accounts.value = raw.map((item: any, idx: number) => normalizeAbaAccount(item, idx))
-      } else if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
-        const hasAccountField =
-          raw.account || raw.acc || raw.number || raw.accountNumber ||
-          raw.name || raw.accountName || raw.accName || raw.id
-        if (hasAccountField) {
-          accounts.value = [normalizeAbaAccount(raw, 0)]
-        }
-      }
-
-      if (accounts.value.length > 0) {
-        const def = accounts.value.find((a) => a.isDefault) || accounts.value[0]
-        if (def) {
-          selectedAccountId.value = def.id
-        }
+      if (res && res.accountNumber) {
+        const normalized = normalizeAbaAccount(
+          {
+            accountNumber: res.accountNumber,
+            accountName: res.accountName || '',
+            currency: res.currency || accountCurrency.value,
+            useDefault: true
+          },
+          0
+        )
+        accounts.value = [normalized]
+        selectedAccountId.value = normalized.id
       }
     } catch (err) {
       console.warn('Failed to get default account from ABA bridge:', err)
+      activeAccount.value = null
+      accountChecked.value = true
     } finally {
       isLoadingAccount.value = false
     }
   }
 
-  const selectAccount = (account: AccountItem) => {
-    selectedAccountId.value = account.id
-    setTimeout(() => {
-      isAccountModalOpen.value = false
-    }, 180)
-  }
-
   // 8. WebSocket for OCPI commands
-  const { data: socketData, status: socketStatus, send: sendSocketMessage } = useWebSocket(
-    'wss://qacltom.udaya-tech.com/OCPI/ws',
-    {
-      evseUid: computed(() => getChargerUsername())
-    }
-  )
+  const config = useRuntimeConfig()
+  const rawWsUrl = (config.public?.webSocketUrl as string) || ''
+  const wsUrl = rawWsUrl
+    ? (rawWsUrl.startsWith('ws://') || rawWsUrl.startsWith('wss://') ? rawWsUrl : `wss://${rawWsUrl}/OCPI/ws`)
+    : 'wss://qacltom.udaya-tech.com/OCPI/ws'
+
+  const {
+    data: socketData,
+    status: socketStatus,
+    send: sendSocketMessage
+  } = useWebSocket(wsUrl, {
+    evseUid: computed(() => getChargerUsername())
+  })
 
   watch(socketData, (msg) => {
     console.log('[chargingInfor] Received WebSocket message:', msg)
@@ -641,14 +648,13 @@ export function useChargingInforService() {
         grandTotalPrice: totalPrice.value
       }
 
-
-
       const res = await createTempOrder.mutateAsync(orderParams)
 
       // Validate server business status
       const isSuccess = res?.body?.status ?? (res as any)?.status ?? res?.success
       if (isSuccess === false) {
-        const errorMsg = res?.body?.message || (res as any)?.message || 'Failed to create sales order'
+        const errorMsg =
+          res?.body?.message || (res as any)?.message || 'Failed to create sales order'
         triggerToast(errorMsg)
         return
       }
@@ -674,9 +680,7 @@ export function useChargingInforService() {
       })
 
       const message =
-        res?.body?.message ??
-        (res as any)?.message ??
-        'Sales order created successfully'
+        res?.body?.message ?? (res as any)?.message ?? 'Sales order created successfully'
 
       triggerToast(message)
 
@@ -708,16 +712,64 @@ export function useChargingInforService() {
     }
   }
 
-  // Lifecycle
-  onMounted(() => {
-    ABABridgeService.setNavigationBar({
-      title: 'Charging Information',
-      color: '#ffffff',
-      safeAreaColor: '#000000',
-      bgColor: '#DD7310'
-    }).catch(() => {})
-    loadDefaultAccount()
-  })
+  // --- Transaction Utility: Decimal Formatter --
+  const formatToTwoDecimals = (value: number): string => {
+    return value.toFixed(2)
+  }
+
+  // ==========================================
+  // doPayment
+  // ==========================================
+  const { executePayment } = useABAMiniApp()
+  const generatePaymentHashMutation = useGeneratePaymentHashMutation()
+
+  const PaymentTrigger = async (useDefault: boolean = false) => {
+    try {
+      const acc = currentAccount.value?.number || activeAccount.value?.accountNumber || ''
+      if (!acc && !useDefault) {
+        triggerToast('Please select a payment account')
+        return
+      }
+
+      const stringifiedAmount = totalPrice.value.toFixed(2)
+      const currency = accountCurrency.value || 'KHR'
+
+      // 1. Fetch payment hash strictly from backend API (/aba-mini-app/payment/hash)
+      const hashRes = await generatePaymentHashMutation.mutateAsync({
+        account: acc,
+        amount: stringifiedAmount,
+        currency: currency as 'USD' | 'KHR'
+      })
+
+      const hashData = (hashRes as any)?.data ?? hashRes?.body?.data
+      const paymentHash =
+        hashData?.hash ||
+        (typeof hashData === 'string' ? hashData : (hashRes as any)?.hash || '')
+
+      if (!paymentHash) {
+        triggerToast('Failed to retrieve payment hash from server')
+        return
+      }
+
+      // 2. Prepare payload using API-generated hash key
+      const paymentPayload: ABAPaymentPayload = {
+        amount: stringifiedAmount,
+        account: acc,
+        currency: currency as 'USD' | 'KHR',
+        useDefault: useDefault,
+        additionalKey: {
+          hash: paymentHash
+        }
+      }
+
+      // 3. Trigger native payment
+      await executePayment(paymentPayload)
+      triggerToast('Payment initiated')
+    } catch (err: any) {
+      console.error('Payment error:', err)
+      triggerToast(err?.message || 'Payment failed')
+    }
+  }
 
   return {
     // Presets & Mode
@@ -760,10 +812,12 @@ export function useChargingInforService() {
     accounts,
     selectedAccountId,
     currentAccount,
+    activeAccount,
+    accountChecked,
+    accountCurrency,
     isLoadingAccount,
-    isAccountModalOpen,
-    selectAccount,
     loadDefaultAccount,
+    PaymentTrigger,
 
     // Calculations
     subTotal,
@@ -798,4 +852,3 @@ export function useChargingInforService() {
     triggerToast
   }
 }
-

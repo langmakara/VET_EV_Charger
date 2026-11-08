@@ -524,7 +524,7 @@
         :station="selectedStation"
         @close="closeStationModal"
       />
-      <AppButton label="Test" @click="navigateTo('/dashboard')" />
+      <!-- <AppButton label="Test" @click="navigateTo('/dashboard')" /> -->
     </ion-content>
     <ion-footer class="scan-QR">
       <div class="scan-QR__container">

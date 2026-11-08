@@ -24,11 +24,8 @@ export const createApiClient = (
   })
 
   instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-    // ⚠️ TEMPORARY STATIC TOKEN (Delete in the future)
-    const STATIC_TOKEN = 'eaccb925-1ad0-47ee-827c-72e3f742500c'
-
-    // Use STATIC_TOKEN first; if empty, fall back to dynamic token
-    const rawToken = STATIC_TOKEN || (getToken ? getToken() : undefined)
+    // Resolve dynamic token from auth state (e.g. useAbaAuthTokenMutation / cookies)
+    const rawToken = getToken ? getToken() : undefined
 
     if (rawToken) {
       const cleanToken = rawToken.replace(/^Bearer\s+/i, '')

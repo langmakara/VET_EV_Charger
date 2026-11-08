@@ -486,6 +486,64 @@ export interface LabelPointData {
   [key: string]: any;
 }
 
+// POST /aba-mini-app/payment/hash
+export interface AbaPaymentHashParams {
+  account: string;
+  amount: number | string;
+  currency: 'KHR' | 'USD';
+  [key: string]: any;
+}
+
+export interface AbaPaymentHashData {
+  hash?: string;
+  amount?: string;
+  account?: string;
+  currency?: string;
+  [key: string]: any;
+}
+
+// POST /aba-mini-app/auth/token
+export interface AbaAuthTokenParams {
+  addrCode?: string;
+  address?: string;
+  appId?: number | string;
+  appVersion?: string;
+  city?: string;
+  country?: string;
+  dobFull?: string;
+  dobShort?: string;
+  email?: string;
+  firstName?: string;
+  fullName?: string;
+  fullProfile?: boolean;
+  id?: number | string;
+  lang?: string;
+  lastName?: string;
+  middleName?: string;
+  nationality?: string;
+  nidDoc?: string;
+  nidExpiryDate?: string;
+  nidNumber?: string;
+  nidType?: string;
+  occupation?: string;
+  osVersion?: string;
+  phone?: string;
+  secret_key?: string;
+  sex?: string;
+  [key: string]: any;
+}
+
+export interface AbaAuthTokenData {
+  token?: string;
+  accessToken?: string;
+  access_token?: string;
+  tokenType?: string;
+  expiresIn?: number;
+  newCustomer?: boolean;
+  user?: any;
+  [key: string]: any;
+}
+
 
 
 

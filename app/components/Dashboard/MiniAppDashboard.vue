@@ -21,11 +21,25 @@
       <!-- Secure User Scope Profile Data Block -->
       <section class="card">
         <h3>User Context Bank Verification</h3>
-        <button @click="fetchUserRoutingDetails">Query Pre-Selected Account Schema</button>
+        <div class="input-row">
+          <input
+            v-model="accountAmount"
+            type="text"
+            placeholder="Amount (e.g. 10000)"
+          />
+          <select v-model="accountCurrency">
+            <option value="KHR">KHR</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+        <button @click="fetchUserRoutingDetails">Query Default Account (API #2)</button>
         <div v-if="activeAccount" class="meta-display">
-          <p><strong>Acc Number:</strong> {{ activeAccount.accountNumber }}</p>
+          <p><strong>Account Name:</strong> {{ activeAccount.accountName }}</p>
+          <p><strong>Account Number:</strong> {{ activeAccount.accountNumber }}</p>
           <p><strong>Currency:</strong> {{ activeAccount.currency }}</p>
-          <p><strong>Balance:</strong> {{ activeAccount.balanceMasked }}</p>
+        </div>
+        <div v-else-if="accountChecked" class="meta-display">
+          <p><em>No default account returned (possibly insufficient balance or unavailable).</em></p>
         </div>
       </section>
     </main>
@@ -35,18 +49,33 @@
 <script setup lang="ts">
   import { ref } from 'vue'
   import { useDeviceLocation } from '@/composables/useNativeBridge'
-  import { ABABridgeService, type ABAAccountData } from '@/services/abaBridge'
+  import {
+    ABABridgeService,
+    type ABADefaultAccResponse,
+    type ABAGetDefaultAccPayload
+  } from '@/services/abaBridge'
 
-  const activeAccount = ref<ABAAccountData | null>(null)
+  const activeAccount = ref<ABADefaultAccResponse | null>(null)
+  const accountChecked = ref(false)
+  const accountAmount = ref('10000')
+  const accountCurrency = ref<'KHR' | 'USD'>('KHR')
   const { currentCoordinates, isHardwareScanning, triggerHardwareSync } = useDeviceLocation()
 
   const fetchUserRoutingDetails = async () => {
+    accountChecked.value = false
     try {
-      // Native Context Hook: Requests current validated account parameter blocks from user session
-      const response = await ABABridgeService.invokeNative<ABAAccountData>('getDefaultAcc', {})
+      // API #2: Get Default Account with required payload: { currency: "USD" | "KHR", amount: "xxx" }
+      const payload: ABAGetDefaultAccPayload = {
+        currency: accountCurrency.value,
+        amount: accountAmount.value
+      }
+      const response = await ABABridgeService.getDefaultAcc(payload)
       activeAccount.value = response
+      accountChecked.value = true
     } catch (error) {
       console.error('Failed processing target default user account parsing logic:', error)
+      activeAccount.value = null
+      accountChecked.value = true
     }
   }
 </script>
@@ -82,5 +111,23 @@
     background: #f8fafc;
     padding: 8px;
     border-radius: 4px;
+  }
+  .input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .input-row input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  .input-row select {
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-size: 14px;
   }
 </style>

@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useAssetResolver } from '~/composables/useAssetResolver'
+import { useAuthToken } from '~/composables/useAuthToken'
+import { useSendProfile } from '~/composables/useSendProfile'
 
 interface Props {
   /**
-   * Simulated duration in milliseconds (default: 5000 = 5 seconds)
+   * Simulated duration in milliseconds if manually simulating progress.
+   * When null/undefined, progress advances towards ~90% and waits for token or isLoaded.
    */
-  duration?: number
+  duration?: number | null
   /**
    * Direct progress control (0 to 100).
    * When provided, automatic simulation is bypassed.
@@ -33,16 +36,21 @@ interface Props {
    * Custom logo image source (defaults to VET logo)
    */
   logoSrc?: string
+  /**
+   * Automatically complete when auth token is obtained from API (default: true)
+   */
+  waitForToken?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  duration: 5000,
+  duration: null,
   progress: null,
   isLoaded: false,
   text: 'Downloading contents.......',
   fullscreen: true,
   hideOnComplete: true,
-  logoSrc: ''
+  logoSrc: '',
+  waitForToken: true
 })
 
 const emit = defineEmits<{
@@ -52,6 +60,9 @@ const emit = defineEmits<{
 }>()
 
 const { resolveAsset } = useAssetResolver()
+const { authResponse } = useSendProfile()
+const { getToken } = useAuthToken()
+const cookieToken = useCookie<string | null>('access_token')
 
 // Current internal progress (0 to 100)
 const currentProgress = ref<number>(0)
@@ -71,24 +82,51 @@ const handleImageError = () => {
 let animationFrameId: number | null = null
 let startTime: number | null = null
 
+// Check if token has been acquired from API or storage
+const checkHasToken = (): boolean => {
+  if (cookieToken.value) return true
+  if (getToken()) return true
+
+  const data = authResponse.value?.data || authResponse.value?.body?.data
+  if (
+    data?.token ||
+    data?.accessToken ||
+    data?.access_token ||
+    (typeof authResponse.value?.data === 'string' && authResponse.value.data)
+  ) {
+    return true
+  }
+
+  return false
+}
+
+const isTokenReceived = computed(() => {
+  if (props.isLoaded) return true
+  if (props.waitForToken && checkHasToken()) return true
+  return false
+})
+
+/**
+ * Smoothly animates progress towards ~90% while waiting for token from API.
+ * Does NOT complete automatically on a 5-second timer.
+ */
 const startSimulatedProgress = () => {
   if (props.progress !== null) return
 
   startTime = null
-  const totalDuration = props.duration || 5000
 
   const step = (timestamp: number) => {
     if (!startTime) startTime = timestamp
     const elapsed = timestamp - startTime
-    const rawProgress = Math.min((elapsed / totalDuration) * 100, 100)
 
-    currentProgress.value = Math.round(rawProgress * 10) / 10
+    // Smoothly advances progress curve towards ~90%, slowing down as it approaches 90-92%
+    // Progress will not jump to 100% until token is received or isLoaded is true
+    const progressVal = 92 * (1 - Math.exp(-elapsed / 2200))
+    currentProgress.value = Math.min(92, Math.round(progressVal * 10) / 10)
     emit('update:progress', currentProgress.value)
 
-    if (elapsed < totalDuration && !props.isLoaded) {
+    if (!isTokenReceived.value && !props.isLoaded) {
       animationFrameId = requestAnimationFrame(step)
-    } else {
-      triggerComplete()
     }
   }
 
@@ -103,17 +141,18 @@ const stopAnimation = () => {
 }
 
 /**
- * Fast-finish transition: smoothly animates to 100% when API succeeds
+ * Fast-finish transition: smoothly and rapidly animates to 100% when token is received from API
  */
 const fastFinish = () => {
   stopAnimation()
+  if (isCompleted.value) return
   if (currentProgress.value >= 100) {
     triggerComplete()
     return
   }
 
   const startVal = currentProgress.value
-  const finishDuration = 300 // 300ms rapid fill to 100%
+  const finishDuration = 250 // 250ms rapid fill to 100%
   let finishStartTime: number | null = null
 
   const finishStep = (timestamp: number) => {
@@ -147,7 +186,7 @@ const triggerComplete = () => {
   currentProgress.value = 100
   emit('update:progress', 100)
 
-  // Allow 250ms for user to perceive 100% progress before initiating transition
+  // Allow 200ms for user to perceive 100% progress before initiating transition
   setTimeout(() => {
     if (props.hideOnComplete) {
       isVisible.value = false
@@ -160,7 +199,7 @@ const triggerComplete = () => {
       emit('complete')
       emit('finish')
     }
-  }, 250)
+  }, 200)
 }
 
 // Watch controlled progress
@@ -177,7 +216,18 @@ watch(
   }
 )
 
-// Watch API success flag (isLoaded)
+// Watch API token reception or isLoaded flag
+watch(
+  isTokenReceived,
+  (received) => {
+    if (received) {
+      fastFinish()
+    }
+  },
+  { immediate: true }
+)
+
+// Watch explicit isLoaded prop
 watch(
   () => props.isLoaded,
   (loaded) => {
@@ -200,7 +250,7 @@ onMounted(() => {
     if (currentProgress.value >= 100) {
       triggerComplete()
     }
-  } else if (props.isLoaded) {
+  } else if (isTokenReceived.value) {
     fastFinish()
   } else {
     startSimulatedProgress()

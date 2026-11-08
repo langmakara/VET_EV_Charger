@@ -16,6 +16,6 @@
     IonBackButton,
     IonContent
   } from '@ionic/vue'
-  import TestDoPayment from '~/components/Dashboard/TestDoPayment.vue'
+  import TestDoPayment from '~/components/Dashboard/MiniAppDashboard.vue'
 </script>
 

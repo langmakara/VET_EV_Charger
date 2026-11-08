@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { IonPage, IonContent, IonToast } from '@ionic/vue';
 import AppButton from '~/components/Button/AppButton.vue';
-import {useABAMiniApp } from '~/composables/useNativeBridge';
+import { useABAMiniApp } from '~/composables/useNativeBridge';
+import { useSendProfile } from '~/composables/useSendProfile';
+import { useAuthToken } from '~/composables/useAuthToken';
 import LoadingPage from '~/components/loading/loadingPage.vue';
 
 interface Props {
@@ -15,12 +17,24 @@ const props = withDefaults(defineProps<Props>(), {
 
 const router = useRouter();
 const { closeMiniApp } = useABAMiniApp();
+const { authResponse } = useSendProfile();
+const { getToken } = useAuthToken();
+const cookieToken = useCookie<string | null>('access_token');
 
-// Startup loading state (loads for 5s by default)
+// Startup loading state (waits until token is retrieved from API)
 const showStartupLoading = ref(props.showLoading);
-
-// Future-proof: Set to true when your first page gets data from API successfully
 const isDataLoaded = ref(false);
+
+watch(
+  [() => cookieToken.value, () => authResponse.value],
+  ([token, auth]) => {
+    const resData = auth?.data || auth?.body?.data;
+    if (token || resData?.token || resData?.accessToken || resData?.access_token || getToken()) {
+      isDataLoaded.value = true;
+    }
+  },
+  { immediate: true }
+);
 
 const showToast = ref(false);
 const toastMessage = ref('');
@@ -118,11 +132,11 @@ const openVetTerms = () => {
       </div>
     </ion-content>
 
-    <!-- App Startup Loading Screen (5s by default, transitions to Terms of Service) -->
+    <!-- App Startup Loading Screen (transitions to Terms of Service on API token success) -->
     <LoadingPage
       v-if="showStartupLoading"
-      :duration="5000"
       :is-loaded="isDataLoaded"
+      @complete="showStartupLoading = false"
     />
   </ion-page>
 </template>

@@ -9,6 +9,7 @@ import {
   type ABAUserProfile,
   type ABALocationResponse
 } from '@/services/abaBridge';
+import { useSendProfile } from '@/composables/useSendProfile';
 
 // Shared global state across all pages and components
 const sharedUserProfile = ref<ABAUserProfile | null>(null);
@@ -17,6 +18,7 @@ const isProcessing = ref(false);
 export function useABAMiniApp() {
   const paymentStatus = ref<ABAPaymentStatusResponse | null>(null);
   const userProfile = sharedUserProfile;
+  const { sendProfile, authResponse } = useSendProfile();
   
   let destroyPaymentListener: (() => void) | null = null;
 
@@ -30,6 +32,7 @@ export function useABAMiniApp() {
   /**
    * Fetches basic profile metadata once and caches it.
    * If forceRefresh is false and profile already exists, returns cached profile.
+   * When profile data is retrieved successfully from mobile app, sends all data to useAbaAuthTokenMutation.
    */
   const getProfile = async (forceRefresh = false): Promise<ABAUserProfile> => {
     if (sharedUserProfile.value && !forceRefresh) {
@@ -39,6 +42,14 @@ export function useABAMiniApp() {
     try {
       const profile = await ABABridgeService.invokeNative<ABAUserProfile>('getProfile', {});
       sharedUserProfile.value = profile;
+
+      // When get profile data from mobile app success, send all data to api useAbaAuthTokenMutation
+      try {
+        await sendProfile(profile);
+      } catch (authErr) {
+        console.error('[useABAMiniApp] Failed to authenticate profile token with backend:', authErr);
+      }
+
       return profile;
     } finally {
       isProcessing.value = false;
@@ -95,6 +106,8 @@ export function useABAMiniApp() {
     userProfile,
     setBarTitle,
     getProfile,
+    sendProfile,
+    authResponse,
     executePayment,
     closeMiniApp,
     getDeviceInfo

@@ -1,4 +1,5 @@
 import { createApiClient } from "~/api/client";
+import { getAbaAuthToken } from "~/composables/useSendProfile";
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
@@ -10,6 +11,11 @@ export default defineNuxtPlugin(() => {
   });
 
   const getToken = (): string | null => {
+    // 1. Check in-memory token from useAbaAuthTokenMutation
+    const abaToken = getAbaAuthToken();
+    if (abaToken) return abaToken;
+
+    // 2. Check Cookie
     if (tokenCookie.value) return tokenCookie.value;
 
     if (import.meta.client) {

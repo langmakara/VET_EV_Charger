@@ -45,9 +45,10 @@
     accounts,
     selectedAccountId,
     currentAccount,
+    activeAccount,
+    accountChecked,
     isLoadingAccount,
-    isAccountModalOpen,
-    selectAccount,
+    PaymentTrigger,
 
     // Financial Calculations
     subTotal,
@@ -230,17 +231,17 @@
     <ion-footer class="ion-no-border charging-info-footer">
       <div class="footer-wrapper">
         <!-- Saving Account Selector Box -->
-        <div class="account-card" @click="isAccountModalOpen = true">
+        <div class="account-card" @click="PaymentTrigger(false)">
           <div class="account-top-row">
-            <span class="account-type-title">{{ currentAccount?.name || 'Account' }}</span>
+            <span class="account-type-title">{{ currentAccount?.name }}</span>
             <div class="account-dropdown-trigger">
-              <span class="account-dropdown-text">Account</span>
+              <span class="account-dropdown-text">Select</span>
               <ion-icon :icon="chevronDown" class="account-chevron-icon"></ion-icon>
             </div>
           </div>
           <div class="account-bottom-row">
             <template v-if="currentAccount">
-              {{ currentAccount.number }} | {{ currentAccount.currency }}
+              {{ activeAccount?.accountNumber }}
             </template>
             <template v-else-if="isLoadingAccount"> Loading account... </template>
             <template v-else> Select account </template>
@@ -252,16 +253,16 @@
           type="button"
           class="pay-main-button"
           :disabled="isSubmittingOrder"
-          @click="handlePay"
+          @click="PaymentTrigger(true)"
         >
           <!-- ABA PAY Badge -->
-          <div class="aba-pay-badge">
+          <!-- <div class="aba-pay-badge">
             <div class="aba-top-row">
               <span class="aba-letters">ABA</span>
               <span class="aba-red-accent"></span>
             </div>
             <div class="aba-pay-sub">PAY</div>
-          </div>
+          </div> -->
 
           <!-- Button Text -->
           <span class="pay-button-label">

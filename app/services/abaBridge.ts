@@ -14,16 +14,17 @@ export interface ABAUserProfile {
   middleName: string;
   lastName: string;
   fullName: string;
-  sex: 'M' | 'F';
+  sex: 'M' | 'F' | string;
   dobShort: string;
   nationality: string;
   phone: string;
   email: string;
-  lang: 'en' | 'kh' | 'zh';
+  lang: 'en' | 'kh' | 'zh' | string;
   address: string;
   id: string;
   appVersion: string;
   osVersion: string;
+  [key: string]: any;
 }
 
 export interface ABADeviceInfo {
@@ -50,11 +51,22 @@ export interface ABABarTitlePayload {
   safeAreaColor?: string;
 }
 
+export interface ABAGetDefaultAccPayload {
+  currency: 'USD' | 'KHR';
+  amount: string;
+}
+
+export interface ABADefaultAccResponse {
+  accountName: string;
+  accountNumber: string;
+  currency: string;
+}
+
 export interface ABAPaymentPayload {
   amount: string;
   account: string;
   currency: 'USD' | 'KHR';
-  vendorId: string;
+  // vendorId: string;
   useDefault: boolean;
   additionalKey: {
     hash: string;
@@ -116,6 +128,24 @@ export class ABABridgeService {
     } catch (error) {
       return this.handleBridgeError(handlerName, error);
     }
+  }
+
+  /**
+   * Adjusts the Mobile App Header Layout Styling Configuration properties dynamically
+   */
+  static async setNavigationBar(config: ABABarTitlePayload): Promise<void> {
+    return this.invokeNative<void>('setBarTitle', config);
+  }
+
+  /**
+   * API #2: Retrieve the user's default account if available and balance is sufficient
+   * Payload: { currency: "USD" | "KHR", amount: "xxx" }
+   * Response: { accountName: string, accountNumber: string, currency: string }
+   */
+  static async getDefaultAcc(
+    payload: ABAGetDefaultAccPayload = { currency: 'KHR', amount: '0' }
+  ): Promise<ABADefaultAccResponse | null> {
+    return this.invokeNative<ABADefaultAccResponse | null>('getDefaultAcc', payload);
   }
 
   /**
