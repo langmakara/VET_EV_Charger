@@ -97,7 +97,7 @@
 
       <!-- Error state -->
       <div v-else-if="isError" class="ion-text-center ion-padding">
-        <ion-text color="danger">{{ error?.message || 'Failed to load stations' }}</ion-text>
+        <ion-text color="danger">{{ error?.message || $t('nearbyStation.failedLoadStations') }}</ion-text>
       </div>
 
       <!-- Empty state -->
@@ -106,7 +106,7 @@
         class="ion-text-center ion-padding"
         style="margin-top: 40px"
       >
-        <ion-text color="medium">No charging stations found nearby.</ion-text>
+        <ion-text color="medium">{{ $t('nearbyStation.noStationsNearby') }}</ion-text>
       </div>
 
       <!-- Station List -->
@@ -123,7 +123,7 @@
         <ion-infinite-scroll :disabled="!hasNextPage" @ionInfinite="loadMore">
           <ion-infinite-scroll-content
             loading-spinner="crescent"
-            loading-text="Loading more stations..."
+            :loading-text="$t('evCharger.loadingMoreStations')"
           />
         </ion-infinite-scroll>
       </div>

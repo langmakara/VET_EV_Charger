@@ -20,17 +20,29 @@ const props = withDefaults(
     isOpen: boolean
     handlerName?: string
     requestPayload?: any
-    response?: any
+    response?: any // Profile data from ABA Mobile App
+    authResponse?: any // Response from useSendProfile (Auth Token API)
+    authPayload?: any // Payload sent to useSendProfile API
+    apiUrl?: string // Full API URL (e.g. POST .../aba-mini-app/auth/token)
+    apiMethod?: string // e.g. 'POST'
     error?: any
+    authError?: any
     isLoading?: boolean
+    isAuthLoading?: boolean
   }>(),
   {
     isOpen: false,
     handlerName: 'getProfile',
     requestPayload: null,
     response: null,
+    authResponse: null,
+    authPayload: null,
+    apiUrl: '',
+    apiMethod: 'POST',
     error: null,
-    isLoading: false
+    authError: null,
+    isLoading: false,
+    isAuthLoading: false
   }
 )
 
@@ -39,8 +51,23 @@ const emit = defineEmits<{
   (e: 'refresh'): void
 }>()
 
-const activeTab = ref<'response' | 'request'>('response')
+type ActiveTab = 'profile' | 'apiPayload' | 'apiResponse' | 'bridgePayload'
+const activeTab = ref<ActiveTab>('profile')
 const copied = ref(false)
+const urlCopied = ref(false)
+
+// Auto-switch to API Response tab if authResponse exists and profile is empty
+watch(
+  () => props.isOpen,
+  (open) => {
+    if (open) {
+      if ((props.authResponse || props.authError) && !props.response) {
+        activeTab.value = 'apiResponse'
+      }
+    }
+  },
+  { immediate: true }
+)
 
 const formattedResponse = computed(() => {
   if (props.error) {
@@ -53,7 +80,30 @@ const formattedResponse = computed(() => {
       ? JSON.stringify(props.response, null, 2)
       : String(props.response)
   }
-  return '// No response received yet'
+  return '// No profile response received from ABA Mobile app yet'
+})
+
+const formattedAuthPayload = computed(() => {
+  if (props.authPayload !== null && props.authPayload !== undefined) {
+    return typeof props.authPayload === 'object'
+      ? JSON.stringify(props.authPayload, null, 2)
+      : String(props.authPayload)
+  }
+  return '// No API payload available yet'
+})
+
+const formattedAuthResponse = computed(() => {
+  if (props.authError) {
+    return typeof props.authError === 'object'
+      ? JSON.stringify(props.authError, Object.getOwnPropertyNames(props.authError), 2)
+      : String(props.authError)
+  }
+  if (props.authResponse !== null && props.authResponse !== undefined) {
+    return typeof props.authResponse === 'object'
+      ? JSON.stringify(props.authResponse, null, 2)
+      : String(props.authResponse)
+  }
+  return '// No response received from useSendProfile yet'
 })
 
 const formattedRequest = computed(() => {
@@ -63,9 +113,56 @@ const formattedRequest = computed(() => {
   return '// No request payload specified'
 })
 
+const currentDisplayContent = computed(() => {
+  if (activeTab.value === 'profile') return formattedResponse.value
+  if (activeTab.value === 'apiPayload') return formattedAuthPayload.value
+  if (activeTab.value === 'apiResponse') return formattedAuthResponse.value
+  return formattedRequest.value
+})
+
+const currentTabLoading = computed(() => {
+  if (activeTab.value === 'apiResponse' || activeTab.value === 'apiPayload') return props.isAuthLoading
+  if (activeTab.value === 'profile') return props.isLoading
+  return false
+})
+
+const currentTabError = computed(() => {
+  if (activeTab.value === 'apiResponse') return !!props.authError
+  if (activeTab.value === 'profile') return !!props.error
+  return false
+})
+
+const currentTabSuccess = computed(() => {
+  if (activeTab.value === 'apiResponse') return !!props.authResponse && !props.authError
+  if (activeTab.value === 'apiPayload') return !!props.authPayload
+  if (activeTab.value === 'profile') return !!props.response && !props.error
+  return false
+})
+
+const copyApiUrl = async () => {
+  if (!props.apiUrl) return
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(props.apiUrl)
+    } else {
+      const textarea = document.createElement('textarea')
+      textarea.value = props.apiUrl
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+    }
+    urlCopied.value = true
+    setTimeout(() => {
+      urlCopied.value = false
+    }, 2000)
+  } catch (err) {
+    console.error('Failed to copy URL', err)
+  }
+}
+
 const copyToClipboard = async () => {
-  const content =
-    activeTab.value === 'response' ? formattedResponse.value : formattedRequest.value
+  const content = currentDisplayContent.value
   try {
     if (navigator?.clipboard?.writeText) {
       await navigator.clipboard.writeText(content)
@@ -102,21 +199,45 @@ const copyToClipboard = async () => {
           </button>
         </div>
 
+        <!-- API URL Banner -->
+        <div v-if="apiUrl" class="api-url-bar">
+          <div class="api-url-left">
+            <span class="http-badge">{{ apiMethod || 'POST' }}</span>
+            <span class="url-text" :title="apiUrl">{{ apiUrl }}</span>
+          </div>
+          <button class="copy-url-btn" type="button" @click="copyApiUrl" :title="urlCopied ? 'Copied' : 'Copy API URL'">
+            <ion-icon :icon="urlCopied ? checkmarkOutline : copyOutline" />
+            <span class="copy-url-label">{{ urlCopied ? 'Copied' : 'Copy URL' }}</span>
+          </button>
+        </div>
+
         <!-- Status Bar -->
-        <div class="status-bar" :class="{ isError: !!error, isSuccess: !!response && !error }">
+        <div
+          class="status-bar"
+          :class="{
+            isError: currentTabError,
+            isSuccess: currentTabSuccess
+          }"
+        >
           <div class="status-indicator">
-            <ion-spinner v-if="isLoading" name="crescent" class="loading-spinner"></ion-spinner>
-            <ion-icon v-else-if="error" :icon="alertCircleOutline" class="status-icon error" />
-            <ion-icon v-else :icon="checkmarkCircleOutline" class="status-icon success" />
+            <ion-spinner v-if="currentTabLoading" name="crescent" class="loading-spinner"></ion-spinner>
+            <ion-icon v-else-if="currentTabError" :icon="alertCircleOutline" class="status-icon error" />
+            <ion-icon v-else-if="currentTabSuccess" :icon="checkmarkCircleOutline" class="status-icon success" />
             <span class="status-text">
-              <template v-if="isLoading">Waiting for Native Mobile response...</template>
-              <template v-else-if="error">Bridge Error</template>
-              <template v-else-if="response">Response Received (200 OK)</template>
+              <template v-if="currentTabLoading">
+                {{ (activeTab === 'apiResponse' || activeTab === 'apiPayload') ? 'Calling useSendProfile Auth API...' : 'Waiting for Native Mobile response...' }}
+              </template>
+              <template v-else-if="currentTabError">
+                {{ activeTab === 'apiResponse' ? 'Auth API Error' : 'Bridge Error' }}
+              </template>
+              <template v-else-if="currentTabSuccess">
+                {{ activeTab === 'apiResponse' ? 'Auth Token Success (200 OK)' : activeTab === 'apiPayload' ? 'Payload Ready' : 'Profile Received (200 OK)' }}
+              </template>
               <template v-else>Ready to inspect</template>
             </span>
           </div>
 
-          <button v-if="!isLoading" class="action-btn" @click="emit('refresh')" title="Refresh call">
+          <button v-if="!isLoading && !isAuthLoading" class="action-btn" @click="emit('refresh')" title="Refresh call">
             <ion-icon :icon="refreshOutline" />
             <span>Re-fetch</span>
           </button>
@@ -126,17 +247,35 @@ const copyToClipboard = async () => {
         <div class="tab-bar">
           <button
             class="tab-btn"
-            :class="{ active: activeTab === 'response' }"
-            @click="activeTab = 'response'"
+            :class="{ active: activeTab === 'profile' }"
+            @click="activeTab = 'profile'"
           >
-            Response JSON
+            ABA Profile
+            <span v-if="response" class="tab-badge ok">✓</span>
           </button>
           <button
             class="tab-btn"
-            :class="{ active: activeTab === 'request' }"
-            @click="activeTab = 'request'"
+            :class="{ active: activeTab === 'apiPayload' }"
+            @click="activeTab = 'apiPayload'"
           >
-            Request Payload
+            API Payload
+            <span v-if="authPayload" class="tab-badge ok">✓</span>
+          </button>
+          <button
+            class="tab-btn"
+            :class="{ active: activeTab === 'apiResponse' }"
+            @click="activeTab = 'apiResponse'"
+          >
+            API Response
+            <span v-if="authResponse && !authError" class="tab-badge ok">✓</span>
+            <span v-else-if="authError" class="tab-badge err">!</span>
+          </button>
+          <button
+            class="tab-btn"
+            :class="{ active: activeTab === 'bridgePayload' }"
+            @click="activeTab = 'bridgePayload'"
+          >
+            Bridge Req
           </button>
           <button class="copy-btn" @click="copyToClipboard">
             <ion-icon :icon="copied ? checkmarkOutline : copyOutline" />
@@ -148,9 +287,14 @@ const copyToClipboard = async () => {
         <div class="code-container">
           <div class="code-header">
             <span class="code-lang">JSON</span>
-            <span class="code-info">{{ activeTab === 'response' ? 'Native Output' : 'Input Sent' }}</span>
+            <span class="code-info">
+              <template v-if="activeTab === 'profile'">ABA Mobile App Output (Native Bridge)</template>
+              <template v-else-if="activeTab === 'apiPayload'">Payload Sent to Backend Auth API</template>
+              <template v-else-if="activeTab === 'apiResponse'">useSendProfile Response (OAuth Token)</template>
+              <template v-else>Input Sent to Native Bridge</template>
+            </span>
           </div>
-          <pre class="json-viewer"><code>{{ activeTab === 'response' ? formattedResponse : formattedRequest }}</code></pre>
+          <pre class="json-viewer"><code>{{ currentDisplayContent }}</code></pre>
         </div>
 
         <!-- Footer / Dismiss -->
@@ -186,6 +330,8 @@ const copyToClipboard = async () => {
   height: 100%;
   padding: 18px;
   box-sizing: border-box;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* Header */
@@ -194,6 +340,73 @@ const copyToClipboard = async () => {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
+}
+
+/* API URL Banner */
+.api-url-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.api-url-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.http-badge {
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.url-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11.5px;
+  color: #93c5fd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+}
+
+.copy-url-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #bfdbfe;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.copy-url-btn:hover {
+  background: rgba(59, 130, 246, 0.3);
+  color: #ffffff;
+}
+
+.copy-url-label {
+  display: inline;
 }
 
 .header-left {
@@ -314,7 +527,32 @@ const copyToClipboard = async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  width: 100%;
+  padding-bottom: 4px;
+}
+
+.tab-bar::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tab-bar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tab-bar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.tab-bar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .tab-btn {
@@ -327,6 +565,26 @@ const copyToClipboard = async () => {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.tab-badge {
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.tab-badge.err {
+  background: rgba(239, 68, 68, 0.25);
+  color: #f87171;
 }
 
 .tab-btn.active {
@@ -348,6 +606,8 @@ const copyToClipboard = async () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .copy-btn:hover {
@@ -364,7 +624,7 @@ const copyToClipboard = async () => {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   overflow: hidden;
-  min-height: 220px;
+  min-height: 0;
 }
 
 .code-header {
@@ -391,6 +651,8 @@ const copyToClipboard = async () => {
   margin: 0;
   padding: 12px;
   overflow-y: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
   font-size: 12.5px;
   line-height: 1.5;
@@ -398,6 +660,27 @@ const copyToClipboard = async () => {
   white-space: pre-wrap;
   word-break: break-all;
   flex: 1;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.json-viewer::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.json-viewer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.json-viewer::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.json-viewer::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Footer */

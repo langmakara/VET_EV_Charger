@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { computed } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import {
     IonCard,
     IonCardContent,
@@ -14,7 +15,9 @@
     news: NewFeedData
   }>()
 
-  const { baseUrl: evChargerBaseUrl } = useApiUrl('/vetEvChargerCustomerAPi', 5697)
+  const { locale } = useI18n()
+  const config = useRuntimeConfig()
+  const evChargerBaseUrl = computed(() => ((config.public.apiBase as string) || '').replace(/\/+$/, ''))
 
   const newsImage = computed(() => {
     const img = props.news?.feedUrl || props.news?.profileUrl || (props.news as any)?.image
@@ -27,10 +30,17 @@
     ) {
       return img
     }
-    return `${evChargerBaseUrl}${img.startsWith('/') ? '' : '/'}${img}`
+    return `${evChargerBaseUrl.value}${img.startsWith('/') ? '' : '/'}${img}`
   })
 
   const newsTitle = computed(() => {
+    const loc = locale.value?.toLowerCase() || ''
+    if (loc.startsWith('km')) {
+      return props.news?.titleKh || props.news?.titleEn || props.news?.titleZh || (props.news as any)?.title || ''
+    }
+    if (loc.startsWith('zh')) {
+      return props.news?.titleZh || props.news?.titleEn || props.news?.titleKh || (props.news as any)?.title || ''
+    }
     return (
       props.news?.titleEn ||
       props.news?.titleKh ||
@@ -41,6 +51,13 @@
   })
 
   const newsDesc = computed(() => {
+    const loc = locale.value?.toLowerCase() || ''
+    if (loc.startsWith('km')) {
+      return props.news?.descriptionKh || props.news?.descriptionEn || props.news?.descriptionZh || (props.news as any)?.description || ''
+    }
+    if (loc.startsWith('zh')) {
+      return props.news?.descriptionZh || props.news?.descriptionEn || props.news?.descriptionKh || (props.news as any)?.description || ''
+    }
     return (
       props.news?.descriptionEn ||
       props.news?.descriptionKh ||

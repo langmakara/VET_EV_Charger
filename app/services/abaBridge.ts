@@ -9,6 +9,7 @@ export interface ABALocationResponse {
 }
 
 export interface ABAUserProfile {
+  // Basic profile fields
   appId: string;
   firstName: string;
   middleName: string;
@@ -19,11 +20,24 @@ export interface ABAUserProfile {
   nationality: string;
   phone: string;
   email: string;
-  lang: 'en' | 'kh' | 'zh' | string;
-  address: string;
-  id: string;
+  lang: 'en' | 'kh' | 'zh' | string; // en, kh, zh
+  id: string; // app id
   appVersion: string;
   osVersion: string;
+
+  // Additional fields for full profile
+  address?: string;
+  city?: string;
+  country?: string;
+  dobFull?: string;
+  nidNumber?: string;
+  nidType?: '1' | '2' | string; // 1 => NID, 2 => PASSPORT
+  nidExpiryDate?: string;
+  nidDoc?: string;
+  occupation?: string;
+  addrCode?: string;
+  secret_key?: string; // Response from bridge originated from the transformation of all values using SHA-256
+
   [key: string]: any;
 }
 
@@ -79,6 +93,26 @@ export interface ABAPaymentStatusResponse {
   debitCcy: string;
   accountNumber: string;
   accountName: string;
+}
+
+export interface ABAOpenMapPayload {
+  lat: string;
+  lng: string;
+}
+
+export type ABAOpenAppName = 'phone' | 'email' | 'mail' | string;
+
+export interface ABAOpenAppPayload {
+  /**
+   * The type of application to open:
+   * - 'phone': Phone call
+   * - 'email' | 'mail': Send email
+   */
+  name: ABAOpenAppName;
+  /**
+   * Value passed to the application (phone number or email address)
+   */
+  value: string;
 }
 
 export class ABABridgeService {
@@ -146,6 +180,24 @@ export class ABABridgeService {
     payload: ABAGetDefaultAccPayload = { currency: 'KHR', amount: '0' }
   ): Promise<ABADefaultAccResponse | null> {
     return this.invokeNative<ABADefaultAccResponse | null>('getDefaultAcc', payload);
+  }
+
+  /**
+   * API #12: Open Map
+   * Open the Google Map app or browser (if the user doesn't have the app)
+   * Payload: { lat: "xxx", lng: "xxx" }
+   */
+  static async openMap(payload: ABAOpenMapPayload): Promise<void> {
+    return this.invokeNative<void>('openMap', payload);
+  }
+
+  /**
+   * API #18: Open App
+   * Open native external applications (e.g. phone call or email composer)
+   * Payload: { name: "phone" | "email" | "mail", value: "xxx" }
+   */
+  static async openApp(payload: ABAOpenAppPayload): Promise<void> {
+    return this.invokeNative<void>('openApp', payload);
   }
 
   /**

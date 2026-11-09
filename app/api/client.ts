@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
 import type { ApiError } from './types'
+import { getAbaAuthToken } from '~/composables/useSendProfile'
 
 export interface CreateApiClientOptions {
   baseURL: string
@@ -24,8 +25,8 @@ export const createApiClient = (
   })
 
   instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-    // Resolve dynamic token from auth state (e.g. useAbaAuthTokenMutation / cookies)
-    const rawToken = getToken ? getToken() : undefined
+    // Resolve dynamic token from useAbaAuthTokenMutation (via getAbaAuthToken)
+    const rawToken = getToken ? getToken() : getAbaAuthToken()
 
     if (rawToken) {
       const cleanToken = rawToken.replace(/^Bearer\s+/i, '')

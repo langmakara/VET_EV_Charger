@@ -2,6 +2,7 @@
 import { IonModal, IonContent, IonIcon } from '@ionic/vue';
 import { chevronForward } from 'ionicons/icons';
 import Icon from '~/components/Icon/icon.vue';
+import { useABAMiniApp } from '~/composables/useNativeBridge';
 
 const props = withDefaults(
   defineProps<{
@@ -22,6 +23,8 @@ const emit = defineEmits<{
   (e: 'update:isOpen', value: boolean): void;
 }>();
 
+const { openPhoneCall } = useABAMiniApp();
+
 const handleDismiss = () => {
   emit('didDismiss');
   emit('update:isOpen', false);
@@ -30,9 +33,7 @@ const handleDismiss = () => {
 
 const callSupport = () => {
   const sanitized = props.phoneNumber.replace(/\s+/g, '');
-  if (typeof window !== 'undefined') {
-    window.location.href = `tel:${sanitized}`;
-  }
+  openPhoneCall(sanitized);
 };
 
 const openFacebook = () => {
@@ -56,7 +57,7 @@ const openFacebook = () => {
         <!-- Header -->
         <div class="contact-sheet-header">
           <div class="header-spacer"></div>
-          <div class="contact-sheet-title">Contact Us</div>
+          <div class="contact-sheet-title">{{ $t('common.contactUs') }}</div>
           <button class="contact-close-button" type="button" aria-label="Close" @click="handleDismiss">
             <Icon name="close" size="18px" color="#1E293B" />
           </button>
@@ -70,7 +71,7 @@ const openFacebook = () => {
               <Icon name="phone-call" size="26px" color="#00A859" />
             </div>
             <div class="contact-card-info">
-              <div class="contact-card-title">VET EV Charger Customer Support</div>
+              <div class="contact-card-title">{{ $t('profileDetails.customerSupportTitle') }}</div>
               <div class="contact-card-sub">{{ phoneNumber }}</div>
             </div>
             <ion-icon :icon="chevronForward" class="contact-chevron"></ion-icon>
@@ -82,7 +83,7 @@ const openFacebook = () => {
               <Icon name="facebook" size="28px" />
             </div>
             <div class="contact-card-info">
-              <div class="contact-card-title">VET EV Charger Facebook Page</div>
+              <div class="contact-card-title">{{ $t('profileDetails.facebookPageTitle') }}</div>
               <div class="contact-card-sub">{{ facebookUrl }}</div>
             </div>
             <ion-icon :icon="chevronForward" class="contact-chevron"></ion-icon>

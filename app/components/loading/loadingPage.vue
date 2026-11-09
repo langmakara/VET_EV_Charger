@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { IonIcon } from '@ionic/vue'
+import { codeWorkingOutline } from 'ionicons/icons'
 import { useAssetResolver } from '~/composables/useAssetResolver'
-import { useAuthToken } from '~/composables/useAuthToken'
-import { useSendProfile } from '~/composables/useSendProfile'
+import { useSendProfile, getIsNewAbaUser } from '~/composables/useSendProfile'
+import { useABAMiniApp } from '~/composables/useNativeBridge'
+import BridgeResponseModal from '~/components/Modal/BridgeResponseModal.vue'
 
 interface Props {
   /**
@@ -54,15 +57,53 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  (e: 'complete'): void
-  (e: 'finish'): void
+  (e: 'complete', payload?: { newAbaUser: boolean; customer?: any }): void
+  (e: 'finish', payload?: { newAbaUser: boolean; customer?: any }): void
   (e: 'update:progress', value: number): void
 }>()
 
 const { resolveAsset } = useAssetResolver()
-const { authResponse } = useSendProfile()
-const { getToken } = useAuthToken()
-const cookieToken = useCookie<string | null>('access_token')
+const {
+  authResponse,
+  authPayload,
+  apiUrl,
+  isAuthPending,
+  authError,
+  authToken,
+  authCustomer,
+  isNewAbaUser,
+  sendProfile
+} = useSendProfile()
+const { userProfile, getProfile } = useABAMiniApp()
+
+// Bridge Response Inspector Modal state
+const isBridgeModalOpen = ref<boolean>(false)
+const isProfileLoading = ref<boolean>(false)
+const profileError = ref<any>(null)
+
+const handleOpenBridgeModal = () => {
+  isBridgeModalOpen.value = true
+}
+
+const handleCloseBridgeModal = () => {
+  isBridgeModalOpen.value = false
+}
+
+const handleRefreshProfile = async () => {
+  isProfileLoading.value = true
+  profileError.value = null
+  try {
+    const profile = await getProfile(true)
+    if (profile) {
+      await sendProfile(profile)
+    }
+  } catch (err: any) {
+    profileError.value = err
+    console.error('[LoadingPage] Error fetching profile/auth token:', err)
+  } finally {
+    isProfileLoading.value = false
+  }
+}
 
 // Current internal progress (0 to 100)
 const currentProgress = ref<number>(0)
@@ -82,17 +123,17 @@ const handleImageError = () => {
 let animationFrameId: number | null = null
 let startTime: number | null = null
 
-// Check if token has been acquired from API or storage
+// Check if token has been acquired from API
 const checkHasToken = (): boolean => {
-  if (cookieToken.value) return true
-  if (getToken()) return true
+  if (authToken.value) return true
 
-  const data = authResponse.value?.data || authResponse.value?.body?.data
+  const res = authResponse.value as any
+  const body = res?.body
   if (
-    data?.token ||
-    data?.accessToken ||
-    data?.access_token ||
-    (typeof authResponse.value?.data === 'string' && authResponse.value.data)
+    body?.accessToken ||
+    body?.token ||
+    res?.data?.accessToken ||
+    res?.data?.token
   ) {
     return true
   }
@@ -182,25 +223,38 @@ const fastFinish = () => {
 
 const triggerComplete = () => {
   if (isCompleted.value) return
+  if (isBridgeModalOpen.value) return
   isCompleted.value = true
   currentProgress.value = 100
   emit('update:progress', 100)
 
   // Allow 200ms for user to perceive 100% progress before initiating transition
   setTimeout(() => {
+    const isNew = getIsNewAbaUser()
+    const payload = {
+      newAbaUser: isNew,
+      customer: authCustomer?.value || (authResponse.value as any)?.body
+    }
+
     if (props.hideOnComplete) {
       isVisible.value = false
       // Wait for the 350ms CSS fade-out transition to finish before emitting complete
       setTimeout(() => {
-        emit('complete')
-        emit('finish')
+        emit('complete', payload)
+        emit('finish', payload)
       }, 350)
     } else {
-      emit('complete')
-      emit('finish')
+      emit('complete', payload)
+      emit('finish', payload)
     }
   }, 200)
 }
+
+watch(isBridgeModalOpen, (isOpen) => {
+  if (!isOpen && isTokenReceived.value) {
+    triggerComplete()
+  }
+})
 
 // Watch controlled progress
 watch(
@@ -264,6 +318,7 @@ onBeforeUnmount(() => {
 // Expose methods for parent components
 defineExpose({
   currentProgress,
+  isNewAbaUser: () => getIsNewAbaUser(),
   finish: fastFinish,
   start: startSimulatedProgress,
   reset: () => {
@@ -314,9 +369,39 @@ defineExpose({
 
         <!-- Status text -->
         <p class="loading-text">{{ text }}</p>
+
+        <!-- Debug inspection button -->
+        <!-- <button
+          type="button"
+          class="debug-inspect-btn"
+          @click="handleOpenBridgeModal"
+        >
+          <ion-icon :icon="codeWorkingOutline" />
+          <span>Inspect ABA Profile & Auth API</span>
+          <span v-if="authResponse || userProfile" class="badge-ready">Ready</span>
+          <span v-else-if="isProfileLoading || isAuthPending" class="badge-loading">...</span>
+        </button> -->
       </div>
     </div>
   </Transition>
+
+  <!-- Bridge Response Modal for viewing profile data from ABA Mobile App & useSendProfile -->
+  <BridgeResponseModal
+    :is-open="isBridgeModalOpen"
+    handler-name="getProfile"
+    :request-payload="{}"
+    :response="userProfile"
+    :auth-response="authResponse"
+    :auth-payload="authPayload || userProfile"
+    :api-url="apiUrl"
+    api-method="POST"
+    :error="profileError"
+    :auth-error="authError"
+    :is-loading="isProfileLoading"
+    :is-auth-loading="isAuthPending"
+    @close="handleCloseBridgeModal"
+    @refresh="handleRefreshProfile"
+  />
 </template>
 
 <style scoped>
@@ -412,6 +497,48 @@ defineExpose({
   text-align: center;
   letter-spacing: 0.2px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Debug Inspection Button */
+.debug-inspect-btn {
+  margin-top: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 20px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.debug-inspect-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.badge-ready {
+  background: #22c55e;
+  color: #ffffff;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.badge-loading {
+  background: #3b82f6;
+  color: #ffffff;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 10px;
+  font-weight: 700;
 }
 
 /* Fade Transition */

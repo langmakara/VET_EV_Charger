@@ -220,17 +220,17 @@
               </div>
 
               <div class="points-info-row">
-                <span class="current-points-label"
-                  >Current Points: {{ membership?.currentPoint }}</span
-                >
+                <span class="current-points-label">
+                  {{ $t('membershipPage.currentPoints', { points: membership?.currentPoint ?? 0 }) }}
+                </span>
                 <span class="expiry-label">
-                  (expires in <span class="days-left">{{ membership?.expiringInDays }} days</span>)
+                  {{ $t('membershipPage.expiresInDays', { days: membership?.expiringInDays ?? 0 }) }}
                 </span>
               </div>
 
               <div class="help-link-row" @click="showSheet = true">
                 <Icon name="info-circle" size="16px" color="#df5e0e" class="info-icon" />
-                <span class="help-link-text">How to earn or use point</span>
+                <span class="help-link-text">{{ $t('membershipPage.howToEarnOrUsePoint') }}</span>
               </div>
             </div>
           </div>
@@ -238,13 +238,13 @@
 
         <div class="content-container" :class="{ 'history-active': headerIsActive }">
           <div v-if="!headerIsActive" class="membership-benefit" @click="headerBenefit">
-            <h2 class="title"><Icon name="user-plus" size="18px" />Membership Benefit</h2>
+            <h2 class="title"><Icon name="user-plus" size="18px" />{{ $t('membershipPage.membershipBenefit') }}</h2>
             <div class="view-all" role="button" tabindex="0">
               <Icon name="chevron-right" class="chevron-icon" size="20px" />
             </div>
           </div>
           <div v-if="!headerIsActive" class="membership-benefit" @click="headerHistory">
-            <h2 class="title"><Icon name="history-check" size="18px" />History</h2>
+            <h2 class="title"><Icon name="history-check" size="18px" />{{ $t('membershipPage.history') }}</h2>
             <div class="view-all" role="button" tabindex="0">
               <Icon name="chevron-right" class="chevron-icon" size="20px" />
             </div>
@@ -262,7 +262,7 @@
                       expand="block"
                       fill="solid"
                       @click="setTab('all')"
-                      >All</ion-button
+                      >{{ $t('membershipPage.all') }}</ion-button
                     >
                   </ion-col>
                   <ion-col>
@@ -272,7 +272,7 @@
                       expand="block"
                       fill="solid"
                       @click="setTab('earned')"
-                      >Earned</ion-button
+                      >{{ $t('membershipPage.earned') }}</ion-button
                     >
                   </ion-col>
                   <ion-col>
@@ -282,7 +282,7 @@
                       expand="block"
                       fill="solid"
                       @click="setTab('spend')"
-                      >Spend</ion-button
+                      >{{ $t('membershipPage.spend') }}</ion-button
                     >
                   </ion-col>
                 </ion-row>
@@ -298,7 +298,7 @@
 
               <!-- Error -->
               <div v-else-if="isHistoryError && filteredHistory.length === 0" class="empty-state">
-                <p>{{ historyError?.message || 'Failed to load history' }}</p>
+                <p>{{ historyError?.message || $t('membershipPage.failedLoadHistory') }}</p>
               </div>
 
               <!-- History Cards List -->
@@ -309,14 +309,14 @@
                 <div ref="sentinelEl" class="infinite-sentinel">
                   <div v-if="isFetchingNextPage" class="loading-more">
                     <ion-spinner name="crescent" color="primary" />
-                    <span>Loading more...</span>
+                    <span>{{ $t('membershipPage.loadingMore') }}</span>
                   </div>
                 </div>
               </template>
 
               <!-- Empty state -->
               <ion-text v-else class="empty-state">
-                <p>No history found.</p>
+                <p>{{ $t('membershipPage.noHistoryFound') }}</p>
               </ion-text>
             </div>
           </div>
@@ -325,7 +325,7 @@
       <!-- Bottom sheet -->
       <AppModal
         v-model="showSheet"
-        title="How to earn & use points"
+        :title="$t('membershipPage.howToEarnOrUsePoint')"
         :breakpoints="[0, 0.48, 0.75]"
         :initial-breakpoint="0.48"
       >
@@ -336,13 +336,12 @@
               <Icon name="earn-points" size="22px" color="#df5e0e" />
             </div>
             <div class="guide-info">
-              <h3 class="guide-title">Earn points</h3>
+              <h3 class="guide-title">{{ $t('membershipPage.earnPoints') }}</h3>
               <p class="guide-desc">
-                Points are added to your balance base on how much you spent on your charging
-                process.
+                {{ $t('membershipPage.earnPointsDesc') }}
               </p>
               <div class="guide-badge-wrapper">
-                <span class="guide-rate-badge">100 kWh = 1 pt</span>
+                <span class="guide-rate-badge">{{ $t('membershipPage.earnRateBadge') }}</span>
               </div>
             </div>
           </div>
@@ -355,9 +354,9 @@
               <Icon name="use-points" size="22px" color="#df5e0e" />
             </div>
             <div class="guide-info">
-              <h3 class="guide-title">Use points</h3>
+              <h3 class="guide-title">{{ $t('membershipPage.usePoints') }}</h3>
               <p class="guide-desc">
-                Redeem points for kWh for charging or benefits when available.
+                {{ $t('membershipPage.usePointsDesc') }}
               </p>
             </div>
           </div>

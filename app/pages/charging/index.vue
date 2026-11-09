@@ -269,7 +269,7 @@
         <ion-row class="ion-margin-top">
           <ion-col size="12" class="ion-text-center">
             <ion-text class="battery-label">
-              <p>Battery</p>
+              <p>{{ $t('charging.battery') }}</p>
             </ion-text>
           </ion-col>
         </ion-row>
@@ -303,7 +303,7 @@
         <ion-row class="ion-margin-bottom">
           <ion-col size="12" class="ion-text-center">
             <ion-text class="estimated-time">
-              <span>Estimated Time :</span> <span class="time-value">{{ estimatedTimeText }}</span>
+              <span>{{ $t('charging.estimatedTime') }}</span> <span class="time-value">{{ estimatedTimeText }}</span>
             </ion-text>
           </ion-col>
         </ion-row>
@@ -313,7 +313,7 @@
           <ion-col size="6">
             <ion-card class="stat-card">
               <ion-card-content class="card-content">
-                <ion-text class="stat-label"><p>Time Elapsed</p></ion-text>
+                <ion-text class="stat-label"><p>{{ $t('charging.timeElapsed') }}</p></ion-text>
                 <ion-row class="ion-align-items-center ion-nowrap stat-row-inner">
                   <span class="stat-icon icon-orange">
                     <Icon name="time-elapsed" size="22px" color="white" />
@@ -330,7 +330,7 @@
           <ion-col size="6">
             <ion-card class="stat-card">
               <ion-card-content class="card-content">
-                <ion-text class="stat-label"><p>Current</p></ion-text>
+                <ion-text class="stat-label"><p>{{ $t('charging.current') }}</p></ion-text>
                 <ion-row class="ion-align-items-center ion-nowrap stat-row-inner">
                   <span class="stat-icon icon-green">
                     <Icon name="current" size="22px" />
@@ -347,7 +347,7 @@
           <ion-col size="6">
             <ion-card class="stat-card">
               <ion-card-content class="card-content">
-                <ion-text class="stat-label"><p>Voltage</p></ion-text>
+                <ion-text class="stat-label"><p>{{ $t('charging.voltage') }}</p></ion-text>
                 <ion-row class="ion-align-items-center ion-nowrap stat-row-inner">
                   <span class="stat-icon icon-blue">
                     <Icon name="voltage" size="22px" color="white" />
@@ -364,7 +364,7 @@
           <ion-col size="6">
             <ion-card class="stat-card">
               <ion-card-content class="card-content">
-                <ion-text class="stat-label"><p>Energy</p></ion-text>
+                <ion-text class="stat-label"><p>{{ $t('charging.energy') }}</p></ion-text>
                 <ion-row class="ion-align-items-center ion-nowrap stat-row-inner">
                   <span class="stat-icon icon-red">
                     <Icon name="energy" size="22px" color="white" />
@@ -383,7 +383,7 @@
           <ion-col size="12">
             <ion-card class="stat-card">
               <ion-card-content class="card-content">
-                <ion-text class="stat-label"><p>Estimated Cost</p></ion-text>
+                <ion-text class="stat-label"><p>{{ $t('charging.estimatedCost') }}</p></ion-text>
                 <ion-row class="ion-align-items-center ion-nowrap stat-row-inner">
                   <span class="stat-icon icon-yellow">
                     <Icon name="cost" size="22px" />
@@ -407,8 +407,7 @@
                   </ion-col>
                   <ion-col>
                     <ion-text class="warning-text">
-                      <span class="warning-note">Note:</span> You cannot unplug the power while
-                      charging.
+                      <span class="warning-note">{{ $t('charging.note') }}</span> {{ $t('charging.unplugWarning') }}
                     </ion-text>
                   </ion-col>
                 </ion-row>
@@ -419,7 +418,7 @@
             <ion-button class="stop-button" expand="block" @click="isStopAlertOpen = true">
               <span class="stop-button-content">
                 <Icon name="power" size="24px" color="#E53935" class="stop-icon" />
-                <ion-text class="stop-text">Stop</ion-text>
+                <ion-text class="stop-text">{{ $t('charging.stop') }}</ion-text>
               </span>
             </ion-button>
           </ion-col>
@@ -429,6 +428,8 @@
       <AlertComponent
         :is-open="isStopAlertOpen"
         type="stop"
+        :title="$t('charging.stopConfirmTitle')"
+        :message="$t('charging.stopConfirmMessage')"
         @cancel="isStopAlertOpen = false"
         @confirm="handleStopConfirm"
         @didDismiss="isStopAlertOpen = false"
@@ -437,9 +438,9 @@
       <AlertComponent
         :is-open="isFullyChargedAlertOpen"
         type="custom"
-        title="Fully Charged!"
-        message="Please unplug the charger before traveling.<br>Thank you."
-        label-confirm="Continue"
+        :title="$t('charging.fullyChargedTitle')"
+        :message="$t('charging.fullyChargedMessage')"
+        :label-confirm="$t('qrScan.continue')"
         hide-cancel
         outline-confirm
         @confirm="handleFullyChargedConfirm"

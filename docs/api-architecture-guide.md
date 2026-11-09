@@ -31,7 +31,7 @@ This project uses a **3-layer architecture** to handle API calls:
 
 Creates a **single** Axios instance (`$api`) provided to the entire app via Nuxt plugin:
 
-- **Base URL** — resolved from environment config via `useApiUrl()`
+- **Base URL** — resolved from environment config via `useRuntimeConfig().public.apiBase`
 - **Request interceptor** — automatically attaches:
   - `Authorization: Bearer <token>` (from cookie/localStorage/URL)
   - `x-lang-id` + `lang-id` headers (from `lang_id` cookie)

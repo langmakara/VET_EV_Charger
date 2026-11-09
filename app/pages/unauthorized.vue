@@ -22,14 +22,14 @@ const { resolveAsset } = useAssetResolver()
         <img v-else :src="resolveAsset('images/logo.jpg')" alt="VET Car Rental Logo" class="logo-img" />
       </div>
 
-      <h1 v-if="isLoginFailed">Your Account Can't Open Mini App</h1>
-      <h1 v-else>Open from Mobile App</h1>
+      <h1 v-if="isLoginFailed">{{ $t('unauthorized.accountCannotOpen') }}</h1>
+      <h1 v-else>{{ $t('unauthorized.openFromMobileApp') }}</h1>
 
-      <p v-if="isLoginFailed">Your account is not authorized or allowed to access this mini app.</p>
-      <p v-else>This mini app is only available when launched from the <strong>VET Experess</strong> mobile application.</p>
+      <p v-if="isLoginFailed">{{ $t('unauthorized.notAuthorizedDesc') }}</p>
+      <p v-else>{{ $t('unauthorized.onlyMobileAppDesc') }}</p>
 
-      <p class="hint" v-if="isLoginFailed">Please log in with an authorized account or contact support.</p>
-      <p class="hint" v-else>Please open this page through the app to continue.</p>
+      <p class="hint" v-if="isLoginFailed">{{ $t('unauthorized.contactSupportHint') }}</p>
+      <p class="hint" v-else>{{ $t('unauthorized.openThroughAppHint') }}</p>
     </div>
   </div>
 </template>

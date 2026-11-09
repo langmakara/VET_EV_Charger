@@ -201,13 +201,13 @@
 
       <!-- 2. Current Points Row -->
       <div class="current-points-row">
-        <span class="current-label">Current Points</span>
-        <span class="current-value">{{ formatNumber(currentMembershipPoints) }} Points</span>
+        <span class="current-label">{{ $t('chargingInfor.currentPoints') }}</span>
+        <span class="current-value">{{ formatNumber(currentMembershipPoints) }} {{ $t('chargingInfor.points') }}</span>
       </div>
 
       <!-- 3. Choose amount Section -->
       <div class="section-block">
-        <div class="section-label">Choose amount</div>
+        <div class="section-label">{{ $t('chargingInfor.chooseAmount') }}</div>
         <div class="preset-grid">
           <button
             v-for="preset in activePresets"
@@ -218,15 +218,15 @@
             @click="handleSelectPreset(preset)"
           >
             <span class="preset-kwh">{{ preset.labelKwh || `${preset.kwh} kWh` }}</span>
-            <span class="preset-points">{{ formatNumber(preset.points) }} Points</span>
+            <span class="preset-points">{{ formatNumber(preset.points) }} {{ $t('chargingInfor.points') }}</span>
           </button>
         </div>
       </div>
 
       <!-- 4. Preferred Amount Input Box -->
-      <div class="section-block">
+      <!-- <div class="section-block">
         <label for="preferred-point-input" class="section-label">
-          Or enter your preferred amount
+          {{ $t('chargingInfor.orEnterPreferredAmount') }}
         </label>
         <div class="input-wrapper">
           <input
@@ -234,20 +234,20 @@
             type="text"
             inputmode="numeric"
             class="point-input"
-            placeholder="Enter"
+            :placeholder="$t('chargingInfor.enter')"
             :value="inputPoints"
             @input="handleInput"
             @keyup.enter="handleApply"
           />
-          <span class="input-suffix">Point</span>
+          <span class="input-suffix">{{ $t('chargingInfor.point') }}</span>
         </div>
-        <div class="ratio-note">1 kWh = 100Points</div>
-      </div>
+        <div class="ratio-note">{{ $t('chargingInfor.pointRatio') }}</div>
+      </div> -->
 
       <!-- 5. Action Buttons: Cancel & Apply -->
       <div class="modal-actions">
-        <button type="button" class="action-btn btn-cancel" @click="handleCancel">Cancel</button>
-        <button type="button" class="action-btn btn-apply" @click="handleApply">Apply</button>
+        <button type="button" class="action-btn btn-cancel" @click="handleCancel">{{ $t('common.cancel') }}</button>
+        <button type="button" class="action-btn btn-apply" @click="handleApply">{{ $t('common.apply') }}</button>
       </div>
     </div>
   </ion-modal>

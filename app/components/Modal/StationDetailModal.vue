@@ -25,6 +25,7 @@
   }>()
 
   const { t } = useI18n()
+  const { openMap, openPhoneCall, openEmail } = useABAMiniApp()
 
   const stationId = computed(() => props.station?.id)
 
@@ -78,15 +79,11 @@
   }
 
   const openDirection = () => {
-    const lat = Number(station.value?.lats)
-    const lng = Number(station.value?.longs)
-    // if (lat && lng) {
-    //   abaBridge.openMap({ lat, lng }).catch(() => {
-    //     // Fallback to web Google Maps if outside mobile app or bridge fails
-    //     const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
-    //     window.open(url, '_blank')
-    //   })
-    // }
+    const lat = station.value?.lats ?? station.value?.lat ?? station.value?.latitude
+    const lng = station.value?.longs ?? station.value?.lng ?? station.value?.longitude
+    if (lat && lng) {
+      openMap(lat, lng)
+    }
   }
 
   const handleScanToCharge = async () => {
@@ -103,7 +100,8 @@
     await navigateTo('/qr_scan')
   }
 
-  const { baseUrl: evChargerBaseUrl } = useApiUrl('/vetEvChargerCustomerAPi', 5697)
+  const config = useRuntimeConfig()
+  const evChargerBaseUrl = computed(() => ((config.public.apiBase as string) || '').replace(/\/+$/, ''))
 
   const stationImage = computed(() => {
     const img = station.value?.imageUrl || props.station?.imageUrl
@@ -116,7 +114,7 @@
     ) {
       return img
     }
-    return `${evChargerBaseUrl}${img.startsWith('/') ? '' : '/'}${img}`
+    return `${evChargerBaseUrl.value}${img.startsWith('/') ? '' : '/'}${img}`
   })
 
   const franchiseProfile = computed(() => {
@@ -130,7 +128,7 @@
     ) {
       return img
     }
-    return `${evChargerBaseUrl}${img.startsWith('/') ? '' : '/'}${img}`
+    return `${evChargerBaseUrl.value}${img.startsWith('/') ? '' : '/'}${img}`
   })
 
   const stationCountDisplay = computed(() => {
@@ -299,12 +297,16 @@
   const handleContactClick = (contact: any) => {
     if (!contact?.link) return
     const linkStr = String(contact.link).trim()
-    if (linkStr.startsWith('http://') || linkStr.startsWith('https://')) {
-      window.open(linkStr, '_blank')
+    if (linkStr.startsWith('mailto:')) {
+      const email = linkStr.replace(/^mailto:/i, '')
+      openEmail(email)
     } else if (linkStr.startsWith('tel:')) {
-      window.open(linkStr, '_self')
-    } else if (/^\d+$/.test(linkStr.replace(/[\s-+()]/g, ''))) {
-      window.open(`tel:${linkStr}`, '_self')
+      const phone = linkStr.replace(/^tel:/i, '')
+      openPhoneCall(phone)
+    } else if (/^\+?\d[\d\s-()]+$/.test(linkStr) && !linkStr.startsWith('http')) {
+      openPhoneCall(linkStr)
+    } else if (linkStr.startsWith('http://') || linkStr.startsWith('https://')) {
+      window.open(linkStr, '_blank')
     } else {
       window.open(linkStr, '_blank')
     }

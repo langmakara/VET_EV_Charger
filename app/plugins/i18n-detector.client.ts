@@ -1,14 +1,14 @@
-import { resolveLocaleFromLangId, getLangIdFromLocale, type SupportedLocale } from "~/helpers/languages";
+import { changeAppLanguage } from "~/helpers/languages";
 
 export default defineNuxtPlugin(async (nuxtApp) => {
   const router = useRouter();
-  const i18n = nuxtApp.$i18n as { locale: { value: string }; setLocale: (loc: string) => Promise<void> } | undefined;
+  const i18n = nuxtApp.$i18n as any;
   const langIdCookie = useCookie<string | number | null>("lang_id");
 
   const syncLanguageFromQueryOrCookie = async (queryLangId?: any) => {
     if (!i18n) return;
 
-    // 1. Check URL query param (e.g. ?langId=1 or ?langId=2 or ?langId=3)
+    // 1. Check URL query param (e.g. ?langId=1 or ?lang=kh or ?lang=en)
     const currentQuery = router.currentRoute.value?.query || {};
     let targetQueryVal = queryLangId || currentQuery.langId || currentQuery.lang_id || currentQuery.lang;
 
@@ -18,19 +18,10 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       targetQueryVal = searchParams.get("langId") || searchParams.get("lang_id") || searchParams.get("lang");
     }
 
-    let targetLocale: SupportedLocale = "en";
-
     if (targetQueryVal) {
-      targetLocale = resolveLocaleFromLangId(targetQueryVal);
+      await changeAppLanguage(targetQueryVal, i18n);
     } else if (langIdCookie.value) {
-      targetLocale = resolveLocaleFromLangId(langIdCookie.value);
-    }
-
-    const numericLangId = getLangIdFromLocale(targetLocale);
-    langIdCookie.value = numericLangId;
-
-    if (i18n.locale.value !== targetLocale) {
-      await i18n.setLocale(targetLocale);
+      await changeAppLanguage(langIdCookie.value, i18n);
     }
   };
 

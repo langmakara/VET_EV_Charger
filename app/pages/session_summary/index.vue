@@ -16,32 +16,32 @@ import Icon from '~/components/Icon/icon.vue';
             <div class="header-summary">
                 <Icon name="info" size="64px" color="red" />
             </div>
-            <h3 class="header-Title">Charging stopped</h3>
+            <h3 class="header-Title">{{ $t('sessionSummary.chargingStopped') }}</h3>
 
             <div class="list">
                 <div>
-                    <h4 >Your payment</h4>
+                    <h4>{{ $t('sessionSummary.yourPayment') }}</h4>
                     <ion-item>
-                        <ion-label color="medium">Pre-authorised amount</ion-label>
+                        <ion-label color="medium">{{ $t('sessionSummary.preAuthorisedAmount') }}</ion-label>
                         <ion-note slot="end" color="primary">40000 KHR</ion-note>
                     </ion-item>
                     <ion-item>
-                        <ion-label color="medium">Final charging cost</ion-label>
+                        <ion-label color="medium">{{ $t('sessionSummary.finalChargingCost') }}</ion-label>
                         <ion-note slot="end" color="primary">20000 KHR</ion-note>
                     </ion-item>
                     <ion-item lines="none" class="lastRow">
-                        <ion-label color="medium">Unused amount</ion-label>
+                        <ion-label color="medium">{{ $t('sessionSummary.unusedAmount') }}</ion-label>
                         <ion-note slot="end" color="primary">22000 KHR</ion-note>
                     </ion-item>
                 </div>
             </div>
             <ion-item lines="none" class="lastRow">
-                <ion-label color="medium">Estimated Final Cost</ion-label>
+                <ion-label color="medium">{{ $t('sessionSummary.estimatedFinalCost') }}</ion-label>
                 <ion-note slot="end" color="dark" class="FinalCost" >20,000 KHR</ion-note>
             </ion-item>
         </ion-content>
         <ion-footer class="footer-btn">
-            <AppButton label="Back to Homescreen" color="primary" fill="outline" class="custom-outline" expand="block" @click="handleBackToHome" />
+            <AppButton :label="$t('sessionSummary.backToHomescreen')" color="primary" fill="outline" class="custom-outline" expand="block" @click="handleBackToHome" />
         </ion-footer>
     </ion-page>
 </template>

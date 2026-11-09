@@ -189,7 +189,7 @@
     <div class="voucher-modal-container">
       <!-- Modal Header: Title & Close Button -->
       <div class="modal-header">
-        <h2 class="modal-title">Apply Voucher</h2>
+        <h2 class="modal-title">{{ $t('chargingInfor.applyVoucher') }}</h2>
         <IconButton buttonType="close" size="md" @click="handleClose" />
       </div>
 
@@ -199,8 +199,8 @@
           <ion-col>
             <AppInputField
               v-model="voucherInputCode"
-              label="Enter or scan voucher code"
-              placeholder="Code"
+              :label="$t('evCharger.enterOrScanVoucherCode')"
+              :placeholder="$t('evCharger.code')"
             />
           </ion-col>
           <ion-col size="auto" class="btn-container">
@@ -213,7 +213,7 @@
       <div class="vouchers-list">
         <div v-if="displayedVouchers.length === 0" class="no-vouchers">
           <p>
-            {{ voucherInputCode?.trim() ? 'No vouchers match your code' : 'No vouchers available' }}
+            {{ voucherInputCode?.trim() ? $t('evCharger.noVouchersMatch') : $t('evCharger.noVouchersAvailable') }}
           </p>
         </div>
         <div
@@ -235,8 +235,8 @@
 
       <!-- Action Buttons: Cancel & Apply -->
       <div class="modal-actions">
-        <button type="button" class="action-btn btn-cancel" @click="handleCancel">Cancel</button>
-        <button type="button" class="action-btn btn-apply" @click="handleApply">Apply</button>
+        <button type="button" class="action-btn btn-cancel" @click="handleCancel">{{ $t('common.cancel') }}</button>
+        <button type="button" class="action-btn btn-apply" @click="handleApply">{{ $t('common.apply') }}</button>
       </div>
     </div>
   </ion-modal>

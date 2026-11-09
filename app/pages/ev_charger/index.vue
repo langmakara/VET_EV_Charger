@@ -41,7 +41,7 @@
   import { useMembershipInfoQuery } from '~/composables/queries/useMembership.ts'
   import { useWebSocket, type OcpiMeterValuesPayload } from '~/composables/useChargintSocket'
   import { formatMins, formatSeconds } from '~/utils/formatters'
-  import { NO_IMAGE_AVAILABLE } from '~/composables/useApiUrl'
+  import { NO_IMAGE_AVAILABLE } from '~/composables/useAssetResolver'
   import { useABAMiniApp } from '@/composables/useNativeBridge'
   
   const { userProfile } = useABAMiniApp()
@@ -78,7 +78,8 @@
     isError: isNewsFeedError
   } = useNewFeedQuery(NewFeedFilter)
 
-  const { baseUrl: evChargerBaseUrl } = useApiUrl('/vetEvChargerCustomerAPi', 5697)
+  const config = useRuntimeConfig()
+  const evChargerBaseUrl = computed(() => ((config.public.apiBase as string) || '').replace(/\/+$/, ''))
 
   const resolveNewsImage = (img?: string) => {
     if (!img) return '/images/station.svg'
@@ -90,7 +91,7 @@
     ) {
       return img
     }
-    return `${evChargerBaseUrl}${img.startsWith('/') ? '' : '/'}${img}`
+    return `${evChargerBaseUrl.value}${img.startsWith('/') ? '' : '/'}${img}`
   }
 
   // Extract news feed from newsFeedRes and map fields for card template
@@ -192,7 +193,6 @@
   })
 
   // 2. WebSocket Connection for live OCPI telemetry
-  const config = useRuntimeConfig()
   const webSocketUrl = config.public.webSocketUrl || 'qacltom.udaya-tech.com'
   const wsUrl =
     webSocketUrl.startsWith('ws://') || webSocketUrl.startsWith('wss://')
@@ -396,6 +396,7 @@
               size="small"
               fill="solid"
               class="btn-view-detail"
+              v-if="isCharging"
               @click="handleViewDetail()"
             >
               {{ $t('evCharger.viewDetail') }}

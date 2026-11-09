@@ -30,7 +30,7 @@
 
       <!-- Error state -->
       <div v-else-if="isError" class="ion-text-center ion-padding">
-        <ion-text color="danger">{{ error?.message || 'Failed to load news feeds' }}</ion-text>
+        <ion-text color="danger">{{ error?.message || $t('newsFeed.failedLoadNews') }}</ion-text>
       </div>
 
       <!-- Empty state -->
@@ -39,7 +39,7 @@
         class="ion-text-center ion-padding"
         style="margin-top: 40px"
       >
-        <ion-text color="medium">No news feed available</ion-text>
+        <ion-text color="medium">{{ $t('newsFeed.noNewsAvailable') }}</ion-text>
       </div>
 
       <!-- News feed list -->

@@ -15,7 +15,7 @@
   import Icon from '~/components/Icon/icon.vue'
   import ContactModal from './contactModal.vue'
   import { getLangIdFromLocale, type SupportedLocale } from '~/helpers/languages'
-  import { NO_IMAGE_AVAILABLE } from '~/composables/useApiUrl'
+  import { NO_IMAGE_AVAILABLE } from '~/composables/useAssetResolver'
   import { useABAMiniApp } from '@/composables/useNativeBridge'
   
   const { userProfile } = useABAMiniApp()

@@ -16,7 +16,7 @@ export const abaApi = (http: AxiosInstance) => ({
    */
   generatePaymentHash: (params: AbaPaymentHashParams) =>
     http
-      .post<ApiResponseWrapper<AbaPaymentHashData>>('/aba-mini-app/payment/hash', params)
+      .post<ApiResponseWrapper<AbaPaymentHashData>>('/aba-mini-app/wallet/top-up', params)
       .then((r) => r.data),
 
   /**

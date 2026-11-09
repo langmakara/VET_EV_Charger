@@ -16,7 +16,8 @@
     (e: 'click'): void
   }>()
 
-  const { baseUrl: evChargerBaseUrl } = useApiUrl('/vetEvChargerCustomerAPi', 5697)
+  const config = useRuntimeConfig()
+  const evChargerBaseUrl = computed(() => ((config.public.apiBase as string) || '').replace(/\/+$/, ''))
 
   const voucherImage = computed(() => {
     const img = props.voucher?.banner || props.voucher?.bannerName
@@ -29,7 +30,7 @@
     ) {
       return img
     }
-    return `${evChargerBaseUrl}${img.startsWith('/') ? '' : '/'}${img}`
+    return `${evChargerBaseUrl.value}${img.startsWith('/') ? '' : '/'}${img}`
   })
 
   const formattedDiscount = computed(() => {

@@ -45,7 +45,7 @@
       <!-- Error state -->
       <div v-else-if="isError" class="ion-text-center ion-padding" style="margin-top: 40px">
         <ion-text color="danger">{{
-          error?.message || 'Failed to load membership benefits'
+          error?.message || $t('membershipPage.failedLoadBenefits')
         }}</ion-text>
       </div>
 
@@ -55,13 +55,13 @@
         class="ion-text-center ion-padding"
         style="margin-top: 40px"
       >
-        <ion-text color="medium">No membership benefits available</ion-text>
+        <ion-text color="medium">{{ $t('membershipPage.noBenefitsAvailable') }}</ion-text>
       </div>
 
       <!-- Membership tiers list -->
       <div v-else v-for="tier in benefitsList" :key="tier.id" class="benefit-header">
         <div v-if="tier.isYouAreHere" class="ribbon-wrapper">
-          <div class="ribbon">You are here</div>
+          <div class="ribbon">{{ $t('membershipPage.youAreHere') }}</div>
         </div>
         <AppCard bgColor="#F3F3F3" class="benefit-card">
           <ion-card-header>

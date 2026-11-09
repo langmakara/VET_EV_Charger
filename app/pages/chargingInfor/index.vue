@@ -88,7 +88,7 @@
           >
             <!-- Front view car EV icon -->
             <Icon name="car-front" size="18px" class="car-icon" />
-            <span class="segment-label">kWh</span>
+            <span class="segment-label">{{ $t('chargingInfor.kwh') }}</span>
           </button>
 
           <button
@@ -97,13 +97,13 @@
             :class="{ 'is-active': selectedMode === 'khr' }"
             @click="setMode('khr')"
           >
-            <span class="segment-text-bold">KHR</span>
-            <span class="segment-text-light">Amount</span>
+            <span class="segment-text-bold">{{ $t('chargingInfor.khr') }}</span>
+            <span class="segment-text-light">{{ $t('chargingInfor.amount') }}</span>
           </button>
         </div>
 
         <!-- 2. Section Heading -->
-        <div class="section-title">Electrical input information</div>
+        <div class="section-title">{{ $t('chargingInfor.electricalInputInfo') }}</div>
 
         <!-- 3. Grid of 6 Preset Choices (2 rows x 3 columns) -->
         <ion-grid class="preset-grid ion-no-padding">
@@ -133,7 +133,7 @@
             <div class="action-left">
               <!-- Ticket / Voucher Icon -->
               <Icon name="voucher" size="19px" class="action-icon" />
-              <span class="action-title">Apply Voucher</span>
+              <span class="action-title">{{ $t('chargingInfor.applyVoucher') }}</span>
             </div>
 
             <div class="action-right">
@@ -149,7 +149,7 @@
             <div class="action-left">
               <!-- Star Icon -->
               <Icon name="star" size="19px" class="action-icon" />
-              <span class="action-title">Apply Point</span>
+              <span class="action-title">{{ $t('chargingInfor.applyPoint') }}</span>
             </div>
 
             <div class="action-right">
@@ -164,7 +164,7 @@
         <!-- 5. Preferred Amount Input Box -->
         <div class="input-section">
           <label class="input-label" for="preferred-amount-input">
-            Or enter your preferred amount
+            {{ $t('chargingInfor.orEnterPreferredAmount') }}
           </label>
           <div class="input-wrapper">
             <input
@@ -183,12 +183,12 @@
         <!-- 6. Price Summary Section -->
         <div class="summary-card">
           <div class="summary-line">
-            <span class="summary-label">Sub Total</span>
+            <span class="summary-label">{{ $t('chargingInfor.subTotal') }}</span>
             <span class="summary-value">KHR (៛) {{ formatNumber(subTotal) }}</span>
           </div>
 
           <div class="summary-line">
-            <span class="summary-label"> Discount {{ voucherLabelText }} </span>
+            <span class="summary-label"> {{ $t('chargingInfor.discount') }} {{ voucherLabelText }} </span>
             <span class="summary-value discount-text">
               -KHR (៛) {{ formatNumber(discountAmount) }}
             </span>
@@ -197,7 +197,7 @@
           <div class="summary-divider"></div>
 
           <div class="summary-line total-line">
-            <span class="total-label">Total Price</span>
+            <span class="total-label">{{ $t('chargingInfor.totalPrice') }}</span>
             <span class="total-value">KHR (៛) {{ formatNumber(totalPrice) }}</span>
           </div>
         </div>
@@ -220,8 +220,7 @@
             </svg>
           </div>
           <p class="notice-description">
-            You’ll only pay for the energy used. Any unused amount will be returned once charging
-            stops.
+            {{ $t('chargingInfor.unusedReturnNotice') }}
           </p>
         </div>
       </div>
@@ -235,7 +234,7 @@
           <div class="account-top-row">
             <span class="account-type-title">{{ currentAccount?.name }}</span>
             <div class="account-dropdown-trigger">
-              <span class="account-dropdown-text">Select</span>
+              <span class="account-dropdown-text">{{ $t('chargingInfor.select') }}</span>
               <ion-icon :icon="chevronDown" class="account-chevron-icon"></ion-icon>
             </div>
           </div>
@@ -243,8 +242,8 @@
             <template v-if="currentAccount">
               {{ activeAccount?.accountNumber }}
             </template>
-            <template v-else-if="isLoadingAccount"> Loading account... </template>
-            <template v-else> Select account </template>
+            <template v-else-if="isLoadingAccount"> {{ $t('chargingInfor.loadingAccount') }} </template>
+            <template v-else> {{ $t('chargingInfor.selectAccount') }} </template>
           </div>
         </div>
 
@@ -255,18 +254,9 @@
           :disabled="isSubmittingOrder"
           @click="PaymentTrigger(true)"
         >
-          <!-- ABA PAY Badge -->
-          <!-- <div class="aba-pay-badge">
-            <div class="aba-top-row">
-              <span class="aba-letters">ABA</span>
-              <span class="aba-red-accent"></span>
-            </div>
-            <div class="aba-pay-sub">PAY</div>
-          </div> -->
-
           <!-- Button Text -->
           <span class="pay-button-label">
-            {{ isSubmittingOrder ? 'Processing...' : `Pay ${formatNumber(totalPrice)} KHR` }}
+            {{ isSubmittingOrder ? 'Processing...' : `${$t('chargingInfor.pay')} ${formatNumber(totalPrice)} KHR` }}
           </span>
         </button>
       </div>

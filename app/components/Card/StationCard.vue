@@ -91,7 +91,8 @@ const isFavorite = computed(() => {
   return Boolean(props.station?.isFavorite ?? (props.station as any)?.isFavorites)
 })
 
-const { baseUrl: evChargerBaseUrl } = useApiUrl('/vetEvChargerCustomerAPi', 5697)
+const config = useRuntimeConfig()
+const evChargerBaseUrl = computed(() => ((config.public.apiBase as string) || '').replace(/\/+$/, ''))
 
 const stationImage = computed(() => {
   const img = props.station?.imageUrl || (props.station as any)?.station
@@ -100,7 +101,7 @@ const stationImage = computed(() => {
   if (img.startsWith('/images') || img.startsWith('/icons') || img.startsWith('/vet-ev-charger')) {
     return img
   }
-  return `${evChargerBaseUrl}${img.startsWith('/') ? '' : '/'}${img}`
+  return `${evChargerBaseUrl.value}${img.startsWith('/') ? '' : '/'}${img}`
 })
 
 const { t } = useI18n()

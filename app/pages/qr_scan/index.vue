@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { ref, computed, onBeforeUnmount } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import CameraComponent from '~/components/Camera/CameraComponent.vue'
   import AlertComponent from '~/components/Modal/AlertComponent.vue'
   import ModalPlug from './modalPlug.vue'
@@ -7,6 +8,7 @@
   import { useGunTypeQuery } from '~/composables/queries'
   import type { GunTypeData } from '~/api/types'
 
+  const { t } = useI18n()
   const router = useRouter()
 
   const result = ref('')
@@ -28,44 +30,44 @@
     return res?.data ?? res?.body?.data ?? []
   })
 
-  const chargingSteps = [
+  const chargingSteps = computed(() => [
     {
       step: 1,
       icon: 'qr-code',
-      title: 'Scan QR code',
-      description: 'Scan the QR code on the charging machine.'
+      title: t('qrScan.step1Title'),
+      description: t('qrScan.step1Desc')
     },
     {
       step: 2,
       icon: 'amount',
-      title: 'Set charging amount',
-      description: 'Choose your charging amount (or kWh / price).'
+      title: t('qrScan.step2Title'),
+      description: t('qrScan.step2Desc')
     },
     {
       step: 3,
       icon: 'confirmPayment',
-      title: 'Confirm payment',
-      description: 'Review the details and confirm your payment.'
+      title: t('qrScan.step3Title'),
+      description: t('qrScan.step3Desc')
     },
     {
       step: 4,
       icon: 'PlugCharger',
-      title: 'Plug charger to vehicle',
-      description: 'Connect the charger to your EV and wait for charging to start.'
+      title: t('qrScan.step4Title'),
+      description: t('qrScan.step4Desc')
     },
     {
       step: 5,
       icon: 'TrackCharging',
-      title: 'Track your charging',
-      description: 'View the progress and final details in the app.'
+      title: t('qrScan.step5Title'),
+      description: t('qrScan.step5Desc')
     },
     {
       step: 6,
       icon: 'PlugCharger',
-      title: 'Unplug charger',
-      description: 'Safely disconnect the charger and return it to the station once finish.'
+      title: t('qrScan.step6Title'),
+      description: t('qrScan.step6Desc')
     }
-  ]
+  ])
   const cameraRef = ref<InstanceType<typeof CameraComponent> | null>(null)
 
   let plugTimer: any = null
@@ -182,7 +184,7 @@
               <div class="scan-box">
                 <Icon name="Corner" size="250px" class="scan-corners" color="white" />
               </div>
-              <p class="scan-hint">Point the camera at a QR code</p>
+              <p class="scan-hint">{{ $t('qrScan.scanHint') }}</p>
             </div>
 
             <!-- Bottom: Charger Card -->
@@ -196,9 +198,9 @@
                   <Icon name="Vector-color" size="26px" color="#DE5D0A" />
                 </div>
                 <div class="header-info">
-                  <h3 class="header-title">How to charge</h3>
+                  <h3 class="header-title">{{ $t('qrScan.howToCharge') }}</h3>
                   <p class="header-subtitle">
-                    Follow these simple steps to start charging your EV.
+                    {{ $t('qrScan.howToChargeSubtitle') }}
                   </p>
                 </div>
               </div>

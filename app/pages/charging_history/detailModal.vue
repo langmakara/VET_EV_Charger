@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { IonModal, IonContent } from '@ionic/vue'
+import { useI18n } from 'vue-i18n'
 
 import type { HistoryDetailItem } from '~/types'
 
 export type { HistoryDetailItem }
+
+const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
@@ -60,7 +63,7 @@ const activeType = computed<'transaction' | 'session'>(() => {
 // Header Title
 const modalTitle = computed(() => {
   if (props.title) return props.title
-  return activeType.value === 'session' ? 'Session Detail' : 'Transaction Detail'
+  return activeType.value === 'session' ? t('chargingHistory.sessionDetail') : t('chargingHistory.transactionDetail')
 })
 
 // Responsive Breakpoints for Ionic Bottom Sheet
@@ -107,9 +110,9 @@ const displaySubTotal = computed(() => {
 const displayDiscountLabel = computed(() => {
   if (props.item?.discountPercent) {
     const raw = String(props.item.discountPercent)
-    return `Discount (${raw.includes('%') ? raw : `${raw}%`})`
+    return `${t('chargingHistory.discount')} (${raw.includes('%') ? raw : `${raw}%`})`
   }
-  return 'Discount (20%)'
+  return `${t('chargingHistory.discount')} (20%)`
 })
 
 const displayDiscountValue = computed(() => {
@@ -234,19 +237,19 @@ const handleDismiss = () => {
           <slot :item="item" :type="activeType">
             <!-- Common Field 1: Transaction id -->
             <div class="detail-row">
-              <span class="row-label">Transaction id</span>
+              <span class="row-label">{{ $t('chargingHistory.transactionId') }}</span>
               <span class="row-value">{{ displayTransactionId }}</span>
             </div>
 
             <!-- Common Field 2: Station Name -->
             <div class="detail-row">
-              <span class="row-label">Station Name</span>
+              <span class="row-label">{{ $t('chargingHistory.stationName') }}</span>
               <span class="row-value">{{ displayStationName }}</span>
             </div>
 
             <!-- Common Field 3: Order Date -->
             <div class="detail-row">
-              <span class="row-label">Order Date</span>
+              <span class="row-label">{{ $t('chargingHistory.orderDate') }}</span>
               <span class="row-value">{{ displayOrderDate }}</span>
             </div>
 
@@ -254,7 +257,7 @@ const handleDismiss = () => {
             <template v-if="activeType === 'transaction'">
               <!-- Sub Total -->
               <div class="detail-row">
-                <span class="row-label">Sub Total</span>
+                <span class="row-label">{{ $t('chargingHistory.subTotal') }}</span>
                 <span class="row-value">{{ displaySubTotal }}</span>
               </div>
 
@@ -266,19 +269,19 @@ const handleDismiss = () => {
 
               <!-- Total Amount -->
               <div class="detail-row">
-                <span class="row-label">Total Amout</span>
+                <span class="row-label">{{ $t('chargingHistory.totalAmount') }}</span>
                 <span class="row-value is-bold">{{ displayTotalAmount }}</span>
               </div>
 
               <!-- Total kWh -->
               <div class="detail-row">
-                <span class="row-label">Total kWh</span>
+                <span class="row-label">{{ $t('chargingHistory.totalKwh') }}</span>
                 <span class="row-value is-bold">{{ displayTotalKwh }}</span>
               </div>
 
               <!-- Point Spend -->
               <div class="detail-row is-last">
-                <span class="row-label">Point Spend</span>
+                <span class="row-label">{{ $t('chargingHistory.pointSpend') }}</span>
                 <span class="row-value is-red">{{ displayPointSpend }}</span>
               </div>
             </template>
@@ -287,25 +290,25 @@ const handleDismiss = () => {
             <template v-else>
               <!-- Time Elapsed -->
               <div class="detail-row">
-                <span class="row-label">Time Elapsed</span>
+                <span class="row-label">{{ $t('chargingHistory.timeElapsed') }}</span>
                 <span class="row-value">{{ displayTimeElapsed }}</span>
               </div>
 
               <!-- Energy -->
               <div class="detail-row">
-                <span class="row-label">Energy</span>
+                <span class="row-label">{{ $t('chargingHistory.energy') }}</span>
                 <span class="row-value">{{ displayEnergy }}</span>
               </div>
 
               <!-- Pre-authorised amount -->
               <div class="detail-row">
-                <span class="row-label">Pre-authorised amount</span>
+                <span class="row-label">{{ $t('chargingHistory.preAuthorisedAmount') }}</span>
                 <span class="row-value">{{ displayPreAuthorised }}</span>
               </div>
 
               <!-- Final charging cost -->
               <div class="detail-row is-last">
-                <span class="row-label">Final charging cost</span>
+                <span class="row-label">{{ $t('chargingHistory.finalChargingCost') }}</span>
                 <span class="row-value is-bold">{{ displayFinalChargingCost }}</span>
               </div>
             </template>

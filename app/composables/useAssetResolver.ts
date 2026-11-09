@@ -3,6 +3,8 @@
  * Replaces the duplicated `resolveAsset` helper previously inlined in
  * RentalTypeCard.vue and VehicleCard.vue.
  */
+export const NO_IMAGE_AVAILABLE = "https://placehold.co/600x400?text=Image\\nUpcoming";
+
 export const useAssetResolver = () => {
   const config = useRuntimeConfig();
 

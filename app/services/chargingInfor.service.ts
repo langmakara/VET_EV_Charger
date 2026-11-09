@@ -603,7 +603,7 @@ export function useChargingInforService() {
       evse_uid: chargerUsername,
       transactionId: customTxId,
       isFullCharge,
-      paymentMethod: 5,
+      paymentMethod: 1,
       plug,
       durations: 0,
       totalKwh: totalKwh.value,
@@ -638,7 +638,7 @@ export function useChargingInforService() {
       const orderParams: CreateSaleOrderAppTmpParams = {
         chargerUsername,
         plugId,
-        paymentMethod: 5, // ABA PAY default
+        paymentMethod: 1, // ABA PAY default
         discountPercentage: discountPct,
         discount: discountAmount.value,
         voucherId,
@@ -671,7 +671,7 @@ export function useChargingInforService() {
         evse_uid: chargerUsername,
         transactionId: txId,
         isFullCharge,
-        paymentMethod: 5,
+        paymentMethod: 1,
         plug: plugId,
         durations: 0,
         totalKwh: totalKwh.value,
@@ -736,9 +736,9 @@ export function useChargingInforService() {
 
       // 1. Fetch payment hash strictly from backend API (/aba-mini-app/payment/hash)
       const hashRes = await generatePaymentHashMutation.mutateAsync({
-        account: acc,
+        // account: acc,
         amount: stringifiedAmount,
-        currency: currency as 'USD' | 'KHR'
+        // currency: currency as 'USD' | 'KHR'
       })
 
       const hashData = (hashRes as any)?.data ?? hashRes?.body?.data

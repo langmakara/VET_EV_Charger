@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { IonPage, IonContent, IonToast } from '@ionic/vue';
 import AppButton from '~/components/Button/AppButton.vue';
 import { useABAMiniApp } from '~/composables/useNativeBridge';
-import { useSendProfile } from '~/composables/useSendProfile';
-import { useAuthToken } from '~/composables/useAuthToken';
+import { useSendProfile, getIsNewAbaUser } from '~/composables/useSendProfile';
 import LoadingPage from '~/components/loading/loadingPage.vue';
 
 interface Props {
@@ -15,26 +15,46 @@ const props = withDefaults(defineProps<Props>(), {
   showLoading: true,
 });
 
+const { t } = useI18n();
 const router = useRouter();
 const { closeMiniApp } = useABAMiniApp();
-const { authResponse } = useSendProfile();
-const { getToken } = useAuthToken();
-const cookieToken = useCookie<string | null>('access_token');
+const { authResponse, authToken, authCustomer, isNewAbaUser } = useSendProfile();
 
 // Startup loading state (waits until token is retrieved from API)
 const showStartupLoading = ref(props.showLoading);
+// Terms of service content is shown only when not loading AND newAbaUser: true
+const showTermsContent = ref(!props.showLoading);
 const isDataLoaded = ref(false);
 
 watch(
-  [() => cookieToken.value, () => authResponse.value],
+  [() => authToken.value, () => authResponse.value],
   ([token, auth]) => {
-    const resData = auth?.data || auth?.body?.data;
-    if (token || resData?.token || resData?.accessToken || resData?.access_token || getToken()) {
+    const resAny = auth as any;
+    const body = resAny?.body;
+    if (token || body?.accessToken || body?.token || resAny?.data?.accessToken || resAny?.data?.token) {
       isDataLoaded.value = true;
     }
   },
   { immediate: true }
 );
+
+/**
+ * Handle loading completion from LoadingPage.
+ * If newAbaUser is true: reveal the Terms of Service onboarding page.
+ * If newAbaUser is false: directly navigate to the EV Charger home page.
+ */
+const handleLoadingComplete = async (payload?: { newAbaUser?: boolean }) => {
+  const isNew = typeof payload?.newAbaUser === 'boolean' ? payload.newAbaUser : getIsNewAbaUser();
+
+  if (isNew) {
+    showStartupLoading.value = false;
+    showTermsContent.value = true;
+  } else {
+    showTermsContent.value = false;
+    await navigateTo('/ev_charger', { replace: true });
+    showStartupLoading.value = false;
+  }
+};
 
 const showToast = ref(false);
 const toastMessage = ref('');
@@ -48,7 +68,7 @@ const handleAccept = () => {
   if (typeof window !== 'undefined') {
     localStorage.setItem('vet_ev_terms_accepted', 'true');
   }
-  triggerToast('Terms accepted');
+  triggerToast(t('termsOfService.termsAccepted'));
   setTimeout(() => {
     navigateTo('/ev_charger', { replace: true });
   }, 400);
@@ -73,11 +93,12 @@ const openVetTerms = () => {
 
 <template>
   <ion-page>
-    <ion-content class="terms-page-content" :fullscreen="true">
+    <!-- Main Terms Content: only shown when loading finishes and newAbaUser: true -->
+    <ion-content v-if="showTermsContent" class="terms-page-content" :fullscreen="true">
       <div class="terms-container">
         <!-- 1. Header with title & divider -->
         <div class="terms-header">
-          <h1 class="terms-title">Terms of Service</h1>
+          <h1 class="terms-title">{{ $t('termsOfService.title') }}</h1>
           <div class="terms-divider"></div>
         </div>
 
@@ -91,25 +112,25 @@ const openVetTerms = () => {
           </div>
 
           <!-- App Title -->
-          <h2 class="app-name-title">VET EV Charger</h2>
+          <h2 class="app-name-title">{{ $t('termsOfService.appName') }}</h2>
 
           <!-- Subtitle / Tagline -->
           <p class="app-tagline">
-            Find nearby EV charging stations, charge with ease, and keep your journey moving.
+            {{ $t('termsOfService.tagline') }}
           </p>
 
           <!-- Disclaimer Paragraph 1 -->
           <p class="terms-paragraph">
-            VET is the owner of this mini-application and is solely responsible for any contents, products, or services it offers, ABA Bank is not liable for any losses or liabilities arising from the use of this mini-application.
+            {{ $t('termsOfService.disclaimer1') }}
           </p>
 
           <!-- Disclaimer Paragraph 2 -->
           <p class="terms-paragraph">
-            By using the VET service, you agree to
-            <a href="#" class="terms-link" @click.prevent="openAbaTerms">ABA’s Terms and Conditions</a>,
-            and
-            <a href="#" class="terms-link" @click.prevent="openVetTerms">VET’s Terms of Service</a>,
-            as well as to share with VET your personal information such as your full name, email address, and phone number.
+            {{ $t('termsOfService.agreePrefix') }}
+            <a href="#" class="terms-link" @click.prevent="openAbaTerms">{{ $t('termsOfService.abaTerms') }}</a>,
+            {{ $t('termsOfService.and') }}
+            <a href="#" class="terms-link" @click.prevent="openVetTerms">{{ $t('termsOfService.vetTerms') }}</a>,
+            {{ $t('termsOfService.agreeSuffix') }}
           </p>
 
           <!-- Action Buttons using AppButton component -->
@@ -117,14 +138,14 @@ const openVetTerms = () => {
             <AppButton
               class="terms-btn-accept"
               expand="block"
-              label="ACCEPT"
+              :label="$t('termsOfService.accept')"
               @click="handleAccept"
             />
             <AppButton
               class="terms-btn-cancel"
               expand="block"
               fill="outline"
-              label="CANCEL"
+              :label="$t('termsOfService.cancel')"
               @click="handleCancel"
             />
           </div>
@@ -132,11 +153,11 @@ const openVetTerms = () => {
       </div>
     </ion-content>
 
-    <!-- App Startup Loading Screen (transitions to Terms of Service on API token success) -->
+    <!-- App Startup Loading Screen (transitions to Terms of Service on API token success only when newAbaUser: true) -->
     <LoadingPage
       v-if="showStartupLoading"
       :is-loaded="isDataLoaded"
-      @complete="showStartupLoading = false"
+      @complete="handleLoadingComplete"
     />
   </ion-page>
 </template>

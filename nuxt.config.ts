@@ -84,6 +84,9 @@ export default defineNuxtConfig({
     baseURL: process.env.NUXT_APP_BASE_URL || "/",
     head: {
       title: "EV Charger",
+      link: [
+        { rel: "icon", type: "image/svg+xml", href: "/images/logo.svg" },
+      ],
       script: [
         {
           innerHTML:
@@ -99,20 +102,38 @@ export default defineNuxtConfig({
     // Private: ONLY available inside the server/ directory
     apiBaseUrl: "",
     public: {
-      apiBase:
-        process.env.NUXT_PUBLIC_API_BASE ||
-        process.env.VITE_API_URL_QA ||
-        "https://qacltom.udaya-tech.com/vetEvChargerCustomerAPi",
-      nodeEnv: process.env.VITE_NODE_ENV || "qa",
+      apiBase: (() => {
+        if (process.env.NUXT_PUBLIC_API_BASE) {
+          return process.env.NUXT_PUBLIC_API_BASE;
+        }
+        const nodeEnv = (process.env.VITE_NODE_ENV || "dev").toLowerCase().trim();
+        switch (nodeEnv) {
+          case "pro":
+          case "prod":
+          case "production":
+            return (
+              process.env.VITE_API_URL_PROD 
+            );
+          case "qa":
+            return (
+              process.env.VITE_API_URL_QA
+            );
+          case "local":
+            return (
+              process.env.VITE_API_URL_LOCAL
+            );
+          case "dev":
+          case "development":
+          default:
+            return (
+              process.env.VITE_API_URL_DEV
+            );
+        }
+      })(),
+      nodeEnv: process.env.VITE_NODE_ENV || "dev",
       appName: process.env.VITE_APP_NAME || "VET EV Charger",
-      apiUrl: process.env.VITE_API_URL || "",
-      apiUrlProd: process.env.VITE_API_URL_PROD || "https://qadockerde.udaya-tech.com:10",
-      apiUrlQa: process.env.VITE_API_URL_QA || "https://qadockerde.udaya-tech.com:10",
-      apiUrlLocal: process.env.VITE_API_URL_LOCAL || "http://192.168.10.10:8080",
-      apiUrlDev: process.env.VITE_API_URL_DEV || "http://phea.local:11137",
       googleMapApiKey: process.env.VITE_GOOGLE_MAP_API_KEY || "",
-      webSocketUrl:
-        process.env.WEB_SOCKET_URL,
+      webSocketUrl: process.env.WEB_SOCKET_URL,
     },
   },
   future: {

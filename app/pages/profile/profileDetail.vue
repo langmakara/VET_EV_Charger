@@ -1,10 +1,12 @@
 <script setup lang="ts">
   import { ref, onMounted } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import { IonPage, IonContent, IonToast } from '@ionic/vue'
   import Icon from '~/components/Icon/icon.vue'
-  import { NO_IMAGE_AVAILABLE } from '~/composables/useApiUrl'
+  import { NO_IMAGE_AVAILABLE } from '~/composables/useAssetResolver'
   import { useABAMiniApp } from '@/composables/useNativeBridge'
 
+  const { t } = useI18n()
   const { userProfile } = useABAMiniApp()
 
   // Toast feedback
@@ -17,7 +19,7 @@
   }
 
   const handleCameraClick = () => {
-    triggerToast('Change profile photo')
+    triggerToast(t('profileDetails.changePhoto'))
   }
 
   const handleImageError = (event: Event) => {
@@ -47,7 +49,7 @@
               type="button"
               class="camera-btn"
               @click="handleCameraClick"
-              aria-label="Change profile photo"
+              :aria-label="$t('profileDetails.changePhoto')"
             >
               <Icon name="camera" size="15px" color="#64748b" />
             </button>
@@ -60,7 +62,7 @@
           <div class="info-row">
             <div class="info-left">
               <Icon name="user" size="20px" class="info-icon" />
-              <span class="info-label">Full name</span>
+              <span class="info-label">{{ $t('profileDetails.fullName') }}</span>
             </div>
             <span class="info-value">{{ userProfile?.fullName }}</span>
           </div>
@@ -69,7 +71,7 @@
           <div class="info-row">
             <div class="info-left">
               <Icon name="at" size="20px" class="info-icon" />
-              <span class="info-label">Email</span>
+              <span class="info-label">{{ $t('profileDetails.email') }}</span>
             </div>
             <span class="info-value">{{ userProfile?.email }}</span>
           </div>
@@ -78,7 +80,7 @@
           <div class="info-row">
             <div class="info-left">
               <Icon name="location" size="20px" class="info-icon" />
-              <span class="info-label">Address</span>
+              <span class="info-label">{{ $t('profileDetails.address') }}</span>
             </div>
             <span class="info-value">{{ userProfile?.address }}</span>
           </div>
@@ -87,7 +89,7 @@
           <div class="info-row no-border">
             <div class="info-left">
               <Icon name="phone" size="20px" class="info-icon" />
-              <span class="info-label">Phone Number</span>
+              <span class="info-label">{{ $t('profileDetails.phoneNumber') }}</span>
             </div>
             <span class="info-value">{{ userProfile?.phone }}</span>
           </div>

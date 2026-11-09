@@ -41,10 +41,9 @@ app/
 │   └── Map/                          # Map integration components
 ├── composables/                      # Custom Vue Composables
 │   ├── queries/                      # Vue Query hooks for data fetching
-│   ├── useApiUrl.ts                  # API URL helper
 │   ├── useAssetResolver.ts           # Asset resolving helper
-│   ├── useAuthToken.ts               # Auth token management composable
 │   ├── useNativeBridge.ts            # Native bridge for mobile apps
+│   ├── useSendProfile.ts             # ABA auth token & profile submission
 │   └── useUserProfile.ts             # User profile state management
 ├── data/                             # Mock data or static JSON data
 ├── helpers/                          # Application Helpers

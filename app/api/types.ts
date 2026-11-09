@@ -23,7 +23,7 @@ export interface ApiResponseBody<T = any> {
 
 export interface ApiResponseWrapper<T = void> {
   header?: ApiResponseHeader;
-  body?: ApiResponseBody<T>;
+  body?: ApiResponseBody<T> | T | any;
   data?: T;
   success?: boolean;
   status?: number;
@@ -488,9 +488,9 @@ export interface LabelPointData {
 
 // POST /aba-mini-app/payment/hash
 export interface AbaPaymentHashParams {
-  account: string;
+  account?: string;
   amount: number | string;
-  currency: 'KHR' | 'USD';
+  currency?: 'KHR' | 'USD';
   [key: string]: any;
 }
 
@@ -534,12 +534,19 @@ export interface AbaAuthTokenParams {
 }
 
 export interface AbaAuthTokenData {
-  token?: string;
   accessToken?: string;
-  access_token?: string;
   tokenType?: string;
+  refreshToken?: string;
   expiresIn?: number;
+  scope?: string;
+  clientId?: string;
+  customerId?: number | string;
+  customerName?: string;
+  phoneNumber?: string;
   newCustomer?: boolean;
+  newAbaUser?: boolean;
+  token?: string;
+  access_token?: string;
   user?: any;
   [key: string]: any;
 }

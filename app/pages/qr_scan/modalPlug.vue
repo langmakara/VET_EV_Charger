@@ -127,20 +127,20 @@
     <ion-content class="ion-no-padding">
       <ion-card class="modal-card">
         <ion-card-header class="modal-header">
-          <ion-card-title class="modal-title">Plug Selection</ion-card-title>
-          <ion-text class="modal-subtitle">Select your preferred plug type</ion-text>
+          <ion-card-title class="modal-title">{{ $t('qrScan.plugSelection') }}</ion-card-title>
+          <ion-text class="modal-subtitle">{{ $t('qrScan.selectPreferredPlug') }}</ion-text>
         </ion-card-header>
 
         <ion-card-content class="modal-body">
           <!-- Loading state -->
           <div v-if="isLoading && plugs.length === 0" class="loading-box">
             <ion-spinner name="crescent" color="primary" />
-            <p>Loading available plugs...</p>
+            <p>{{ $t('qrScan.loadingPlugs') }}</p>
           </div>
 
           <!-- Empty state -->
           <div v-else-if="plugs.length === 0" class="loading-box">
-            <p>No plugs found for this charger.</p>
+            <p>{{ $t('qrScan.noPlugsFound') }}</p>
           </div>
 
           <!-- Plug list -->
@@ -178,7 +178,7 @@
                   <span
                     class="status-text"
                     :class="{ 'is-busy': !plug.isAvailable }"
-                  >{{ plug.status }}</span>
+                  >{{ plug.isAvailable ? $t('qrScan.available') : $t('qrScan.busy') }}</span>
                 </div>
               </div>
 
@@ -196,7 +196,7 @@
         </ion-card-content>
         <div class="modal-footer">
           <AppButton
-            label="Continue"
+            :label="$t('qrScan.continue')"
             expand="block"
             :disabled="!selectedAvailablePlug || (isLoading && plugs.length === 0)"
             @click="handleContinue"

@@ -174,7 +174,7 @@
                   expand="block"
                   fill="solid"
                   @click="setTab('all')"
-                  >All</ion-button
+                  >{{ $t('membershipPage.all') }}</ion-button
                 >
               </ion-col>
               <ion-col>
@@ -184,7 +184,7 @@
                   expand="block"
                   fill="solid"
                   @click="setTab('earned')"
-                  >Income</ion-button
+                  >{{ $t('membershipPage.income') }}</ion-button
                 >
               </ion-col>
               <ion-col>
@@ -194,7 +194,7 @@
                   expand="block"
                   fill="solid"
                   @click="setTab('spend')"
-                  >Expend</ion-button
+                  >{{ $t('membershipPage.expense') }}</ion-button
                 >
               </ion-col>
             </ion-row>
@@ -214,7 +214,7 @@
 
           <!-- Error state -->
           <div v-else-if="isError && filteredHistory.length === 0" class="empty-state">
-            <p>{{ error?.message || 'Failed to load transaction history' }}</p>
+            <p>{{ error?.message || $t('chargingHistory.failedLoadTransactions') }}</p>
           </div>
 
           <!-- History Cards List -->
@@ -232,14 +232,14 @@
             <div ref="sentinelEl" class="infinite-sentinel">
               <div v-if="isFetchingNextPage" class="loading-more">
                 <ion-spinner name="crescent" color="primary" />
-                <span>Loading more...</span>
+                <span>{{ $t('membershipPage.loadingMore') }}</span>
               </div>
             </div>
           </template>
 
           <!-- Empty state -->
           <ion-text v-else class="empty-state">
-            <p>No transaction history found.</p>
+            <p>{{ $t('chargingHistory.noTransactionsFound') }}</p>
           </ion-text>
         </div>
 
