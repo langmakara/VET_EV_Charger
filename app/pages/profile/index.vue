@@ -247,7 +247,6 @@
       v-model:isOpen="showToast"
       :message="toastMessage"
       type="success"
-      position="bottom"
     />
   </ion-page>
 </template>

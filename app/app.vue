@@ -35,7 +35,6 @@
     '/session_summary': 'titles.sessionSummary',
     '/faq': 'titles.faq',
     '/terms': 'titles.terms',
-    '/termsofService': 'titles.termsOfService',
     '/transactionHistory': 'titles.transactionHistory',
     '/unauthorized': 'titles.unauthorized'
   }
