@@ -31,7 +31,14 @@
   const selectedStatus = ref([])
   const selectedConnector = ref([])
   const selectedTags = ref([])
-  const selectedPovince = ref([])
+  const selectedProvince = ref([])
+
+  const resetFilters = () => {
+    selectedStatus.value = []
+    selectedConnector.value = []
+    selectedTags.value = []
+    selectedProvince.value = []
+  }
 
   const ChargerOptions = computed(() => [
     { label: t('evCharger.allType'), value: 'All' },
@@ -51,10 +58,10 @@
     { label: t('evCharger.within15km'), value: '15' },
     { label: t('evCharger.within20km'), value: '20' },
     { label: t('evCharger.within25km'), value: '25' },
-    { label: t('evCharger.anyDistance'), value: 'Closed' }
+    { label: t('evCharger.anyDistance'), value: 'any' }
   ])
 
-  const povinceOptions = computed(() => [
+  const provinceOptions = computed(() => [
     { label: t('evCharger.allProvinces'), value: 'All' },
     { label: 'Phnom Penh', value: 'Phnom Penh' },
     { label: 'Banteay Meanchey', value: 'Banteay Meanchey' },
@@ -95,7 +102,7 @@
     <ion-header>
       <ion-toolbar class="header-filter">
         <ion-buttons slot="start">
-          <ion-button class="but-reset">{{ $t('label.reset') }}</ion-button>
+          <ion-button class="but-reset" @click="resetFilters">{{ $t('label.reset') }}</ion-button>
         </ion-buttons>
         <ion-title>{{ $t('filter.title') }}</ion-title>
         <ion-buttons slot="end">
@@ -123,9 +130,9 @@
       />
 
       <SelectFloatControl
-        v-model="selectedPovince"
+        v-model="selectedProvince"
         :label="$t('evCharger.province')"
-        :options="povinceOptions"
+        :options="provinceOptions"
       />
     </ion-content>
   </ion-modal>

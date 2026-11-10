@@ -15,6 +15,7 @@ export default {
     "appVersion": "App Version 1.0.0"
   },
   "common": {
+    "contactUs": "Contact Us",
     "somethingWentWrong": "Something went wrong loading vehicles.",
     "retry": "Retry",
     "next": "Next",
@@ -311,6 +312,7 @@ export default {
     "selectAccount": "Select account",
     "loadingAccount": "Loading account...",
     "select": "Select",
+    "change": "Change",
     "pay": "Pay",
     "currentPoints": "Current Points",
     "chooseAmount": "Choose amount",
@@ -418,7 +420,10 @@ export default {
     "busy": "Busy",
     "continue": "Continue",
     "scanAgain": "Scan Again",
-    "scanSuccess": "QR Code scanned successfully!"
+    "scanSuccess": "QR Code scanned successfully!",
+    "scanSuccessDesc": "Your QR Code scanned successfully!",
+    "chargerNotFound": "Charger not found or invalid QR code. Please scan again.",
+    "verifyingCharger": "Verifying charger QR code..."
   },
   "unauthorized": {
     "accountCannotOpen": "Your Account Can't Open Mini App",

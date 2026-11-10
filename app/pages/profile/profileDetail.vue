@@ -1,13 +1,21 @@
 <script setup lang="ts">
   import { ref, onMounted } from 'vue'
   import { useI18n } from 'vue-i18n'
-  import { IonPage, IonContent, IonToast } from '@ionic/vue'
+  import { IonPage, IonContent } from '@ionic/vue'
+  import ToastAlert from '~/components/Alert/ToastAlert.vue'
   import Icon from '~/components/Icon/icon.vue'
-  import { NO_IMAGE_AVAILABLE } from '~/composables/useAssetResolver'
   import { useABAMiniApp } from '@/composables/useNativeBridge'
 
   const { t } = useI18n()
   const { userProfile } = useABAMiniApp()
+  const defaultAvatar = '/vet-ev-charger/images/EVLogo.svg'
+
+  const handleImageError = (event: Event) => {
+    const target = event.target as HTMLImageElement
+    if (target && !target.src.includes('EVLogo.svg')) {
+      target.src = defaultAvatar
+    }
+  }
 
   // Toast feedback
   const showToast = ref(false)
@@ -21,13 +29,6 @@
   const handleCameraClick = () => {
     triggerToast(t('profileDetails.changePhoto'))
   }
-
-  const handleImageError = (event: Event) => {
-    const target = event.target as HTMLImageElement
-    if (target && target.src !== NO_IMAGE_AVAILABLE) {
-      target.src = NO_IMAGE_AVAILABLE
-    }
-  }
 </script>
 
 <template>
@@ -39,20 +40,20 @@
           <div class="avatar-wrapper">
             <div class="avatar-image-box">
               <img
-                :src="userProfile?.sex || NO_IMAGE_AVAILABLE"
-                :alt="userProfile?.fullName"
+                :src="userProfile?.avatar || userProfile?.photo || defaultAvatar"
+                :alt="userProfile?.fullName || 'User Avatar'"
                 class="avatar-img"
                 @error="handleImageError"
               />
             </div>
-            <button
+            <!-- <button
               type="button"
               class="camera-btn"
               @click="handleCameraClick"
               :aria-label="$t('profileDetails.changePhoto')"
             >
               <Icon name="camera" size="15px" color="#64748b" />
-            </button>
+            </button> -->
           </div>
         </div>
 
@@ -97,13 +98,12 @@
       </div>
 
       <!-- Feedback Toast -->
-      <ion-toast
-        :is-open="showToast"
+      <ToastAlert
+        v-model:isOpen="showToast"
         :message="toastMessage"
-        :duration="1800"
+        type="info"
         position="bottom"
-        @did-dismiss="showToast = false"
-      ></ion-toast>
+      />
     </ion-content>
   </ion-page>
 </template>
@@ -116,7 +116,7 @@
 
   .detail-container {
     width: 100%;
-    padding: 36px 20px 24px 20px;
+    padding-top: var(--ion-padding);
     box-sizing: border-box;
   }
 

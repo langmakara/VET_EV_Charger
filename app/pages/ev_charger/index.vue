@@ -41,10 +41,17 @@
   import { useMembershipInfoQuery } from '~/composables/queries/useMembership.ts'
   import { useWebSocket, type OcpiMeterValuesPayload } from '~/composables/useChargintSocket'
   import { formatMins, formatSeconds } from '~/utils/formatters'
-  import { NO_IMAGE_AVAILABLE } from '~/composables/useAssetResolver'
   import { useABAMiniApp } from '@/composables/useNativeBridge'
   
   const { userProfile } = useABAMiniApp()
+  const defaultAvatar = '/vet-ev-charger/images/EVLogo.svg'
+
+  const handleImageError = (event: Event) => {
+    const target = event.target as HTMLImageElement
+    if (target && !target.src.includes('EVLogo.svg')) {
+      target.src = defaultAvatar
+    }
+  }
 
   const { actions } = evChargerData
   const { t, locale } = useI18n()
@@ -345,13 +352,6 @@
   onIonViewWillLeave(() => {
     closeStationModal()
   })
-
-  const handleImageError = (event: Event) => {
-    const target = event.target as HTMLImageElement
-    if (target && target.src !== NO_IMAGE_AVAILABLE) {
-      target.src = NO_IMAGE_AVAILABLE
-    }
-  }
 </script>
 
 <template>
@@ -368,8 +368,8 @@
           <ion-item class="profile-item" lines="none" :detail="false">
             <ion-avatar slot="start" class="profile-avatar">
               <img
-                :src="userProfile?.sex || NO_IMAGE_AVAILABLE"
-                :alt="userProfile?.fullName"
+                :src="userProfile?.avatar || userProfile?.photo || defaultAvatar"
+                :alt="userProfile?.fullName || 'User Avatar'"
                 @error="handleImageError"
               />
             </ion-avatar>
@@ -555,7 +555,7 @@
   /* Action Grid Styles */
   .action-grid {
     padding: 0;
-    margin-top: 16px;
+    /* margin-top: 16px; */
   }
 
   .action-card {
@@ -575,13 +575,13 @@
   }
 
   .ChargingCard {
-    padding: 10px;
+    padding: var(--ion-padding);
   }
 
   .charging-active-card {
     padding: 16px 16px 14px 16px;
-    border-radius: 18px;
-    margin-bottom: 16px;
+    /* border-radius: 18px; */
+    /* margin-bottom: 16px; */
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
   }
 
@@ -854,8 +854,8 @@
 
   /* Profile Card Styles */
   .profile-card {
-    margin-bottom: 12px;
-    border-radius: 14px;
+    /* margin-bottom: var(--ion-padding); */
+    /* border-radius: 14px; */
     overflow: hidden;
   }
 

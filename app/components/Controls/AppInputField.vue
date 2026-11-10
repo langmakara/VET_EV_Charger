@@ -1,20 +1,26 @@
 <template>
   <div class="input-group">
-    <span class="field-label">
+    <span v-if="label" class="field-label">
       {{ label }}<span v-if="required" class="required">*</span>
     </span>
     <div :class="['field-container', { 'has-error': isDisplayingError }]">
       <ion-icon v-if="icon" :icon="icon" class="field-icon"></ion-icon>
+      <slot name="start" />
       <ion-input
         :type="type"
         :placeholder="placeholder || label"
         :value="modelValue"
         :min="min"
         :max="max"
+        :inputmode="inputmode"
         @ionInput="onInput"
         @ionBlur="onBlur"
+        @keyup="onKeyup"
         :class="['field-input', { 'no-icon': !icon }]"
       ></ion-input>
+      <span v-if="suffix" class="field-suffix">{{ suffix }}</span>
+      <slot name="suffix" />
+      <slot name="end" />
     </div>
     <span v-if="isDisplayingError" class="error-message">{{ displayErrorMessage }}</span>
   </div>
@@ -36,9 +42,19 @@ export type TextFieldTypes =
   | "datetime-local"
   | "time";
 
+export type InputModeTypes =
+  | "none"
+  | "text"
+  | "decimal"
+  | "numeric"
+  | "tel"
+  | "search"
+  | "email"
+  | "url";
+
 const props = withDefaults(
   defineProps<{
-    label: string;
+    label?: string;
     modelValue?: string | number | null;
     placeholder?: string;
     icon?: string;
@@ -48,30 +64,41 @@ const props = withDefaults(
     errorMessage?: string;
     min?: string | number;
     max?: string | number;
+    inputmode?: InputModeTypes;
+    suffix?: string;
   }>(),
   {
+    label: "",
     type: "text",
     required: false,
     error: false,
     errorMessage: "",
+    suffix: "",
   },
 );
 
 const emit = defineEmits<{
   (e: "update:modelValue", value: string | number | null): void;
+  (e: "input", event: any): void;
   (e: "blur", value: any): void;
+  (e: "keyup", event: any): void;
 }>();
 
 const isTouched = ref(false);
 
 const onInput = (event: any) => {
   isTouched.value = true;
-  emit("update:modelValue", event?.target?.value);
+  emit("input", event);
+  emit("update:modelValue", event?.detail?.value ?? event?.target?.value ?? "");
 };
 
 const onBlur = (event: any) => {
   isTouched.value = true;
   emit("blur", event);
+};
+
+const onKeyup = (event: any) => {
+  emit("keyup", event);
 };
 
 const computedErrorMsg = computed(() => {
@@ -172,9 +199,10 @@ const displayErrorMessage = computed(() => {
   flex-shrink: 0;
 }
 .field-input {
-  --padding-start: 0;
+  --padding-start: 2px; /* was 0: avoids caret clipping at the left edge */
   --padding-end: 0;
   --background: transparent;
+  --color: #1a1a1a;
   --border-width: 0;
   --border-style: none;
   --box-shadow: none;
@@ -182,7 +210,23 @@ const displayErrorMessage = computed(() => {
   --highlight-color: transparent;
   --highlight-height: 0px;
   font-size: 14px;
-  color: var(--app-color-text-primary, #1a1a1a);
+  color: #1a1a1a;
+  caret-color: #1a1a1a;
   flex: 1;
+}
+/* Force the caret on the native <input> inside ion-input */
+.field-input :deep(input),
+.field-input :deep(.native-input) {
+  caret-color: #1a1a1a !important;
+  color: #1a1a1a;
+  opacity: 1;
+}
+.field-suffix {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #1f2937;
+  margin-left: 8px;
+  flex-shrink: 0;
+  user-select: none;
 }
 </style>

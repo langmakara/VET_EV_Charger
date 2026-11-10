@@ -1,12 +1,11 @@
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
+  import { ref, watch, computed } from 'vue'
   import { IonModal, IonContent, onIonViewWillLeave } from '@ionic/vue'
   import { useRoute, useRouter } from 'vue-router'
   import StationCard from '~/components/Card/StationCard.vue'
   import StationDetailModal from '~/components/Modal/StationDetailModal.vue'
-  import evChargerData from '~/data/ev_charger_data.json'
-  import type { GunTypeData, StationData } from '~/api/types'
-  import { useGunTypeQuery, useStationInfinite } from '~/composables/queries'
+  import type { StationData } from '~/api/types'
+  import { useStationInfinite } from '~/composables/queries'
 
   const props = defineProps<{
     isOpen: boolean

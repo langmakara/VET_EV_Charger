@@ -30,7 +30,7 @@ defineEmits(['view-all']);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 4px 12px 4px;
+  padding: 16px 4px 10px 4px;
 }
 
 .title {

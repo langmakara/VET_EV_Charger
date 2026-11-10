@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { IonModal, IonContent, IonIcon } from '@ionic/vue';
 import { chevronForward } from 'ionicons/icons';
 import Icon from '~/components/Icon/icon.vue';
@@ -23,6 +24,7 @@ const emit = defineEmits<{
   (e: 'update:isOpen', value: boolean): void;
 }>();
 
+const { t } = useI18n();
 const { openPhoneCall } = useABAMiniApp();
 
 const handleDismiss = () => {
@@ -46,8 +48,8 @@ const openFacebook = () => {
 <template>
   <ion-modal
     :is-open="isOpen"
-    :initial-breakpoint="0.32"
-    :breakpoints="[0, 0.32]"
+    :initial-breakpoint="0.45"
+    :breakpoints="[0, 0.45]"
     :handle="false"
     class="contact-sheet-modal"
     @didDismiss="handleDismiss"
@@ -57,7 +59,7 @@ const openFacebook = () => {
         <!-- Header -->
         <div class="contact-sheet-header">
           <div class="header-spacer"></div>
-          <div class="contact-sheet-title">{{ $t('common.contactUs') }}</div>
+          <div class="contact-sheet-title">{{ t('profile.contactUs') }}</div>
           <button class="contact-close-button" type="button" aria-label="Close" @click="handleDismiss">
             <Icon name="close" size="18px" color="#1E293B" />
           </button>

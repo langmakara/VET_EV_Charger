@@ -8,17 +8,24 @@
     IonItem,
     IonLabel,
     IonIcon,
-    IonModal,
-    IonToast
+    IonModal
   } from '@ionic/vue'
+  import ToastAlert from '~/components/Alert/ToastAlert.vue'
   import { chevronForward } from 'ionicons/icons'
   import Icon from '~/components/Icon/icon.vue'
   import ContactModal from './contactModal.vue'
   import { getLangIdFromLocale, type SupportedLocale } from '~/helpers/languages'
-  import { NO_IMAGE_AVAILABLE } from '~/composables/useAssetResolver'
   import { useABAMiniApp } from '@/composables/useNativeBridge'
   
   const { userProfile } = useABAMiniApp()
+  const defaultAvatar = '/vet-ev-charger/images/EVLogo.svg'
+
+  const handleImageError = (event: Event) => {
+    const target = event.target as HTMLImageElement
+    if (target && !target.src.includes('EVLogo.svg')) {
+      target.src = defaultAvatar
+    }
+  }
   
 
   const { locale, setLocale, t } = useI18n()
@@ -110,13 +117,6 @@
         break
     }
   }
-
-  const handleImageError = (event: Event) => {
-    const target = event.target as HTMLImageElement
-    if (target && target.src !== NO_IMAGE_AVAILABLE) {
-      target.src = NO_IMAGE_AVAILABLE
-    }
-  }
 </script>
 
 <template>
@@ -127,8 +127,8 @@
         <div class="avatar-section">
           <ion-avatar class="main-avatar">
             <img
-              :src="userProfile?.sex || NO_IMAGE_AVAILABLE"
-              :alt="userProfile?.fullName"
+              :src="userProfile?.avatar || userProfile?.photo || defaultAvatar"
+              :alt="userProfile?.fullName || 'User Avatar'"
               @error="handleImageError"
             />
           </ion-avatar>
@@ -304,14 +304,12 @@
     />
 
     <!-- Toast Notification -->
-    <ion-toast
-      :is-open="showToast"
+    <ToastAlert
+      v-model:isOpen="showToast"
       :message="toastMessage"
-      :duration="2000"
+      type="success"
       position="bottom"
-      color="dark"
-      @didDismiss="showToast = false"
-    ></ion-toast>
+    />
   </ion-page>
 </template>
 

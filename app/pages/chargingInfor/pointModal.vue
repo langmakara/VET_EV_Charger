@@ -1,6 +1,9 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted } from 'vue'
   import { IonModal } from '@ionic/vue'
+  import AppInputField from '~/components/Controls/AppInputField.vue'
+  import AppButton from '~/components/Button/AppButton.vue'
+  import IconButton from '~/components/Button/IconButton.vue'
   import { useMembershipInfoQuery } from '~/composables/queries'
   import { usePointLabelsMutation } from '~/composables/queries/useLabel'
   import type { MembershipInfoData, LabelPointData } from '~/api/types'
@@ -133,9 +136,14 @@
   }
 
   // Handle manual input in the preferred amount field
-  const handleInput = (event: Event) => {
-    const target = event.target as HTMLInputElement
-    const rawValue = target.value.replace(/[^0-9]/g, '')
+  const handleInput = (eventOrValue: Event | string | number | null | undefined) => {
+    let rawValue = ''
+    if (eventOrValue && typeof eventOrValue === 'object' && 'target' in eventOrValue) {
+      const target = (eventOrValue as any).target as HTMLInputElement
+      rawValue = (target?.value || '').replace(/[^0-9]/g, '')
+    } else {
+      rawValue = String(eventOrValue ?? '').replace(/[^0-9]/g, '')
+    }
     inputPoints.value = rawValue
     const num = parseInt(rawValue, 10) || 0
     activePoints.value = num
@@ -181,22 +189,8 @@
     <div class="point-modal-container">
       <!-- 1. Header: Title & Close Button -->
       <div class="modal-header">
-        <h2 class="modal-title">Apply Point</h2>
-        <button type="button" class="close-button" aria-label="Close" @click="handleClose">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+        <h2 class="modal-title">{{ $t('chargingInfor.applyPoint') }}</h2>
+        <IconButton buttonType="close" size="md" @click="handleClose" />
       </div>
 
       <!-- 2. Current Points Row -->
@@ -223,31 +217,35 @@
         </div>
       </div>
 
-      <!-- 4. Preferred Amount Input Box -->
+      <!-- 4. Preferred Amount Input Box using Controls/AppInputField -->
       <!-- <div class="section-block">
-        <label for="preferred-point-input" class="section-label">
-          {{ $t('chargingInfor.orEnterPreferredAmount') }}
-        </label>
-        <div class="input-wrapper">
-          <input
-            id="preferred-point-input"
-            type="text"
-            inputmode="numeric"
-            class="point-input"
-            :placeholder="$t('chargingInfor.enter')"
-            :value="inputPoints"
-            @input="handleInput"
-            @keyup.enter="handleApply"
-          />
-          <span class="input-suffix">{{ $t('chargingInfor.point') }}</span>
-        </div>
+        <AppInputField
+          :model-value="inputPoints"
+          :label="$t('chargingInfor.orEnterPreferredAmount')"
+          :placeholder="$t('chargingInfor.enter')"
+          inputmode="numeric"
+          :suffix="$t('chargingInfor.point')"
+          @update:model-value="handleInput"
+          @keyup.enter="handleApply"
+        />
         <div class="ratio-note">{{ $t('chargingInfor.pointRatio') }}</div>
       </div> -->
 
-      <!-- 5. Action Buttons: Cancel & Apply -->
+      <!-- 5. Action Buttons: Cancel & Apply using AppButton -->
       <div class="modal-actions">
-        <button type="button" class="action-btn btn-cancel" @click="handleCancel">{{ $t('common.cancel') }}</button>
-        <button type="button" class="action-btn btn-apply" @click="handleApply">{{ $t('common.apply') }}</button>
+        <AppButton
+          class="action-btn btn-cancel"
+          fill="outline"
+          expand="block"
+          :label="$t('common.cancel')"
+          @click="handleCancel"
+        />
+        <AppButton
+          class="action-btn btn-apply"
+          expand="block"
+          :label="$t('common.apply')"
+          @click="handleApply"
+        />
       </div>
     </div>
   </ion-modal>
@@ -452,53 +450,47 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-top: 10px;
+    margin-top: 14px;
   }
 
+  .modal-actions :deep(ion-button),
   .action-btn {
     flex: 1;
-    height: 44px;
-    border-radius: 8px;
+    --height: 44px;
+    min-height: 44px;
+    margin: 0;
     font-size: 15px;
     font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition:
-      background-color 0.15s ease,
-      border-color 0.15s ease,
-      transform 0.1s ease;
   }
 
   .btn-cancel {
-    background-color: #ffffff;
-    border: 1.5px solid #d8dee4;
-    color: #334155;
+    --color: #334155;
+    --border-color: #d8dee4;
+    --border-width: 1.5px;
+    --border-radius: 8px;
+    --background: #ffffff;
   }
 
   .btn-cancel:hover {
-    background-color: #f8fafc;
-    border-color: #cbd5e1;
+    --background-hover: #f8fafc;
   }
 
   .btn-cancel:active {
-    background-color: #f1f5f9;
+    --background-activated: #f1f5f9;
   }
 
   .btn-apply {
-    background-color: #de5204;
-    border: none;
-    color: #ffffff;
+    --border-radius: 8px;
+    --background: #de5204;
+    --color: #ffffff;
   }
 
   .btn-apply:hover {
-    background-color: #d04b03;
+    --background-hover: #d04b03;
   }
 
   .btn-apply:active {
-    transform: scale(0.98);
-    background-color: #be4402;
+    --background-activated: #be4402;
   }
 </style>
 

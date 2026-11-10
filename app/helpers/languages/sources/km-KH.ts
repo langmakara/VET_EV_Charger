@@ -15,6 +15,7 @@ export default {
     "appVersion": "កំណែកម្មវិធី 1.0.0"
   },
   "common": {
+    "contactUs": "ទាក់ទងមកយើង",
     "somethingWentWrong": "មានបញ្ហាក្នុងការទាញយកទិន្នន័យ។",
     "retry": "ព្យាយាមម្តងទៀត",
     "next": "បន្ត",
@@ -284,6 +285,7 @@ export default {
     "selectAccount": "ជ្រើសរើសគណនី",
     "loadingAccount": "កំពុងទាញយកគណនី...",
     "select": "ជ្រើសរើស",
+    "change": "ប្តូរ",
     "pay": "ទូទាត់",
     "currentPoints": "ពិន្ទុបច្ចុប្បន្ន",
     "chooseAmount": "ជ្រើសរើសចំនួន",
@@ -392,7 +394,10 @@ export default {
     "busy": "រវល់",
     "continue": "បន្ត",
     "scanAgain": "ស្កេនម្តងទៀត",
-    "scanSuccess": "បានស្កេន QR Code ដោយជោគជ័យ!"
+    "scanSuccess": "បានស្កេន QR Code ដោយជោគជ័យ!",
+    "scanSuccessDesc": "បានស្កេន QR Code ដោយជោគជ័យ!",
+    "chargerNotFound": "រកមិនឃើញទូសាកថ្ម ឬ QR Code មិនត្រឹមត្រូវ។ សូមស្កេនម្តងទៀត។",
+    "verifyingCharger": "កំពុងផ្ទៀងផ្ទាត់ QR Code..."
   },
   "unauthorized": {
     "accountCannotOpen": "គណនីរបស់អ្នកមិនអាចបើក Mini App បានទេ",

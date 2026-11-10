@@ -4,6 +4,7 @@
  * RentalTypeCard.vue and VehicleCard.vue.
  */
 export const NO_IMAGE_AVAILABLE = "https://placehold.co/600x400?text=Image\\nUpcoming";
+export const DEFAULT_AVATAR = "/images/EVLogo.svg";
 
 export const useAssetResolver = () => {
   const config = useRuntimeConfig();

@@ -14,10 +14,10 @@ const props = withDefaults(
   {
     isOpen: false,
     type: 'success',
-    title: 'Success',
-    message: 'Voucher added successfully',
-    highlightText: 'Voucher Code',
-    duration: 3500,
+    title: '',
+    message: '',
+    highlightText: '',
+    duration: 3000,
     position: 'top',
   }
 );
@@ -70,12 +70,12 @@ onBeforeUnmount(() => {
         @click="close"
       >
         <div class="toast-alert-card">
-          <div class="toast-title" :class="`title-${type}`">
+          <div v-if="title" class="toast-title" :class="`title-${type}`">
             {{ title }}
           </div>
-          <div class="toast-message">
-            <span>{{ message }} </span>
-            <strong v-if="highlightText" class="highlight-text"> {{ highlightText }}</strong>
+          <div v-if="message || highlightText" class="toast-message">
+            <span v-if="message">{{ message }} </span>
+            <strong v-if="highlightText" class="highlight-text">{{ highlightText }}</strong>
           </div>
         </div>
       </div>

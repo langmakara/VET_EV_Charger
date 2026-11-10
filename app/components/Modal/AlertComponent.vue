@@ -5,7 +5,7 @@ import { IonModal, IonButton } from '@ionic/vue';
 
 const props = defineProps<{
   isOpen: boolean;
-  type?: 'logout' | 'delete' | 'exit' | 'save' | 'activate' | 'inactivate' | 'terminate' | 'stop' | 'voucher' | 'success' | 'custom';
+  type?: 'logout' | 'delete' | 'exit' | 'save' | 'activate' | 'inactivate' | 'terminate' | 'stop' | 'voucher' | 'success' | 'custom' | 'error' | 'failed';
   name?: string;
   title?: string;
   message?: string;
@@ -89,6 +89,14 @@ const config = computed(() => {
       base.btnConfirm = props.labelConfirm || t('common.ok') || 'OK';
       base.color = '#00A651';
       break;
+    case 'error':
+    case 'failed':
+      base.title = props.title || t('common.failed') || 'Failed';
+      base.message = props.message || t('qrScan.chargerNotFound') || 'Charger not found';
+      base.btnConfirm = props.labelConfirm || t('qrScan.scanAgain') || 'Scan Again';
+      base.btnCancel = props.labelCancel || t('common.cancel') || t('label.cancel') || 'Cancel';
+      base.color = '#E53935';
+      break;
   }
   
   return base;
@@ -111,6 +119,10 @@ const config = computed(() => {
             <svg v-else-if="props.type === 'success'" width="68" height="68" viewBox="0 0 68 68" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="34" cy="34" r="34" fill="#00A651"/>
               <path d="M20 34.5L29 43.5L47 25.5" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg v-else-if="props.type === 'error' || props.type === 'failed'" width="68" height="68" viewBox="0 0 68 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="34" cy="34" r="34" fill="#E53935"/>
+              <path d="M24 24L44 44M44 24L24 44" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
             <Icon v-else name="info" size="64px" :color="config.color" />
           </slot>

@@ -15,6 +15,7 @@ export default {
     "appVersion": "应用版本 1.0.0"
   },
   "common": {
+    "contactUs": "联系我们",
     "somethingWentWrong": "加载车辆时出错了。",
     "retry": "重试",
     "next": "下一步",
@@ -270,6 +271,7 @@ export default {
     "selectAccount": "选择支付账户",
     "loadingAccount": "正在加载账户...",
     "select": "选择",
+    "change": "更换",
     "pay": "立即支付",
     "currentPoints": "当前积分",
     "chooseAmount": "选择预设",
@@ -377,7 +379,10 @@ export default {
     "busy": "占用",
     "continue": "继续",
     "scanAgain": "重新扫描",
-    "scanSuccess": "二维码扫描成功！"
+    "scanSuccess": "二维码扫描成功！",
+    "scanSuccessDesc": "二维码扫描成功！",
+    "chargerNotFound": "未找到该充电桩或二维码无效，请重新扫描。",
+    "verifyingCharger": "正在验证充电桩二维码..."
   },
   "unauthorized": {
     "accountCannotOpen": "该账户无法打开小程序",

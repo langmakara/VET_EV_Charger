@@ -6,13 +6,15 @@
     IonGrid,
     IonRow,
     IonCol,
-    IonIcon,
-    IonToast
+    IonIcon
   } from '@ionic/vue'
+  import ToastAlert from '~/components/Alert/ToastAlert.vue'
   import { chevronForward, chevronDown } from 'ionicons/icons'
   import VoucherModal from './voucherModal.vue'
   import PointModal from './pointModal.vue'
   import Icon from '~/components/Icon/icon.vue'
+  import AppButton from '~/components/Button/AppButton.vue'
+  import AppInputField from '~/components/Controls/AppInputField.vue'
   import { useChargingInforService } from '~/services/chargingInfor.service'
 
   const {
@@ -161,23 +163,16 @@
           </div>
         </div>
 
-        <!-- 5. Preferred Amount Input Box -->
+        <!-- 5. Preferred Amount Input Box using Controls/AppInputField -->
         <div class="input-section">
-          <label class="input-label" for="preferred-amount-input">
-            {{ $t('chargingInfor.orEnterPreferredAmount') }}
-          </label>
-          <div class="input-wrapper">
-            <input
-              id="preferred-amount-input"
-              type="text"
-              inputmode="numeric"
-              :value="inputAmount"
-              class="custom-amount-input"
-              placeholder="0"
-              @input="handleInput"
-            />
-            <span class="input-suffix">{{ selectedMode === 'kwh' ? 'kWh' : 'KHR' }}</span>
-          </div>
+          <AppInputField
+            :model-value="inputAmount"
+            :label="$t('chargingInfor.orEnterPreferredAmount')"
+            placeholder="0"
+            inputmode="numeric"
+            :suffix="selectedMode === 'kwh' ? 'kWh' : 'KHR'"
+            @update:model-value="handleInput"
+          />
         </div>
 
         <!-- 6. Price Summary Section -->
@@ -226,39 +221,40 @@
       </div>
     </ion-content>
 
-    <!-- Bottom Footer Section: Account Card + Pay Button -->
+    <!-- Bottom Footer Section: ABA Pay Header + Account Row + Pay Button -->
     <ion-footer class="ion-no-border charging-info-footer">
       <div class="footer-wrapper">
-        <!-- Saving Account Selector Box -->
+
+        <!-- ABA Pay Header Row -->
+        <div class="aba-pay-header">
+          <Icon name="aba-bank" class="aba-bank-icon" width="40px" height="30px" />
+          <span class="aba-pay-brand-label">ABA Pay</span>
+        </div>
+
+        <!-- Account Selector Row -->
         <div class="account-card" @click="PaymentTrigger(false)">
           <div class="account-top-row">
-            <span class="account-type-title">{{ currentAccount?.name }}</span>
+            <span class="account-type-title">{{ currentAccount?.name ?? $t('chargingInfor.selectAccount') }}</span>
             <div class="account-dropdown-trigger">
-              <span class="account-dropdown-text">{{ $t('chargingInfor.select') }}</span>
+              <span class="account-dropdown-text">{{ $t('chargingInfor.change') }}</span>
               <ion-icon :icon="chevronDown" class="account-chevron-icon"></ion-icon>
             </div>
           </div>
           <div class="account-bottom-row">
-            <template v-if="currentAccount">
-              {{ activeAccount?.accountNumber }}
-            </template>
-            <template v-else-if="isLoadingAccount"> {{ $t('chargingInfor.loadingAccount') }} </template>
-            <template v-else> {{ $t('chargingInfor.selectAccount') }} </template>
+            <template v-if="isLoadingAccount">{{ $t('chargingInfor.loadingAccount') }}</template>
+            <template v-else-if="activeAccount">{{ activeAccount.accountNumber }}<span class="account-currency"> | {{ activeAccount.currency ?? 'KHR' }}</span></template>
           </div>
         </div>
 
-        <!-- Orange Pay Button with ABA PAY Logo Badge -->
-        <button
+        <AppButton
+          expand="block"
+          fill="solid"
           type="button"
-          class="pay-main-button"
           :disabled="isSubmittingOrder"
           @click="PaymentTrigger(true)"
         >
-          <!-- Button Text -->
-          <span class="pay-button-label">
-            {{ isSubmittingOrder ? 'Processing...' : `${$t('chargingInfor.pay')} ${formatNumber(totalPrice)} KHR` }}
-          </span>
-        </button>
+          {{ isSubmittingOrder ? 'Processing...' : `${$t('chargingInfor.pay')} ${formatNumber(totalPrice)} KHR` }}
+        </AppButton>
       </div>
     </ion-footer>
 
@@ -281,14 +277,12 @@
     />
 
     <!-- Notification Toast -->
-    <ion-toast
-      :is-open="showToast"
+    <ToastAlert
+      v-model:isOpen="showToast"
       :message="toastMessage"
-      :duration="2000"
+      type="info"
       position="top"
-      color="dark"
-      @didDismiss="showToast = false"
-    ></ion-toast>
+    />
   </ion-page>
 </template>
 
@@ -613,37 +607,48 @@
   .charging-info-footer {
     --background: #ffffff;
     background: #ffffff;
-    box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.06);
     border-top: 1px solid #f1f4f8;
   }
 
   .footer-wrapper {
     margin: 0 auto;
     width: 100%;
+    padding: 0;
   }
 
-  /* Account Box */
+  /* ABA Pay Header */
+  .aba-pay-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .aba-pay-brand-label {
+    color: #111827;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+
+  /* Account Selector Card */
   .account-card {
-    background-color: #f1f4f7;
-    border-radius: 10px;
-    padding: 8px 12px;
+    background-color: transparent;
+    padding: 0 0 8px;
     cursor: pointer;
-    transition: background-color 0.15s ease;
-  }
-
-  .account-card:active {
-    background-color: #e8ecf1;
   }
 
   .account-top-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 2px;
   }
 
   .account-type-title {
     color: #111827;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
   }
 
@@ -655,93 +660,26 @@
 
   .account-dropdown-text {
     color: #1e3a8a;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
   }
 
   .account-chevron-icon {
-    font-size: 14px;
+    font-size: 15px;
     color: #1e3a8a;
   }
 
   .account-bottom-row {
     color: #838e9e;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 400;
-    margin-top: 1px;
   }
 
-  /* Pay Button */
-  .pay-main-button {
-    width: 100%;
-    height: 48px;
-    border-radius: 10px;
-    border: none;
-    background-color: #de5d0a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 8px;
-    cursor: pointer;
-    transition: all 0.18s ease-in-out;
-    box-shadow: 0 3px 10px rgba(222, 93, 10, 0.28);
+  .account-currency {
+    color: #838e9e;
   }
 
-  .pay-main-button:active {
-    transform: scale(0.985);
-    box-shadow: 0 2px 5px rgba(222, 93, 10, 0.2);
-  }
-
-  /* ABA PAY Logo Badge */
-  .aba-pay-badge {
-    background-color: #ffffff;
-    border-radius: 4px;
-    padding: 2px 6px;
-    height: 25px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    box-sizing: border-box;
-  }
-
-  .aba-top-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 1.5px;
-  }
-
-  .aba-letters {
-    color: #005a79;
-    font-family: Arial, Helvetica, sans-serif;
-    font-weight: 900;
-    font-size: 10px;
-    letter-spacing: -0.4px;
-  }
-
-  .aba-red-accent {
-    width: 2.8px;
-    height: 2.8px;
-    background-color: #e1232e;
-    border-radius: 0.5px;
-    margin-top: 1px;
-  }
-
-  .aba-pay-sub {
-    color: #707b8a;
-    font-family: Arial, Helvetica, sans-serif;
-    font-weight: 800;
-    font-size: 7.5px;
-    letter-spacing: 0.8px;
-    margin-top: 1px;
-  }
-
-  .pay-button-label {
-    color: #ffffff;
-    font-size: 15.5px;
-    font-weight: 700;
-    letter-spacing: -0.2px;
+  .aba-bank-icon {
+    border-radius: 5px;
   }
 </style>

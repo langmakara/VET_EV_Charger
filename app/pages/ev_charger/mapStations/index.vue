@@ -31,37 +31,13 @@ watch(
   }
 )
 
-// Flatten all pagination pages and extract only stations with valid lat & lng for markers
-const stations = computed(() => {
-  const rawList: StationData[] =
-    stationPages.value?.pages.flatMap((page) => {
-      const res = (page as any)?.data ?? page?.body?.data
-      return Array.isArray(res) ? res : (res?.list ?? [])
-    }) ?? []
-
-  return rawList
-    .map((station) => {
-      const rawLat = (station as any).lat ?? station.lats
-      const rawLng = (station as any).lng ?? station.longs
-      const lat = typeof rawLat === 'number' ? rawLat : parseFloat(String(rawLat))
-      const lng = typeof rawLng === 'number' ? rawLng : parseFloat(String(rawLng))
-
-      // Only include stations with valid coordinates for map markers
-      if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) {
-        return null
-      }
-
-      return {
-        ...station,
-        lat,
-        lng,
-        lats: String(lat),
-        longs: String(lng),
-        status: station.status || (station.isOpen ? 'Open' : 'Closed')
-      }
-    })
-    .filter((s): s is NonNullable<typeof s> => s !== null)
-})
+// Flatten all pagination pages into a single station list (ModalMap normalizes coords)
+const stations = computed<StationData[]>(() =>
+  stationPages.value?.pages.flatMap((page) => {
+    const res = (page as any)?.data ?? page?.body?.data
+    return Array.isArray(res) ? res : (res?.list ?? [])
+  }) ?? []
+)
 </script>
 
 <template>

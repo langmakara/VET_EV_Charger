@@ -1,60 +1,15 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { IonPage, IonContent, IonToast } from '@ionic/vue';
+import { IonPage, IonContent } from '@ionic/vue';
+import ToastAlert from '~/components/Alert/ToastAlert.vue';
 import AppButton from '~/components/Button/AppButton.vue';
+import Icon from '~/components/Icon/icon.vue';
 import { useABAMiniApp } from '~/composables/useNativeBridge';
-import { useSendProfile, getIsNewAbaUser } from '~/composables/useSendProfile';
-import LoadingPage from '~/components/loading/loadingPage.vue';
-
-interface Props {
-  showLoading?: boolean;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  showLoading: true,
-});
 
 const { t } = useI18n();
 const router = useRouter();
 const { closeMiniApp } = useABAMiniApp();
-const { authResponse, authToken, authCustomer, isNewAbaUser } = useSendProfile();
-
-// Startup loading state (waits until token is retrieved from API)
-const showStartupLoading = ref(props.showLoading);
-// Terms of service content is shown only when not loading AND newAbaUser: true
-const showTermsContent = ref(!props.showLoading);
-const isDataLoaded = ref(false);
-
-watch(
-  [() => authToken.value, () => authResponse.value],
-  ([token, auth]) => {
-    const resAny = auth as any;
-    const body = resAny?.body;
-    if (token || body?.accessToken || body?.token || resAny?.data?.accessToken || resAny?.data?.token) {
-      isDataLoaded.value = true;
-    }
-  },
-  { immediate: true }
-);
-
-/**
- * Handle loading completion from LoadingPage.
- * If newAbaUser is true: reveal the Terms of Service onboarding page.
- * If newAbaUser is false: directly navigate to the EV Charger home page.
- */
-const handleLoadingComplete = async (payload?: { newAbaUser?: boolean }) => {
-  const isNew = typeof payload?.newAbaUser === 'boolean' ? payload.newAbaUser : getIsNewAbaUser();
-
-  if (isNew) {
-    showStartupLoading.value = false;
-    showTermsContent.value = true;
-  } else {
-    showTermsContent.value = false;
-    await navigateTo('/ev_charger', { replace: true });
-    showStartupLoading.value = false;
-  }
-};
 
 const showToast = ref(false);
 const toastMessage = ref('');
@@ -93,8 +48,7 @@ const openVetTerms = () => {
 
 <template>
   <ion-page>
-    <!-- Main Terms Content: only shown when loading finishes and newAbaUser: true -->
-    <ion-content v-if="showTermsContent" class="terms-page-content" :fullscreen="true">
+    <ion-content class="terms-page-content" :fullscreen="true">
       <div class="terms-container">
         <!-- 1. Header with title & divider -->
         <div class="terms-header">
@@ -107,7 +61,7 @@ const openVetTerms = () => {
           <!-- Logo Emblem inside orange circle -->
           <div class="logo-circle-container">
             <div class="vet-circle-logo">
-              <img src="/images/logo.svg" alt="VET EV Charger" class="vet-logo-img" />
+              <Icon name="logo" size="52px" />
             </div>
           </div>
 
@@ -153,11 +107,11 @@ const openVetTerms = () => {
       </div>
     </ion-content>
 
-    <!-- App Startup Loading Screen (transitions to Terms of Service on API token success only when newAbaUser: true) -->
-    <LoadingPage
-      v-if="showStartupLoading"
-      :is-loaded="isDataLoaded"
-      @complete="handleLoadingComplete"
+    <ToastAlert
+      v-model:isOpen="showToast"
+      :message="toastMessage"
+      type="success"
+      position="bottom"
     />
   </ion-page>
 </template>

@@ -286,9 +286,14 @@ export function useChargingInforService() {
     }
   }
 
-  const handleInput = (event: Event) => {
-    const target = event.target as HTMLInputElement
-    const rawValue = target.value.replace(/[^0-9]/g, '')
+  const handleInput = (eventOrValue: Event | string | number | null | undefined) => {
+    let rawValue = ''
+    if (eventOrValue && typeof eventOrValue === 'object' && 'target' in eventOrValue) {
+      const target = (eventOrValue as any).target as HTMLInputElement
+      rawValue = (target?.value || '').replace(/[^0-9]/g, '')
+    } else {
+      rawValue = String(eventOrValue ?? '').replace(/[^0-9]/g, '')
+    }
     inputAmount.value = rawValue
 
     if (selectedMode.value === 'kwh') {

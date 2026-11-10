@@ -7,7 +7,7 @@
       <ion-textarea
         :placeholder="placeholder || label"
         :value="modelValue"
-        @ionInput="$emit('update:modelValue', ($event.target as any)?.value)"
+        @ionInput="onInput"
         class="field-textarea"
         :rows="rows"
       ></ion-textarea>
@@ -37,9 +37,13 @@ withDefaults(
   }
 );
 
-defineEmits<{
+const emit = defineEmits<{
   (e: "update:modelValue", value: string | null): void;
 }>();
+
+const onInput = (event: any) => {
+  emit("update:modelValue", event?.detail?.value ?? event?.target?.value ?? "");
+};
 </script>
 
 <style scoped>
@@ -92,11 +96,12 @@ defineEmits<{
 }
 
 .field-textarea {
-  --padding-start: 0;
+  --padding-start: 2px; /* was 0: avoids caret clipping at the left edge */
   --padding-end: 0;
   --padding-top: 0;
   --padding-bottom: 0;
   --background: transparent;
+  --color: #1a1a1a;
   --border-width: 0;
   --border-style: none;
   --box-shadow: none;
@@ -104,7 +109,16 @@ defineEmits<{
   --highlight-color: transparent;
   --highlight-height: 0px;
   font-size: 14px;
-  color: var(--app-color-text-primary, #1a1a1a);
+  color: #1a1a1a;
+  caret-color: #1a1a1a;
   width: 100%;
+}
+
+/* Force the caret on the native <textarea> inside ion-textarea */
+.field-textarea :deep(textarea),
+.field-textarea :deep(.native-textarea) {
+  caret-color: #1a1a1a !important;
+  color: #1a1a1a;
+  opacity: 1;
 }
 </style>

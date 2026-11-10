@@ -1,34 +1,30 @@
 <script setup lang="ts">
   import { ref, computed, onBeforeUnmount } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { IonSpinner } from '@ionic/vue'
   import CameraComponent from '~/components/Camera/CameraComponent.vue'
   import AlertComponent from '~/components/Modal/AlertComponent.vue'
   import ModalPlug from './modalPlug.vue'
   import Icon from '~/components/Icon/icon.vue'
-  import { useGunTypeQuery } from '~/composables/queries'
+  import { useApi } from '~/composables/useApi'
+  import { dropdownApi } from '~/api/modules/dropdown.api'
   import type { GunTypeData } from '~/api/types'
 
   const { t } = useI18n()
   const router = useRouter()
+  const http = useApi()
+  const api = dropdownApi(http)
 
   const result = ref('')
   const scanning = ref(true)
+  const isValidating = ref(false)
   const showAlert = ref(false)
+  const alertType = ref<'success' | 'error'>('success')
+  const alertTitle = ref('')
+  const alertMessage = ref('')
   const showModalPlug = ref(false)
-
-  // Reactive filter passing chargerUserName from the scanned QR code
-  const filter = computed(() => ({
-    chargerUserName: result.value || undefined
-  }))
-
-  const { data: gunTypeData, isLoading: isGunTypeLoading } = useGunTypeQuery(filter, {
-    enabled: computed(() => !!result.value)
-  })
-
-  const gunType = computed<GunTypeData[]>(() => {
-    const res: any = gunTypeData.value
-    return res?.data ?? res?.body?.data ?? []
-  })
+  const gunType = ref<GunTypeData[]>([])
+  const selectedPlug = ref<any>(null)
 
   const chargingSteps = computed(() => [
     {
@@ -76,20 +72,68 @@
     if (plugTimer) clearTimeout(plugTimer)
   })
 
-  function handleScan(scannedCode: string) {
-    if (!scanning.value || !scannedCode) return
+  async function handleScan(scannedCode: string) {
+    if (!scanning.value || !scannedCode || isValidating.value) return
 
-    result.value = scannedCode.trim()
+    const code = scannedCode.trim()
+    result.value = code
     scanning.value = false
-    showAlert.value = true
+    isValidating.value = true
+    showAlert.value = false
+    showModalPlug.value = false
+
     if (navigator.vibrate) navigator.vibrate(100)
 
-    // Show ModalPlug 2 seconds after successful scan
-    clearTimeout(plugTimer)
-    plugTimer = setTimeout(() => {
-      showAlert.value = false
-      showModalPlug.value = true
-    }, 2000)
+    try {
+      const res = await api.getGunTypeDropdown({ chargerUserName: code })
+      const rawList =
+        (res as any)?.data ??
+        (res as any)?.body?.data ??
+        (Array.isArray((res as any)?.body) ? (res as any).body : [])
+      const list: GunTypeData[] = Array.isArray(rawList) ? rawList : []
+
+      const isResultTrue = (res as any)?.body?.status ?? (res as any)?.header?.result ?? true
+      const isSuccess = Boolean(isResultTrue && list.length > 0)
+
+      isValidating.value = false
+
+      if (isSuccess) {
+        gunType.value = list
+        alertType.value = 'success'
+        alertTitle.value = t('qrScan.scanSuccess') || 'Scanned Successfully!'
+        alertMessage.value = t('qrScan.scanSuccessDesc') || 'Your QR Code scanned Successfully!'
+        showAlert.value = true
+
+        clearTimeout(plugTimer)
+        plugTimer = setTimeout(() => {
+          ProceedToPlug()
+        }, 1800)
+      } else {
+        gunType.value = []
+        alertType.value = 'error'
+        alertTitle.value = t('common.failed') || 'Not Found'
+        alertMessage.value =
+          (res as any)?.body?.message ||
+          (res as any)?.message ||
+          t('qrScan.chargerNotFound') ||
+          'Charger not found or invalid QR code.'
+        showAlert.value = true
+      }
+    } catch (err: any) {
+      console.error('Failed to get gun type:', err)
+      isValidating.value = false
+      gunType.value = []
+      alertType.value = 'error'
+      alertTitle.value = t('common.failed') || 'Failed'
+      const errRes = err?.response?.data
+      alertMessage.value =
+        errRes?.body?.message ||
+        errRes?.message ||
+        err?.message ||
+        t('qrScan.chargerNotFound') ||
+        'Charger not found or invalid QR code.'
+      showAlert.value = true
+    }
   }
 
   function ProceedToPlug() {
@@ -102,8 +146,6 @@
     showModalPlug.value = false
     ScanAgain()
   }
-
-  const selectedPlug = ref<any>(null)
 
   function handlePlugSelect(plug: any) {
     selectedPlug.value = plug
@@ -136,9 +178,35 @@
     clearTimeout(plugTimer)
     result.value = ''
     selectedPlug.value = null
+    gunType.value = []
     showAlert.value = false
     showModalPlug.value = false
+    isValidating.value = false
     scanning.value = true
+  }
+
+  function handleAlertCancel() {
+    clearTimeout(plugTimer)
+    showAlert.value = false
+    handleBack()
+  }
+
+  function handleAlertConfirm() {
+    if (alertType.value === 'success') {
+      ProceedToPlug()
+    } else {
+      ScanAgain()
+    }
+  }
+
+  function handleAlertDismiss() {
+    if (alertType.value === 'success') {
+      if (!showModalPlug.value) {
+        ProceedToPlug()
+      }
+    } else {
+      ScanAgain()
+    }
   }
 
   function handleBack() {
@@ -154,7 +222,7 @@
   <ion-page>
     <ion-content :fullscreen="true" :scroll-y="false" class="camera-content">
       <div class="camera-wrapper">
-        <CameraComponent ref="cameraRef" :enable-scan="scanning" @scan="handleScan">
+        <CameraComponent ref="cameraRef" :enable-scan="scanning && !isValidating" @scan="handleScan">
           <!-- Custom Page Overlay -->
           <div class="overlay-container">
             <!-- Top bar with Back button -->
@@ -183,8 +251,13 @@
             <div class="scan-guide">
               <div class="scan-box">
                 <Icon name="Corner" size="250px" class="scan-corners" color="white" />
+                <!-- Loading State inside the scan box -->
+                <div v-if="isValidating" class="scan-loading-box">
+                  <ion-spinner name="crescent" color="warning" class="scan-spinner" />
+                  <!-- <p class="scan-loading-text">{{ $t('qrScan.verifyingCharger') }}</p> -->
+                </div>
               </div>
-              <p class="scan-hint">{{ $t('qrScan.scanHint') }}</p>
+              <p v-if="!isValidating" class="scan-hint">{{ $t('qrScan.scanHint') }}</p>
             </div>
 
             <!-- Bottom: Charger Card -->
@@ -228,21 +301,26 @@
           </div>
         </CameraComponent>
 
-        <!-- Success Alert Modal -->
+        <!-- Alert Modal (Success or Error/Not Found) -->
         <AlertComponent
           :is-open="showAlert"
-          type="success"
-          :hide-cancel="true"
-          :hide-confirm="true"
-          @confirm="ProceedToPlug"
-          @didDismiss="ProceedToPlug"
+          :type="alertType"
+          :title="alertTitle"
+          :message="alertMessage"
+          :label-cancel="$t('common.cancel')"
+          :label-confirm="$t('qrScan.scanAgain')"
+          :hide-cancel="alertType === 'success'"
+          :hide-confirm="alertType === 'success'"
+          @cancel="handleAlertCancel"
+          @confirm="handleAlertConfirm"
+          @didDismiss="handleAlertDismiss"
         />
 
-        <!-- Plug Selection Modal (opens 2 seconds after scan) -->
+        <!-- Plug Selection Modal (opens after scan success) -->
         <ModalPlug
           :is-open="showModalPlug"
           :guntype="gunType"
-          :is-loading="isGunTypeLoading"
+          :is-loading="isValidating"
           @didDismiss="ClosePlugModal"
           @close="ClosePlugModal"
           @select="handlePlugSelect"
@@ -338,6 +416,37 @@
     height: 100%;
     display: block;
     filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+  }
+
+  .scan-loading-box {
+    position: absolute;
+    inset: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-radius: 1.5rem;
+    gap: 10px;
+    padding: 16px;
+    text-align: center;
+    z-index: 10;
+  }
+
+  .scan-spinner {
+    width: 42px;
+    height: 42px;
+    --color: #de5d0a;
+  }
+
+  .scan-loading-text {
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin: 0;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   }
 
   .scan-hint {

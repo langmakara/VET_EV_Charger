@@ -104,16 +104,15 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, watch, provide, onBeforeUnmount } from 'vue'
-  import { GoogleMap, AdvancedMarker, Marker, CustomMarker } from 'vue3-google-map'
+  import { ref, computed, watch, provide } from 'vue'
+  import { GoogleMap, AdvancedMarker, CustomMarker } from 'vue3-google-map'
   
   import type { StationData } from '~/api/types'
-  import { IonContent, IonSpinner, IonIcon, modalController, onIonViewWillLeave } from '@ionic/vue'
-  import { closeOutline, locationOutline, locateOutline } from 'ionicons/icons'
+  import { IonContent, IonSpinner, IonIcon, onIonViewWillLeave } from '@ionic/vue'
+  import { locateOutline } from 'ionicons/icons'
   import SearchMap from './SearchMap.vue'
   import ModalStation from './modalStation.vue'
   import StationDetailModal from '~/components/Modal/StationDetailModal.vue'
-  import AppButton from '~/components/Button/AppButton.vue'
   import { useDeviceLocation } from '~/composables/useNativeBridge'
   import IconButton from '../Button/IconButton.vue'
 
@@ -229,27 +228,6 @@
   )
   const zoom = ref<number>(14)
 
-  // --- Zoom debounce plumbing -------------------------------------------------
-  // Any work that should react to the *settled* zoom level (not every tick of a
-  // fast pinch/scroll gesture) should be added inside this watcher rather than
-  // a separate plain `watch(zoom, ...)`. This avoids piling extra work on top
-  // of the burst of tile/viewport requests the Maps SDK already fires during
-  // rapid zooming.
-  let zoomDebounceTimer: ReturnType<typeof setTimeout> | null = null
-  const ZOOM_DEBOUNCE_MS = 250
-
-  watch(zoom, (newZoom) => {
-    if (zoomDebounceTimer) clearTimeout(zoomDebounceTimer)
-    zoomDebounceTimer = setTimeout(() => {
-      // Place any zoom-reactive logic here (e.g. re-fetching nearby places,
-      // adjusting marker clustering, etc.) once zoom has settled.
-    }, ZOOM_DEBOUNCE_MS)
-  })
-
-  onBeforeUnmount(() => {
-    if (zoomDebounceTimer) clearTimeout(zoomDebounceTimer)
-  })
-  // -----------------------------------------------------------------------------
 
   const mapOptions = computed(() => ({
     disableDefaultUI: true,
@@ -261,7 +239,6 @@
     scaleControl: false,
     maxZoom: 19,
     minZoom: 3,
-    mapTypeId: 'satellite',
     // "greedy" treats one-finger pan/zoom gestures directly, matching typical
     // native map UX inside a modal (no "use two fingers" cooperative overlay).
     gestureHandling: 'greedy',
@@ -280,12 +257,6 @@
     ]
   }))
 
-  const areaName = computed(() => {
-    if (!selectedAddress.value) return ''
-    const parts = selectedAddress.value.split(',')
-    return parts[0] ? parts[0].trim() : ''
-  })
-
   // Share the loaded google.maps namespace + live map instance with SearchMap.vue
   provide(
     'mapsApi',
@@ -295,21 +266,6 @@
     'mapInstance',
     computed(() => mapRef.value?.map ?? null)
   )
-
-  const cancel = () => {
-    modalController.dismiss(null, 'cancel')
-  }
-
-  const confirm = () => {
-    if (selectedAddress.value) {
-      modalController.dismiss(
-        { location: selectedAddress.value, coords: selectedCoords.value },
-        'confirm'
-      )
-    } else {
-      modalController.dismiss(null, 'cancel')
-    }
-  }
 
   async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
     const api = mapRef.value?.api
