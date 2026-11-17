@@ -15,6 +15,8 @@
     IonRow,
     IonCol,
     IonCard,
+    IonSpinner,
+    onIonViewDidEnter,
     onIonViewWillLeave
   } from '@ionic/vue'
   import { chevronForward } from 'ionicons/icons'
@@ -42,7 +44,7 @@
   import { useWebSocket, type OcpiMeterValuesPayload } from '~/composables/useChargintSocket'
   import { formatMins, formatSeconds } from '~/utils/formatters'
   import { useABAMiniApp } from '@/composables/useNativeBridge'
-  
+
   const { userProfile } = useABAMiniApp()
   const defaultAvatar = '/vet-ev-charger/images/EVLogo.svg'
 
@@ -55,7 +57,11 @@
 
   const { actions } = evChargerData
   const { t, locale } = useI18n()
-  const { data: membershipInfo, error } = useMembershipInfoQuery()
+  const {
+    data: membershipInfo,
+    error: membershipError,
+    refetch: refetchMembership
+  } = useMembershipInfoQuery()
 
   const membership = computed<MembershipInfoData | null>(() => {
     const res: any = membershipInfo.value
@@ -67,12 +73,30 @@
     return charging.value?.body?.data ?? null
   })
 
+  const { currentCoordinates, isHardwareScanning, triggerHardwareSync } = useDeviceLocation()
+
   // Reactive query parameters (filter payload for POST /station/list)
+  // Pre-populated with cached coordinates from storage if available
   const filter = ref<StationListParams>({
-    rowsPerPage: 5
+    rowsPerPage: 5,
+    ...(currentCoordinates.value?.latitude && currentCoordinates.value?.longitude
+      ? {
+          lats: Number(currentCoordinates.value.latitude),
+          longs: Number(currentCoordinates.value.longitude)
+        }
+      : {})
   })
 
-  const { data, isLoading, isError } = useStationInfinite(filter)
+  // Since Nearby Station requires lat and lng, only enable query when valid coordinates exist
+  const isFilterReady = computed(() => {
+    const lat = Number(filter.value.lats)
+    const lng = Number(filter.value.longs)
+    return !isNaN(lat) && !isNaN(lng) && !(lat === 0 && lng === 0)
+  })
+
+  const { data, isLoading, isError } = useStationInfinite(filter, {
+    enabled: isFilterReady
+  })
 
   const NewFeedFilter = ref({
     page: 1,
@@ -82,11 +106,14 @@
   const {
     data: newsFeedRes,
     isLoading: isNewsFeedLoading,
-    isError: isNewsFeedError
+    isError: isNewsFeedError,
+    refetch: refetchNewsFeed
   } = useNewFeedQuery(NewFeedFilter)
 
   const config = useRuntimeConfig()
-  const evChargerBaseUrl = computed(() => ((config.public.apiBase as string) || '').replace(/\/+$/, ''))
+  const evChargerBaseUrl = computed(() =>
+    ((config.public.apiBase as string) || '').replace(/\/+$/, '')
+  )
 
   const resolveNewsImage = (img?: string) => {
     if (!img) return '/images/station.svg'
@@ -143,8 +170,6 @@
     })
   })
 
-  const { currentCoordinates, triggerHardwareSync } = useDeviceLocation()
-
   watch(
     () => currentCoordinates.value,
     (coords) => {
@@ -190,24 +215,58 @@
   })
 
   // 1. Session & Charger identifiers for WebSocket telemetry
+  const scannedChargerUsername = ref(
+    typeof window !== 'undefined'
+      ? sessionStorage.getItem('vet_ev_charger_username') ||
+          localStorage.getItem('vet_ev_charger_username') ||
+          ''
+      : ''
+  )
+
+  onIonViewDidEnter(() => {
+    if (typeof window !== 'undefined') {
+      const stored =
+        sessionStorage.getItem('vet_ev_charger_username') ||
+        localStorage.getItem('vet_ev_charger_username') ||
+        ''
+      if (stored && stored !== scannedChargerUsername.value) {
+        scannedChargerUsername.value = stored
+      }
+    }
+    // Re-check hardware sync if coordinates are not yet resolved
+    if (!currentCoordinates.value) {
+      triggerHardwareSync()
+    }
+    // Refetch membership points and newsfeed if still empty
+    if (!membership.value) {
+      refetchMembership()
+    }
+    if (NewFeed.value.length === 0) {
+      refetchNewsFeed()
+    }
+  })
+
   const chargerCode = computed(() => {
-    return String(
+    const raw =
       (chargingStatus.value as any)?.chargerUsername ||
-        (chargingStatus.value as any)?.chargerCode ||
-        (typeof window !== 'undefined' ? sessionStorage.getItem('vet_ev_charger_username') : '') ||
-        'ev01'
-    )
+      (chargingStatus.value as any)?.chargerCode ||
+      scannedChargerUsername.value ||
+      (typeof window !== 'undefined' ? sessionStorage.getItem('vet_ev_charger_username') : '') ||
+      ''
+    const str = String(raw).trim()
+    return str && str !== 'undefined' && str !== 'null' ? str : ''
   })
 
   // 2. WebSocket Connection for live OCPI telemetry
-  const webSocketUrl = config.public.webSocketUrl || 'qacltom.udaya-tech.com'
-  const wsUrl =
-    webSocketUrl.startsWith('ws://') || webSocketUrl.startsWith('wss://')
-      ? webSocketUrl
-      : `wss://${webSocketUrl}/OCPI/ws`
-
-  const { data: socketData } = useWebSocket(wsUrl, {
-    evseUid: chargerCode
+  // Connects when QR scan is successful and username is available
+  const {
+    data: socketData,
+    status: socketStatus,
+    connect: connectSocket
+  } = useWebSocket(undefined, {
+    evseUid: chargerCode,
+    username: chargerCode,
+    autoConnect: Boolean(chargerCode.value)
   })
 
   // 3. Telemetry State from WebSocket
@@ -496,17 +555,30 @@
         @view-all="() => navigateTo('/nearBy_Station')"
       />
       <div class="station-scroll-container">
+        <div v-if="isLoading || (!isFilterReady && isHardwareScanning)" class="station-loading">
+          <ion-spinner name="crescent" color="primary"></ion-spinner>
+        </div>
         <StationCard
+          v-else-if="displayedStations.length > 0"
           v-for="station in displayedStations"
           :key="station.id"
           :station="station"
           @click="handleStationClick(station)"
         />
+        <div
+          v-else-if="!isLoading && isFilterReady && displayedStations.length === 0"
+          class="station-empty"
+        >
+          <p>{{ $t('nearbyStation.noStationsNearby') || 'No stations nearby' }}</p>
+        </div>
       </div>
 
       <!-- News feed Section -->
       <SectionHeader :title="$t('evCharger.newsFeed')" @view-all="() => navigateTo('/newsFeed')" />
 
+      <div v-if="isNewsFeedLoading" class="ion-text-center ion-padding">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+      </div>
       <ion-card class="news-card" v-for="news in NewFeed" :key="news.id">
         <ion-item lines="none" class="news-item">
           <ion-thumbnail slot="start" class="news-thumbnail">
@@ -572,6 +644,17 @@
   }
   .station-scroll-container::-webkit-scrollbar {
     display: none;
+  }
+
+  .station-loading,
+  .station-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 100px;
+    color: var(--app-color-text-secondary, #8c8c8c);
+    font-size: 14px;
   }
 
   .ChargingCard {

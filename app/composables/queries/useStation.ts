@@ -5,7 +5,10 @@ import { useApi } from "~/composables/useApi";
 import { stationApi } from "~/api/modules/station.api";
 import { queryKeys } from "./keys";
 
-export const useStationInfinite = (params?: MaybeRef<StationListParams>) => {
+export const useStationInfinite = (
+  params?: MaybeRef<StationListParams>,
+  options?: { enabled?: MaybeRef<boolean> }
+) => {
   const http = useApi();
   const api = stationApi(http);
 
@@ -17,6 +20,12 @@ export const useStationInfinite = (params?: MaybeRef<StationListParams>) => {
         ...unref(params),
         page: pageParam as number,
       }),
+    enabled: computed(() => {
+      if (options?.enabled !== undefined) {
+        return Boolean(unref(options.enabled));
+      }
+      return true;
+    }),
     getNextPageParam: (lastPage, allPages) => {
       const res = (lastPage as any)?.data ?? lastPage?.body?.data;
       const items = Array.isArray(res) ? res : res?.list ?? [];

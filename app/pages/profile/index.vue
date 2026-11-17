@@ -127,7 +127,7 @@
         </div>
 
         <!-- 3. Setting Section -->
-        <div class="section-group">
+        <!-- <div class="section-group">
           <div class="section-header-title">{{ $t('profile.setting') }}</div>
           <div class="menu-card single-item-card">
             <ion-item
@@ -154,7 +154,7 @@
               </div>
             </ion-item>
           </div>
-        </div>
+        </div> -->
 
         <!-- 4. Help and Policies Section -->
         <div class="section-group">

@@ -12,21 +12,53 @@
   import StationCard from '~/components/Card/StationCard.vue'
   import StationDetailModal from '~/components/Modal/StationDetailModal.vue'
   import { useStationInfinite } from '~/composables/queries'
+  import { useDeviceLocation } from '~/composables/useNativeBridge'
   import type { StationData } from '~/api/types'
 
   const route = useRoute()
   const router = useRouter()
 
+  const { currentCoordinates, triggerHardwareSync } = useDeviceLocation()
+
   // Reactive query parameters (filter payload for POST /station/list)
   const filter = ref({
-    rowsPerPage: 20
-    // lats: 11.556374,  // Default coordinates (e.g. Phnom Penh or from GPS)
-    // longs: 104.928207,
+    rowsPerPage: 20,
+    ...(currentCoordinates.value?.latitude && currentCoordinates.value?.longitude
+      ? {
+          lats: Number(currentCoordinates.value.latitude),
+          longs: Number(currentCoordinates.value.longitude)
+        }
+      : {})
+  })
+
+  // Watch for coordinate updates
+  watch(
+    () => currentCoordinates.value,
+    (coords) => {
+      if (coords?.latitude && coords?.longitude) {
+        const lat = Number(coords.latitude)
+        const lng = Number(coords.longitude)
+        if (!isNaN(lat) && !isNaN(lng) && !(lat === 0 && lng === 0)) {
+          filter.value = {
+            ...filter.value,
+            lats: lat,
+            longs: lng
+          }
+        }
+      }
+    },
+    { immediate: true }
+  )
+
+  const isFilterReady = computed(() => {
+    const lat = Number(filter.value.lats)
+    const lng = Number(filter.value.longs)
+    return !isNaN(lat) && !isNaN(lng) && !(lat === 0 && lng === 0)
   })
 
   // Call the infinite query composable
   const { data, isLoading, isError, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useStationInfinite(filter)
+    useStationInfinite(filter, { enabled: isFilterReady })
 
   // Flatten all pagination pages into a single station list
   const rawStations = computed<StationData[]>(() => {

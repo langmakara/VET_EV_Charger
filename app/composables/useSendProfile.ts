@@ -1,17 +1,45 @@
 import { ref, computed } from 'vue'
+import { useQueryClient } from '@tanstack/vue-query'
 import { useAbaAuthTokenMutation } from '~/composables/queries/useAba'
 import type { AbaAuthTokenParams, AbaAuthTokenData, ApiResponseWrapper } from '~/api/types'
+
+// Retrieve any cached auth token from storage immediately on app initialization
+const getStoredAuthToken = (): string | null => {
+  if (typeof window === 'undefined') return null
+  try {
+    const directToken = localStorage.getItem('vet_ev_auth_token')
+    if (directToken) return directToken
+    const saved = localStorage.getItem('customer_info')
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      const token = parsed?.accessToken || parsed?.access_token || parsed?.token
+      if (token) return token
+    }
+  } catch {}
+  return null
+}
 
 // Shared state for auth response, request payload, token, and customer data across components
 const sharedAuthResponse = ref<ApiResponseWrapper<AbaAuthTokenData> | null>(null)
 const sharedAuthPayload = ref<AbaAuthTokenParams | null>(null)
-const sharedAuthToken = ref<string | null>(null)
+const sharedAuthToken = ref<string | null>(getStoredAuthToken())
 const sharedAuthCustomer = ref<AbaAuthTokenData | null>(null)
 const sharedIsAuthPending = ref<boolean>(false)
 const sharedAuthError = ref<any>(null)
 
 export const getAbaAuthToken = (): string | null => {
   return sharedAuthToken.value
+}
+
+export const clearStoredAuthToken = (): void => {
+  sharedAuthToken.value = null
+  sharedAuthCustomer.value = null
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem('vet_ev_auth_token')
+      localStorage.removeItem('customer_info')
+    } catch {}
+  }
 }
 
 export const getAbaAuthPayload = (): AbaAuthTokenParams | null => {
@@ -115,6 +143,16 @@ export const useSendProfile = (options?: Record<string, any>) => {
 
       if (token) {
         sharedAuthToken.value = token
+        if (import.meta.client) {
+          try {
+            localStorage.setItem('vet_ev_auth_token', token)
+          } catch {}
+          // Invalidate active queries so they immediately refetch with the authenticated Bearer token
+          try {
+            const queryClient = useQueryClient()
+            queryClient.invalidateQueries()
+          } catch {}
+        }
       }
 
       return response
@@ -150,6 +188,7 @@ export const useSendProfile = (options?: Record<string, any>) => {
     authToken,
     isNewAbaUser,
     sendProfile,
+    clearAuthToken: clearStoredAuthToken,
     getAuthToken: () => sharedAuthToken.value,
     getAuthPayload: () => sharedAuthPayload.value,
     getAuthCustomer: () => sharedAuthCustomer.value,

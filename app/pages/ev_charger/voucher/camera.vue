@@ -199,7 +199,7 @@
           <!-- Custom Page Overlay -->
           <div class="overlay-container">
             <!-- Top bar with Back button -->
-            <div class="top-bar">
+            <!-- <div class="top-bar">
               <IconButton
                 buttonType="back"
                 buttonSize="50px"
@@ -209,7 +209,7 @@
                 aria-label="Back"
                 @click="handleBack"
               />
-            </div>
+            </div> -->
 
             <!-- Top: Scan frame guide -->
             <div class="scan-guide">
@@ -324,7 +324,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     pointer-events: auto;
   }
   .flashlight-btn--active {

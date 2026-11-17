@@ -201,6 +201,13 @@ export class ABABridgeService {
   }
 
   /**
+   * Return back to native mobile application home page
+   */
+  static async backToHomePage(): Promise<void> {
+    return this.invokeNative<void>('backToHomePage', {});
+  }
+
+  /**
    * Manages reactive state event loops with clean functional un-registration bindings
    */
   static observeNativeEvent<T = any>(

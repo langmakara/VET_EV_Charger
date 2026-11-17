@@ -9,6 +9,8 @@
   import { useApi } from '~/composables/useApi'
   import { dropdownApi } from '~/api/modules/dropdown.api'
   import type { GunTypeData } from '~/api/types'
+  import { extractUsernameFromQr } from '~/utils/qr'
+  import { useWebSocket } from '~/composables/useChargintSocket'
 
   const { t } = useI18n()
   const router = useRouter()
@@ -25,6 +27,17 @@
   const showModalPlug = ref(false)
   const gunType = ref<GunTypeData[]>([])
   const selectedPlug = ref<any>(null)
+
+  // WebSocket connection for QR scanner
+  const {
+    connect: connectSocket,
+    status: socketStatus,
+    data: socketData
+  } = useWebSocket(undefined, {
+    username: computed(() => result.value),
+    evseUid: computed(() => result.value),
+    autoConnect: false // Connect only when QR scan succeeds!
+  })
 
   const chargingSteps = computed(() => [
     {
@@ -75,8 +88,9 @@
   async function handleScan(scannedCode: string) {
     if (!scanning.value || !scannedCode || isValidating.value) return
 
-    const code = scannedCode.trim()
-    result.value = code
+    const rawCode = scannedCode.trim()
+    const username = extractUsernameFromQr(rawCode)
+    result.value = username
     scanning.value = false
     isValidating.value = true
     showAlert.value = false
@@ -85,7 +99,7 @@
     if (navigator.vibrate) navigator.vibrate(100)
 
     try {
-      const res = await api.getGunTypeDropdown({ chargerUserName: code })
+      const res = await api.getGunTypeDropdown({ chargerUserName: username })
       const rawList =
         (res as any)?.data ??
         (res as any)?.body?.data ??
@@ -98,6 +112,15 @@
       isValidating.value = false
 
       if (isSuccess) {
+        // Save charger username in storage immediately upon successful scan
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('vet_ev_charger_username', username)
+          localStorage.setItem('vet_ev_charger_username', username)
+        }
+
+        // Connect to WebSocket with username extracted from QR
+        connectSocket(username)
+
         gunType.value = list
         alertType.value = 'success'
         alertTitle.value = t('qrScan.scanSuccess') || 'Scanned Successfully!'

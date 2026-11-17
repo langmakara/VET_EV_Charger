@@ -1,5 +1,5 @@
 import { createApiClient } from "~/api/client";
-import { getAbaAuthToken } from "~/composables/useSendProfile";
+import { getAbaAuthToken, clearStoredAuthToken } from "~/composables/useSendProfile";
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
@@ -11,7 +11,7 @@ export default defineNuxtPlugin(() => {
   };
 
   const onUnauthorized = () => {
-    // Handle session expiry if needed
+    clearStoredAuthToken();
   };
 
   const api = createApiClient(apiBase, getToken, onUnauthorized);

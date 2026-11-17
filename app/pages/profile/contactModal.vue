@@ -104,7 +104,6 @@ const openFacebook = () => {
 
 .contact-sheet-container {
   background-color: #ffffff;
-  padding: 16px 16px 28px 16px;
   box-sizing: border-box;
 }
 

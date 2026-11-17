@@ -110,7 +110,8 @@
     status: socketStatus,
     send
   } = useWebSocket(wsUrl, {
-    evseUid: chargerCode
+    evseUid: chargerCode,
+    username: chargerCode
   })
 
   // 3. Telemetry State from WebSocket

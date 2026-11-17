@@ -175,6 +175,13 @@ export function useABAMiniApp() {
     ABABridgeService.invokeNative('closeApp', {}).catch(() => {});
   };
 
+  /**
+   * Navigates back to the mobile application home screen
+   */
+  const backToHomePage = async (): Promise<void> => {
+    await ABABridgeService.backToHomePage();
+  };
+
   // --- Automatic Lifecycle Synchronization Hooks ---
   onMounted(() => {
     // Standardized Listener Binding Pattern protecting background thread operations cleanly
@@ -203,6 +210,7 @@ export function useABAMiniApp() {
     authResponse,
     executePayment,
     closeMiniApp,
+    backToHomePage,
     getDeviceInfo,
     openMap,
     openApp,
@@ -211,31 +219,101 @@ export function useABAMiniApp() {
   };
 }
 
+// Cached coordinates loader from localStorage for instant availability on startup
+const getInitialCoordinates = (): ABALocationResponse | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('vet_ev_last_coordinates');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.latitude && parsed?.longitude) {
+        return {
+          latitude: Number(parsed.latitude),
+          longitude: Number(parsed.longitude),
+          accuracy: parsed.accuracy
+        };
+      }
+    }
+  } catch {}
+  return null;
+};
+
+// Shared global coordinates and scanning state across all pages and components
+const sharedCoordinates = ref<ABALocationResponse | null>(getInitialCoordinates());
+const isHardwareScanning = ref(false);
+
 export function useDeviceLocation() {
-  const currentCoordinates = ref<ABALocationResponse | null>(null);
-  const isHardwareScanning = ref(false);
+  const currentCoordinates = sharedCoordinates;
   let destroyLocationListener: (() => void) | null = null;
 
-  const triggerHardwareSync = async () => {
+  const triggerHardwareSync = async (retries = 4, delayMs = 800): Promise<ABALocationResponse | null> => {
     isHardwareScanning.value = true;
     try {
       // 1. Request location permission from native host container
-      await ABABridgeService.invokeNative('requestCurrentLocation', {});
+      try {
+        await ABABridgeService.invokeNative('requestCurrentLocation', {});
+      } catch (err) {
+        console.warn('[useDeviceLocation] requestCurrentLocation error:', err);
+      }
 
-      // 2. Query GPS coordinates via native host bridge
-      const coords = await ABABridgeService.invokeNative<ABALocationResponse>('getCurrentLocation', {});
-      if (coords && coords.latitude && coords.longitude) {
-        currentCoordinates.value = {
-          latitude: Number(coords.latitude),
-          longitude: Number(coords.longitude),
-          accuracy: coords.accuracy
-        };
+      // 2. Poll for GPS coordinates via native host bridge (allowing user time to click "Allow" on permission dialog)
+      for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+          const coords = await ABABridgeService.invokeNative<ABALocationResponse>('getCurrentLocation', {});
+          const rawLat = coords?.latitude ?? (coords as any)?.lat;
+          const rawLng = coords?.longitude ?? (coords as any)?.lng;
+
+          if (rawLat !== undefined && rawLng !== undefined) {
+            const lat = Number(rawLat);
+            const lng = Number(rawLng);
+            if (!isNaN(lat) && !isNaN(lng) && !(lat === 0 && lng === 0)) {
+              const resolved: ABALocationResponse = {
+                latitude: lat,
+                longitude: lng,
+                accuracy: coords.accuracy
+              };
+              currentCoordinates.value = resolved;
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('vet_ev_last_coordinates', JSON.stringify(resolved));
+              }
+              return resolved;
+            }
+          }
+        } catch {}
+
+        // Fallback: try navigator.geolocation if available in browser/webview
+        if (typeof window !== 'undefined' && navigator.geolocation) {
+          try {
+            const browserCoords = await new Promise<ABALocationResponse | null>((resolve) => {
+              navigator.geolocation.getCurrentPosition(
+                (pos) =>
+                  resolve({
+                    latitude: pos.coords.latitude,
+                    longitude: pos.coords.longitude,
+                    accuracy: pos.coords.accuracy
+                  }),
+                () => resolve(null),
+                { timeout: 2000, enableHighAccuracy: true }
+              );
+            });
+            if (browserCoords) {
+              currentCoordinates.value = browserCoords;
+              localStorage.setItem('vet_ev_last_coordinates', JSON.stringify(browserCoords));
+              return browserCoords;
+            }
+          } catch {}
+        }
+
+        if (attempt < retries - 1) {
+          await new Promise((r) => setTimeout(r, delayMs));
+        }
       }
     } catch (err) {
       console.warn('[useDeviceLocation] Failed to acquire device coordinates from native bridge:', err);
     } finally {
       isHardwareScanning.value = false;
     }
+    return currentCoordinates.value;
   };
 
   onMounted(() => {
@@ -243,12 +321,22 @@ export function useDeviceLocation() {
     destroyLocationListener = ABABridgeService.observeNativeEvent<ABALocationResponse>(
       'getCurrentLocation',
       (coords) => {
-        if (coords && coords.latitude && coords.longitude) {
-          currentCoordinates.value = {
-            latitude: Number(coords.latitude),
-            longitude: Number(coords.longitude),
-            accuracy: coords.accuracy
-          };
+        const rawLat = coords?.latitude ?? (coords as any)?.lat;
+        const rawLng = coords?.longitude ?? (coords as any)?.lng;
+        if (rawLat !== undefined && rawLng !== undefined) {
+          const lat = Number(rawLat);
+          const lng = Number(rawLng);
+          if (!isNaN(lat) && !isNaN(lng) && !(lat === 0 && lng === 0)) {
+            const resolved: ABALocationResponse = {
+              latitude: lat,
+              longitude: lng,
+              accuracy: coords.accuracy
+            };
+            currentCoordinates.value = resolved;
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('vet_ev_last_coordinates', JSON.stringify(resolved));
+            }
+          }
         }
       }
     );

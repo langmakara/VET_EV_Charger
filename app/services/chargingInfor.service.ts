@@ -591,7 +591,8 @@ export function useChargingInforService() {
     status: socketStatus,
     send: sendSocketMessage
   } = useWebSocket(wsUrl, {
-    evseUid: computed(() => getChargerUsername())
+    evseUid: computed(() => getChargerUsername()),
+    username: computed(() => getChargerUsername())
   })
 
   watch(socketData, (msg) => {

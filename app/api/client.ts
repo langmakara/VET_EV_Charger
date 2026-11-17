@@ -1,6 +1,6 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
 import type { ApiError } from './types'
-import { getAbaAuthToken } from '~/composables/useSendProfile'
+import { getAbaAuthToken, clearStoredAuthToken } from '~/composables/useSendProfile'
 
 export interface CreateApiClientOptions {
   baseURL: string
@@ -25,6 +25,23 @@ export const createApiClient = (
   })
 
   instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+    // Endpoints that authenticate or exchange tokens MUST NOT include an Authorization Bearer header.
+    // If an old/invalid token is sent in the header to /aba-mini-app/auth/token, the server's OAuth2 filter
+    // intercepts the request and rejects it with 401 "Invalid access token" before the controller runs.
+    const isAuthEndpoint =
+      config.url &&
+      (config.url.includes('/aba-mini-app/auth/token') ||
+        config.url.includes('/auth/token'))
+
+    if (isAuthEndpoint) {
+      if (config.headers?.delete) {
+        config.headers.delete('Authorization')
+      } else if (config.headers) {
+        delete (config.headers as any)['Authorization']
+      }
+      return config
+    }
+
     // Resolve dynamic token from useAbaAuthTokenMutation (via getAbaAuthToken)
     const rawToken = getToken ? getToken() : getAbaAuthToken()
 
@@ -39,17 +56,21 @@ export const createApiClient = (
 
     return config
   })
+
   instance.interceptors.response.use(
     (response) => response,
     (error) => {
       const status = error?.response?.status ?? 500
       const message =
         error?.response?.data?.message ||
+        error?.response?.data?.header?.errorText ||
         error?.response?.data?.body?.message ||
         error?.message ||
         'An unexpected error occurred'
 
       if (status === 401) {
+        // Clear stale token so future requests are not poisoned
+        clearStoredAuthToken()
         if (onUnauthorized) {
           onUnauthorized()
         }
