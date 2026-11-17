@@ -106,7 +106,7 @@
 <script setup lang="ts">
   import { ref, computed, watch, provide } from 'vue'
   import { GoogleMap, AdvancedMarker, CustomMarker } from 'vue3-google-map'
-  
+
   import type { StationData } from '~/api/types'
   import { IonContent, IonSpinner, IonIcon, onIonViewWillLeave } from '@ionic/vue'
   import { locateOutline } from 'ionicons/icons'
@@ -227,7 +227,6 @@
     props.initialCoords || { lat: 11.5564, lng: 104.9282 }
   )
   const zoom = ref<number>(14)
-
 
   const mapOptions = computed(() => ({
     disableDefaultUI: true,
@@ -396,13 +395,14 @@
   async function selectCurrentLocation() {
     try {
       // Trigger hardware sync via useDeviceLocation (requestCurrentLocation)
-      await triggerHardwareSync()
+      const coords = await triggerHardwareSync()
 
-      // If current coordinates are already available, center immediately
-      if (currentCoordinates.value) {
-        const lat = Number(currentCoordinates.value.latitude)
-        const lng = Number(currentCoordinates.value.longitude)
-        await applyLocationToMap(lat, lng, currentCoordinates.value.accuracy)
+      // If coordinates are available, center immediately
+      const targetCoords = coords || currentCoordinates.value
+      if (targetCoords) {
+        const lat = Number(targetCoords.latitude)
+        const lng = Number(targetCoords.longitude)
+        await applyLocationToMap(lat, lng, targetCoords.accuracy)
       }
     } catch (err: any) {
       console.error('selectCurrentLocation failed:', err)

@@ -50,7 +50,9 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   color: #1a1a1a;
   cursor: pointer;
-  transition: transform 0.15s ease, background-color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .close-btn:active {
@@ -231,7 +233,7 @@
   right: 20px;
   width: 46px;
   height: 46px;
-  background-color: var(--ion-color-primary, #DE5D0A);
+  background-color: var(--ion-color-primary, #de5d0a);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -239,7 +241,9 @@
   border: none;
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(222, 93, 10, 0.35);
-  transition: transform 0.15s ease, background-color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease;
   z-index: 1001;
   pointer-events: auto;
 }
@@ -339,7 +343,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
 }
 
 .primary-confirm-btn:active:not(:disabled) {
@@ -362,8 +368,8 @@
  * that appear on the map canvas when satellite/hybrid tiles fail to load.
  * These are internal Google Maps DOM elements, not console errors.
  */
-.map-wrapper .gm-style div[style*="text-align: center"],
-.map-wrapper .gm-style div[style*="position: absolute"] > span,
+.map-wrapper .gm-style div[style*='text-align: center'],
+.map-wrapper .gm-style div[style*='position: absolute'] > span,
 .map-wrapper .gm-style .gm-err-container,
 .map-wrapper .gm-style .gm-err-content,
 .map-wrapper .gm-style .gm-err-message,
@@ -376,7 +382,7 @@
 }
 
 /* Hide the grey/light error overlay Google Maps shows over failed tiles */
-.map-wrapper .gm-style div[style*="background-color: rgb(229, 227, 223)"],
-.map-wrapper .gm-style div[style*="background-color: rgb(248, 249, 250)"] {
+.map-wrapper .gm-style div[style*='background-color: rgb(229, 227, 223)'],
+.map-wrapper .gm-style div[style*='background-color: rgb(248, 249, 250)'] {
   background-color: transparent !important;
 }

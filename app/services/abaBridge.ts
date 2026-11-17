@@ -3,9 +3,9 @@ import { callHandler, registerHandler } from 'web-bridge-gateway';
 import * as Sentry from '@sentry/vue';
 
 export interface ABALocationResponse {
-  latitude: number;
-  longitude: number;
-  accuracy?: number;
+  latitude: number | string;
+  longitude: number | string;
+  accuracy?: number; // Optional (not provided by ABA Native Bridge)
 }
 
 export interface ABAUserProfile {

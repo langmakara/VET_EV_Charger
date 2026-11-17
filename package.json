@@ -1,6 +1,6 @@
 {
   "name": "vet-ev-charger",
-  "version": "1.03",
+  "version": "1.04",
   "type": "module",
   "private": true,
   "scripts": {
